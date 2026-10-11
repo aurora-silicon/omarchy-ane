@@ -6,7 +6,7 @@ Chip: 13-inch M1 (T8103). Kernel 7.1.12-2-12.6-sep, in-tree `ane` module, omarch
 
 ## Method
 
-Exclusive quiet window: no other lane's ANE or GPU ticket ran. Six phases of about 30 s, in this order, so that drift shows up as a difference between the two copies of the same phase:
+Quiet window under the exclusive-window protocol (see Window evidence). Six phases of about 30 s, in this order, so that drift shows up as a difference between the two copies of the same phase:
 
 1. GPU alone. A chain of fp16 2048 x 2048 matmuls (`gpu_bench.py`), one throughput sample per second.
 2. ANE alone. One iteration of `h13-filler.sh` (`ONCE=1 ITER_SECONDS=30`): the Parakeet whole encoder, `ane-run --repeat N`, output compared with the macOS gold, driver `busy_ns` read before and after.
@@ -42,11 +42,11 @@ The heavy ANE loop (97 percent busy in this test) costs a compute-bound GPU job 
 - "Compute-bound" is by construction (a matmul chain). The GPU has no busy counter here, so it was not confirmed by one.
 - The ANE-alone medians (137.49 and 137.54 ms, about 215 calls each) sit inside the quiet range of the Parakeet operating-point receipt (137.4 to 139.3 ms). That receipt's cell of record, 137.914 ms, is the median of five 20-call processes.
 - Exclusivity is only partly evidenced. See the next section.
-- The script waited for another lane's GPU lock holder before the window opened; nothing else ran during the phases.
+- The script waited for another lane's GPU lock holder before the window opened. See Window evidence for what is and is not shown.
 
 ## Window evidence
 
-The guard's window log records `set exclusive` at 16:09:15Z and `clear` at 16:27:51Z. The first phase began at 16:24:44Z, after the window had waited for another lane's job to finish. The script's own line when the window opened read: `EXCLUSIVE; guard ANE tickets running: 0; GPU lock holders: 1`. I did not resolve what that one holder was, and I recorded no list of processes holding the GPU during the phases. The two copies of the GPU-alone phase agree within 0.1 percent (0.5794 and 0.5788), which argues against a changing neighbour but does not prove there was none.
+The guard's window log records `set exclusive` at 16:09:15Z and `clear` at 16:27:51Z. The first phase began at 16:24:44Z, after the window had waited for another lane's job to finish. The script's own line when the window opened read: `EXCLUSIVE; guard ANE tickets running: 0; GPU lock holders: 1`. I did not resolve what that one holder was, and I recorded no list of processes holding the GPU during the phases. The log lines and the script's own line are in `data/window.txt`. The two copies of the GPU-alone phase agree within 0.1 percent (0.5794 and 0.5788), which argues against a changing neighbour but does not prove there was none.
 
 ## Files
 
