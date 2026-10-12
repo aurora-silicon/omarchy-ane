@@ -34,7 +34,7 @@ With both running, the GPU keeps 95.1 percent of its solo rate (0.5509 against 0
 
 The heavy ANE loop (97 percent busy in this test) costs a compute-bound GPU matmul about 5 percent. A GPU matmul costs the ANE loop about 3 percent. That is all this test shows.
 
-It does not carry over to memory-bound or dispatch-bound GPU work such as LLM decode, which this test did not measure. Decode rows taken separately on the same 13-inch M1 with an ANE loop running read far lower than with it stopped, so do not read this receipt as saying the ANE loop is free for GPU decode. A paired test of that case is planned; its numbers are not in this receipt.
+It does not carry over to memory-bound or dispatch-bound GPU work such as LLM decode, which this test did not measure. A paired test of that case is planned; its numbers are not in this receipt.
 
 ## Limits
 
