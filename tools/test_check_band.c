@@ -40,5 +40,15 @@ int main(void)
 	expect("cond units, zero lane nonzero is infinite", isinf(ane_cond_units(1.0, 0.0)), 1);
 	expect("cond units, zero lane NaN is infinite", isinf(ane_cond_units(NAN, 0.0)), 1);
 
+	/* The rms reference and band for an all-zero input row (rscaled 0, gamma 1: sumabs = 1). */
+	expect("rms reference of a normal channel", ane_rms_want(2.0, 3.0, 2.0) == 3.0, 1);
+	expect("rms reference of an all-zero row is 0, not NaN", ane_rms_want(0.0, 1.0, 0.0) == 0.0, 1);
+	expect("rms all-zero row, exact 0 output passes",
+	       ane_lane_in_band(0.0, fabs(0.0 - ane_rms_want(0.0, 1.0, 0.0)), 1.0), 1);
+	expect("rms all-zero row, output 1.0 fails",
+	       ane_lane_in_band(1e9, fabs(1.0 - ane_rms_want(0.0, 1.0, 0.0)), 1.0), 0);
+	expect("rms all-zero row, NaN output fails",
+	       ane_lane_in_band(NAN, fabs(NAN - ane_rms_want(0.0, 1.0, 0.0)), 1.0), 0);
+
 	return bad;
 }

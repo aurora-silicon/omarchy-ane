@@ -1479,7 +1479,7 @@ static int rms_check(struct ane_nn *nn, struct io_file *in,
 	for (i = 0; i < C; i++) {
 		xv = ane_f16_to_f64(a[i * channel_stride]);
 		gv = ane_f16_to_f64(gamma[64 / 2 + i]);
-		want_v = xv * gv / rscaled;
+		want_v = ane_rms_want(xv, gv, rscaled);
 		want = ane_f16_round_half_away(want_v);
 		got = y[i * channel_stride];
 		err = fabs(ane_f16_to_f64(got) - want_v);
