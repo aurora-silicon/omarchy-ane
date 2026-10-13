@@ -32,11 +32,12 @@ static inline double ane_cond_units(double err, double sumabs)
 	return err == 0.0 ? 0.0 : INFINITY;
 }
 
-/* The rms reference for one channel is x * gamma / rscaled. An all-zero input row has rscaled 0, so the quotient is 0/0 = NaN and even an
- * exact all-zero output would fail. The reference for such a row is 0: zero times gamma, over any positive scale. */
+/* The rms reference for one channel is x * gamma / rscaled. An all-zero input row has rscaled exactly 0, so the quotient is 0/0 = NaN and even an
+ * exact all-zero output would fail. The reference for such a row is 0: zero times gamma, over any positive scale. A NaN rscaled (a NaN in the
+ * input row) is not zero: it keeps a NaN reference, and the lane fails. */
 static inline double ane_rms_want(double xv, double gv, double rscaled)
 {
-	return rscaled > 0.0 ? xv * gv / rscaled : 0.0;
+	return rscaled == 0.0 ? 0.0 : xv * gv / rscaled;
 }
 
 #endif

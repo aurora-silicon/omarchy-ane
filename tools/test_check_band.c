@@ -49,6 +49,12 @@ int main(void)
 	       ane_lane_in_band(1e9, fabs(1.0 - ane_rms_want(0.0, 1.0, 0.0)), 1.0), 0);
 	expect("rms all-zero row, NaN output fails",
 	       ane_lane_in_band(NAN, fabs(NAN - ane_rms_want(0.0, 1.0, 0.0)), 1.0), 0);
+	expect("rms NaN scale keeps a NaN reference", isnan(ane_rms_want(1.0, 1.0, NAN)), 1);
+	{
+		double w = ane_rms_want(1.0, 1.0, NAN); /* an exact 0 device output against it */
+
+		expect("rms NaN scale, exact 0 output fails", ane_lane_in_band(fabs(0.0 - w), fabs(0.0 - w), 1.0 + 1.0 + NAN), 0);
+	}
 
 	return bad;
 }
