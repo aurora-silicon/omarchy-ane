@@ -1,0 +1,44 @@
+/* SPDX-License-Identifier: MIT */
+/* Copyright 2026 Joshua Warren */
+/* Host test of the lane acceptance used by ane-run --check matvec and --check rms. No device. */
+#include <math.h>
+#include <stdio.h>
+
+#include "ane_check_band.h"
+
+static int bad;
+
+static void expect(const char *name, int got, int want)
+{
+	if (got != want) {
+		printf("FAIL %s: got %d, wanted %d\n", name, got, want);
+		bad = 1;
+	} else {
+		printf("PASS %s\n", name);
+	}
+}
+
+int main(void)
+{
+	/* Lanes with a scale: unchanged behaviour. */
+	expect("2 ulp passes", ane_lane_in_band(2.0, 1.0, 1.0), 1);
+	expect("4 condition units passes", ane_lane_in_band(100.0, 4.0 * 0x1p-11, 1.0), 1);
+	expect("far outside both fails", ane_lane_in_band(100.0, 1.0, 1.0), 0);
+	expect("NaN device value fails", ane_lane_in_band(NAN, NAN, 1.0), 0);
+	expect("infinite device value fails", ane_lane_in_band(INFINITY, INFINITY, 1.0), 0);
+
+	/* Lanes with no scale (exact sum of absolute terms is 0): only an exact match passes. */
+	expect("zero lane, exact 0 passes", ane_lane_in_band(0.0, 0.0, 0.0), 1);
+	expect("zero lane, output 1.0 fails", ane_lane_in_band(1e9, 1.0, 0.0), 0);
+	expect("zero lane, tiny nonzero fails", ane_lane_in_band(1.0, 0x1p-24, 0.0), 0);
+	expect("zero lane, NaN fails", ane_lane_in_band(NAN, NAN, 0.0), 0);
+	expect("zero lane, infinity fails", ane_lane_in_band(INFINITY, INFINITY, 0.0), 0);
+
+	/* The reported number. */
+	expect("cond units with scale", ane_cond_units(1.0, 1.0) == 2048.0, 1);
+	expect("cond units, zero lane exact is 0", ane_cond_units(0.0, 0.0) == 0.0, 1);
+	expect("cond units, zero lane nonzero is infinite", isinf(ane_cond_units(1.0, 0.0)), 1);
+	expect("cond units, zero lane NaN is infinite", isinf(ane_cond_units(NAN, 0.0)), 1);
+
+	return bad;
+}
