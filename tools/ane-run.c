@@ -2028,6 +2028,11 @@ int main(int argc, char **argv)
 		uint64_t *ns = time_raw ? calloc(repeat, sizeof(*ns)) : NULL;
 		uint32_t done = 0;
 
+		if ((timing && !lat) || (time_raw && !ns)) {
+			fprintf(stderr, "cannot allocate the per-call timing buffers for %u calls\n", repeat);
+			ret = 1;
+		}
+
 		for (uint32_t r = 0; r < repeat && !ret; r++) {
 			struct timespec t0, t1;
 
