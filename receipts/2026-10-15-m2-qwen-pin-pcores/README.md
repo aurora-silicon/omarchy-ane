@@ -37,7 +37,7 @@ Raw step walls in ms (`data/summary.json`, `raw_walls_s`):
 - Arm 1 U stayed on performance cores 4-7 for all 16 steps.
 - Arm 3 U ran its first 5 generated steps on performance cores (171.99 ms). At the sixth step the scheduler moved the decode thread and the session child to the efficiency cores. 28 of 38 calls ran there in that step (195.6 ms). In the next 10 steps all 38 calls ran there.
 - Those 10 steps: 200.04 ms per step. The sum of the call walls was 173.39 ms against 146.19 ms (+27.2 ms). The sum of the exec times did not change (130.54 against 130.73 ms). One call took 4.563 ms against 3.844 ms (+0.72 ms). The decode thread used 28.4 ms of CPU against 9.3 ms and the child 30.8 against 16.8 ms. The run-queue wait stayed near 0, so the threads were not waiting for a core. They ran slower on the core they had.
-- 5 of 5 steps with no call on an efficiency core were fast. 10 of 10 steps with every call on one were slow.
+- 5 of 5 generated steps with no call on an efficiency core were fast. 10 of 10 generated steps with every call on one were slow. The prefill step 0 of arm 3 U also ran all 38 calls on efficiency cores: its ANE phase took 164.7 ms against about 145 ms for its other prefill steps. Counting it, 11 steps ran every call there and all 11 were slower in the ANE phase than every step that ran none (the ANE phase is the sum of the 38 call walls plus the host work between them).
 - Both P arms: no step above 169 ms, and 0 of 608 calls on an efficiency core. Efficiency-core busy ticks were 0.25 and 0.31 per step against 14.6 in arm 3 U.
 
 Why the scheduler picks an efficiency core is not tested here. A task that sleeps about 76 percent of each step in the ioctl poll is a candidate for energy-aware wake placement. That is an inference.
