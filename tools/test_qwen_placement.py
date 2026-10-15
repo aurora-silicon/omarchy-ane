@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright 2026 Joshua Warren
+
+"""Offline checks of the placement code in qwen_m2_decode.py (no device, no ane-session).
+
+1. Importing the module does not pin the importer: a harness that imports it keeps its own mask (PINNED is None).
+2. Running it as a script pins through pcore_mask before numpy starts: a script run in a child process (with a fake sysfs of two efficiency and two
+   performance CPUs, and OMARCHY_ANE_NO_PIN unset) ends with the mask equal to the P CPUs it may use and OPENBLAS_NUM_THREADS=4; with the opt-out set, or
+   with OPENBLAS_NUM_THREADS already set by the user, the mask stays and the user's value stays.
+3. Decoder.step records the CPU of the decode thread after every call (step_cpus, cpu_hist) without changing the timing tuples.
+4. placement() reads the mask of every task of the decode process and of the child from /proc, counts calls off the performance cores, and gives None
+   for the off-P count on a chip with no efficiency cores. finish_placement() flags an off-P call on stderr."""
+import io
+import os
+import subprocess
+import sys
+import tempfile
+from contextlib import redirect_stderr, redirect_stdout
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+
+import numpy as np  # noqa: E402
+import pcore_mask  # noqa: E402
+
+# A fake chip where pin_self() WOULD change the mask, in place while the module is imported: the import must still leave the mask alone.
+_START = sorted(os.sched_getaffinity(0))
+_FAKE = tempfile.TemporaryDirectory()
+_FAKE_ROOT = Path(_FAKE.name)
+for _cpu in range(max(_START) + 1):
+    (_FAKE_ROOT / f"cpu{_cpu}").mkdir()
+    (_FAKE_ROOT / f"cpu{_cpu}" / "cpu_capacity").write_text("1024\n" if _cpu in _START[2:4] else "400\n")
+_real_defaults = pcore_mask.pin_self.__defaults__
+pcore_mask.pin_self.__defaults__ = (_FAKE_ROOT, None)
+import qwen_m2_decode as dec  # noqa: E402
+
+pcore_mask.pin_self.__defaults__ = _real_defaults
+assert sorted(os.sched_getaffinity(0)) == _START, "importing the module changed the mask"
+
+
+def fake_sysfs(root, capacities):
+    for cpu, cap in enumerate(capacities):
+        d = Path(root) / f"cpu{cpu}"
+        d.mkdir()
+        (d / "cpu_capacity").write_text(f"{cap}\n")
+
+
+def child_mask(env_extra, sysfs):
+    """Run qwen_m2_decode.py's top-of-file hook as __main__ in a child with the fake sysfs; return (mask, OPENBLAS_NUM_THREADS)."""
+    code = (
+        "import os, runpy, sys\n"
+        f"sys.path.insert(0, {str(HERE)!r})\n"
+        "import pcore_mask\n"
+        f"pcore_mask.SYSFS_CPU = __import__('pathlib').Path({str(sysfs)!r})\n"
+        "pcore_mask.p_core_cpus.__defaults__ = (pcore_mask.SYSFS_CPU,)\n"
+        "pcore_mask.pin_self.__defaults__ = (pcore_mask.SYSFS_CPU, None)\n"
+        "sys.argv = ['qwen_m2_decode.py', '--summary', '--out', os.environ['OUT']]\n"
+        "try:\n"
+        f"    runpy.run_path({str(HERE / 'qwen_m2_decode.py')!r}, run_name='__main__')\n"
+        "except SystemExit:\n"
+        "    pass\n"
+        "except FileNotFoundError:\n"
+        "    pass\n"
+        "print(sorted(os.sched_getaffinity(0)), os.environ.get('OPENBLAS_NUM_THREADS'))\n")
+    env = {k: v for k, v in os.environ.items() if k not in ("OPENBLAS_NUM_THREADS", pcore_mask.OPT_OUT)}
+    env.update(env_extra)
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env=env, check=True).stdout.strip().splitlines()[-1]
+    mask, _, threads = out.rpartition("] ")
+    return eval(mask + "]"), (None if threads == "None" else threads)  # noqa: S307  (our own printed list)
+
+
+class FakeProc:
+    def __init__(self, pid):
+        self.pid = pid
+
+
+class FakeSession:
+    def __init__(self, pid):
+        self.proc = FakeProc(pid)
+
+
+def main():
+    assert dec.PINNED is None, "importing the module must not pin"
+    allowed = sorted(os.sched_getaffinity(0))
+    assert len(allowed) >= 4, "the host test needs 4 CPUs to build a fake 2+2 chip"
+    e_cpus, p_cpus = allowed[:2], allowed[2:4]
+    with tempfile.TemporaryDirectory() as tmp:
+        sysfs = Path(tmp) / "cpu"
+        sysfs.mkdir()
+        capacity = [0] * (max(allowed) + 1)
+        for c in range(len(capacity)):
+            capacity[c] = 1024 if c in p_cpus else 400
+        fake_sysfs(sysfs, capacity)
+        out = Path(tmp) / "run"
+        out.mkdir()
+        (out / "results.jsonl").write_text("")
+        base = {"OUT": str(out)}
+        mask, threads = child_mask(base, sysfs)
+        assert mask == p_cpus and threads == "4", (mask, threads)
+        mask, threads = child_mask({**base, "OPENBLAS_NUM_THREADS": "7"}, sysfs)
+        assert mask == p_cpus and threads == "7", "a user's thread count stays"
+        mask, threads = child_mask({**base, pcore_mask.OPT_OUT: "1"}, sysfs)
+        assert mask == allowed and threads is None, "the opt-out leaves the mask and the thread count alone"
+
+    d = dec.Decoder.__new__(dec.Decoder)
+    d.cpu_hist, d.step_cpus = {}, []
+    d.max_len, d.session, d.resident_states = 4, None, False
+    d.args = type("A", (), {"resident_lock": "call"})()
+    d.progs = [{"group_start": True, "group_end": False, "srcs": [], "dsts": [{"lane": "h", "port": "o"}], "states": []},
+               {"group_start": False, "group_end": True, "srcs": [], "dsts": [{"lane": "h", "port": "o"}], "states": []}]
+    d.states = [{}, {}]
+    d.call = lambda i, arrays: ({"o": np.ones((1, 2), np.float16)}, 0.5)
+    dec.ctx_vals = lambda pos, max_len, cos, sin: {}
+    hidden, timing = d.step(0, 0, None, None, np.ones((1, 1, 2), np.float16))
+    assert len(timing) == 2 and all(len(t) == 2 and t[1] == 0.5 and t[0] >= 0 for t in timing), timing
+    assert len(d.step_cpus) == 2 and sum(d.cpu_hist.values()) == 2 and all(c >= 0 for c in d.step_cpus), (d.step_cpus, d.cpu_hist)
+    d.step(0, 1, None, None, np.ones((1, 1, 2), np.float16))
+    assert len(d.step_cpus) == 2 and sum(d.cpu_hist.values()) == 4, "step_cpus restarts every step, cpu_hist accumulates"
+
+    child = subprocess.Popen(["sleep", "30"])
+    try:
+        d.session = FakeSession(child.pid)
+        here = sorted(os.sched_getaffinity(0))
+        low, high = here[0], here[1]
+        real = pcore_mask.p_core_cpus
+        try:
+            pcore_mask.p_core_cpus = lambda root=None: [high]
+            d.cpu_hist = {low: 3, high: 5}
+            rec = dec.placement(d)
+            assert rec["calls"] == 8 and rec["calls_off_p_cores"] == 3 and rec["p_cores"] == [high], rec
+            assert rec["calls_by_cpu"] == {str(low): 3, str(high): 5}
+            rng = f"{here[0]}-{here[-1]}" if here == list(range(here[0], here[-1] + 1)) else None
+            assert rec["child_masks"] and len(rec["decode_masks"]) >= 1 and (rng is None or rec["child_masks"] == [rng]), rec
+            seen = []
+            err, outp = io.StringIO(), io.StringIO()
+            with redirect_stderr(err), redirect_stdout(outp):
+                dec.finish_placement(d, seen.append)
+            assert seen[0]["type"] == "placement" and "WARNING: 3 of 8 calls ran on an efficiency core" in err.getvalue(), err.getvalue()
+            assert "3 off the performance cores" in outp.getvalue()
+            d.cpu_hist = {high: 5}
+            err = io.StringIO()
+            with redirect_stderr(err), redirect_stdout(io.StringIO()):
+                dec.finish_placement(d, seen.append)
+            assert err.getvalue() == "" and seen[1]["calls_off_p_cores"] == 0
+            pcore_mask.p_core_cpus = lambda root=None: None
+            rec = dec.placement(d)
+            assert rec["calls_off_p_cores"] is None and rec["p_cores"] is None, "no efficiency cores: no off-P count"
+        finally:
+            pcore_mask.p_core_cpus = real
+    finally:
+        child.kill()
+        child.wait()
+    print("PLACEMENT PASS (import does not pin, script run pins and caps BLAS, opt-out and user value respected, per-call CPU, /proc masks, off-P flag)")
+
+
+if __name__ == "__main__":
+    main()
