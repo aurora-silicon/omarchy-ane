@@ -101,3 +101,39 @@ def test_command_line_exit_codes(tmp_path, capsys):
     assert main([str(a), str(tmp_path / "missing.anec")]) == 2
     assert main([str(a), str(same), "--json"]) == 0
     assert '"constants_equal": true' in capsys.readouterr().out
+
+
+def patched(base: bytes, offset: int, fmt: str, value: int) -> bytes:
+    data = bytearray(base)
+    struct.pack_into(fmt, data, offset, value)
+    return bytes(data)
+
+
+def test_constants_equal_ignores_a_different_stream(tmp_path):
+    """The fold case: the stream differs, the constants are the same bytes."""
+    stream = bytearray(real()[HEADER_BYTES:HEADER_BYTES + 1924])
+    stream[300] ^= 1
+    a, b = tmp_path / "a.anec", tmp_path / "b.anec"
+    a.write_bytes(real())
+    b.write_bytes(rebuild(real(), stream=bytes(stream)))
+    assert main([str(a), str(b), "--constants-equal"]) == 0
+    assert main([str(a), str(b)]) == 1
+
+
+def test_the_tile_table_is_compared_except_the_content_size_entry():
+    info = parse_anec(real())
+    assert info["tiles"][5] > 0
+    changed = parse_anec(patched(real(), 0x28 + 5 * 4, "<I", info["tiles"][5] + 1))
+    assert not compare(info, changed)["tiles_equal"]
+    content_only = parse_anec(patched(real(), 0x28, "<I", info["tiles"][0] + 1))      # tiles[0] is the content size
+    assert compare(info, content_only)["tiles_equal"]
+
+
+def test_the_stream_length_and_the_first_task_size_are_part_of_the_counts():
+    info = parse_anec(real())
+    longer = parse_anec(rebuild(real(), stream=real()[HEADER_BYTES:HEADER_BYTES + 1924] + bytes(64)))
+    result = compare(info, longer)
+    assert not result["counts_equal"] and result["stream_bytes"] == [1924, 1988]
+    first_task = parse_anec(patched(real(), 8, "<I", info["first_task_bytes"] + 16))
+    assert not compare(info, first_task)["counts_equal"]
+    assert compare(info, first_task)["stream_equal"]
