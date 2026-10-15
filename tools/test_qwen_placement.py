@@ -11,7 +11,9 @@
 3. Decoder.step records the CPU of the decode thread after every call (step_cpus, cpu_hist) without changing the timing tuples.
 4. placement() reads the mask of every task of the decode process and of the child from /proc, counts calls off the performance cores, and gives None
    for the off-P count on a chip with no efficiency cores. finish_placement() flags an off-P call on stderr."""
+import argparse
 import io
+import json
 import os
 import subprocess
 import sys
@@ -80,6 +82,77 @@ class FakeProc:
 class FakeSession:
     def __init__(self, pid):
         self.proc = FakeProc(pid)
+
+
+class FakeRunDecoder:
+    """Stands in for Decoder inside run(): `mode` decides how the first step ends ('ok', 'call-stop' raises like a failed CALL, 'kernel-stop' lets a STOP kernel line appear)."""
+    mode = "ok"
+    child = None
+
+    def __init__(self, args, manifest):
+        self.max_len = 8
+        self.session = FakeSession(FakeRunDecoder.child.pid)
+        self.cpu_hist, self.step_cpus = {}, []
+
+    def configure(self, m):
+        self.max_len = m
+
+    def step(self, token, pos, cos, sin, embed, check=None):
+        if FakeRunDecoder.mode == "call-stop":
+            raise SystemExit("STOP prog_000: exit 1")
+        self.step_cpus = [dec.sched_getcpu()]
+        self.cpu_hist[self.step_cpus[0]] = self.cpu_hist.get(self.step_cpus[0], 0) + 1
+        return np.ones(2, np.float32), [(0.001, 0.5)]
+
+    def close_session(self):
+        pass
+
+
+def run_exit_path(mode):
+    """dec.run() on fakes: returns (exit text or None, the record types written to results.jsonl)."""
+    import json
+    child = subprocess.Popen(["sleep", "30"])
+    saved = {k: getattr(dec, k) for k in ("Decoder", "reference_blas", "load_head", "rope_tables", "kernel_marks")}
+    calls = {"n": 0}
+
+    def marks():
+        calls["n"] += 1
+        return [(1.0, "boot")] if mode != "kernel-stop" or calls["n"] % 2 else [(1.0, "boot"), (2.0, "ane EXCH 5 failed")]   # odd call: the mark, even call: the check after the step
+
+    try:
+        FakeRunDecoder.mode, FakeRunDecoder.child = mode, child
+        dec.Decoder, dec.reference_blas, dec.kernel_marks = FakeRunDecoder, (lambda: False), marks
+        dec.load_head = lambda path: (np.ones((4, 2), np.float16), np.ones((4, 2), np.float32), (2, 2, 10000.0))
+        dec.rope_tables = lambda seq, dh, rot, base: (np.ones((seq, 2)), np.ones((seq, 2)))
+        with tempfile.TemporaryDirectory() as tmp:
+            t = Path(tmp)
+            for name, text in (("manifest.json", json.dumps({"max_len": 8})), ("ref.json", json.dumps({"prompts": [{"id": "p", "prompt_token_ids": [0, 1], "generated_ids": [0, 0]}]})), ("x", "x")):
+                (t / name).write_text(text)
+            args = argparse.Namespace(out=str(t / "out"), manifest=str(t / "manifest.json"), ref=str(t / "ref.json"), ref_logits=None, prompts="", new_tokens=2, max_steps=None, m_per_prompt=False,
+                                      dump=None, band=None, ane_run=str(t / "x"), session_bin=str(t / "x"), resident=True, resident_lock="call", gguf="x", logits_file=None)
+            text = None
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                try:
+                    dec.run(args)
+                except SystemExit as e:
+                    text = str(e)
+            recs = [json.loads(line) for line in (t / "out" / "results.jsonl").read_text().splitlines()]
+        return text, [r["type"] for r in recs], recs
+    finally:
+        for k, v in saved.items():
+            setattr(dec, k, v)
+        child.kill()
+        child.wait()
+
+
+def check_exit_paths():
+    text, types, recs = run_exit_path("call-stop")
+    assert text and text.startswith("STOP prog_000") and types == ["start", "placement"], (text, types)
+    assert recs[-1]["decode_masks"] and recs[-1]["child_masks"], "the terminal record carries the masks of both processes"
+    text, types, recs = run_exit_path("kernel-stop")
+    assert text and text.startswith("STOP kernel") and types[-2:] == ["stop", "placement"] and types.count("placement") == 1, (text, types)
+    text, types, recs = run_exit_path("ok")
+    assert text is None and types[0] == "start" and types[-1] == "placement" and types.count("placement") == 1 and "prompt" in types, (text, types)
 
 
 def main():
@@ -154,7 +227,8 @@ def main():
         child.kill()
         child.wait()
     assert dec.task_masks(child.pid) == [], "a process that is gone has no masks and does not raise"
-    print("PLACEMENT PASS (import does not pin, script run pins and caps BLAS, opt-out and user value respected, per-call CPU, /proc masks, off-P flag)")
+    check_exit_paths()
+    print("PLACEMENT PASS (import does not pin, script run pins and caps BLAS, opt-out and user value respected, per-call CPU, /proc masks, off-P flag, one placement record on every exit)")
 
 
 if __name__ == "__main__":

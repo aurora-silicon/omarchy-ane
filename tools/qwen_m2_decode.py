@@ -472,7 +472,11 @@ def run(args):
             mark = max((t for t, _ in kernel_marks()), default=0.0)
             check = dump(pid, pos) if dump else None
             step_start = time.monotonic()
-            hidden, timing = decoder.step(token, pos, cos, sin, embed, check)
+            try:
+                hidden, timing = decoder.step(token, pos, cos, sin, embed, check)
+            except SystemExit:
+                finish_placement(decoder, record)   # a failed CALL: the session is dead or dying, the masks and the calls so far are still the record that matters
+                raise
             ane_s = time.monotonic() - step_start
             new = [line for t, line in kernel_marks() if t > mark]
             stop = [line for line in new if STOP_KERNEL.search(line)]
@@ -509,6 +513,7 @@ def run(args):
             print(" ".join(f"{k}={v}" for k, v in rec.items() if k != "type"), flush=True)
             if stop:
                 record({"type": "stop", "prompt": pid, "step": pos, "reason": " | ".join(stop)})
+                finish_placement(decoder, record)
                 raise SystemExit(f"STOP kernel: {stop[0]}")
             pos += 1
         if args.max_steps is not None:
