@@ -179,18 +179,25 @@ def manifest_at(manifest, m):
     return out
 
 
+try:
+    _SCHED_GETCPU = ctypes.CDLL(None).sched_getcpu
+except (AttributeError, OSError):
+    _SCHED_GETCPU = None
+
+
 def sched_getcpu():
-    """The CPU the calling thread runs on now (glibc sched_getcpu; os has no such call); -1 when unavailable."""
-    try:
-        return ctypes.CDLL(None).sched_getcpu()
-    except (AttributeError, OSError):
-        return -1
+    """The CPU the calling thread runs on now (glibc sched_getcpu, looked up once; os has no such call); -1 when unavailable."""
+    return _SCHED_GETCPU() if _SCHED_GETCPU is not None else -1
 
 
 def task_masks(pid):
-    """The distinct Cpus_allowed_list strings of every task of a process, from /proc (the proof of a mask; the CPU a thread last ran on is only a hint)."""
+    """The distinct Cpus_allowed_list strings of every task of a process, from /proc (the proof of a mask; the CPU a thread last ran on is only a hint). A process that is gone has none."""
+    try:
+        tids = os.listdir(f"/proc/{pid}/task")
+    except OSError:
+        return []
     out = set()
-    for tid in os.listdir(f"/proc/{pid}/task"):
+    for tid in tids:
         try:
             for line in Path(f"/proc/{pid}/task/{tid}/status").read_text().splitlines():
                 if line.startswith("Cpus_allowed_list:"):

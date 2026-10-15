@@ -153,6 +153,7 @@ def main():
     finally:
         child.kill()
         child.wait()
+    assert dec.task_masks(child.pid) == [], "a process that is gone has no masks and does not raise"
     print("PLACEMENT PASS (import does not pin, script run pins and caps BLAS, opt-out and user value respected, per-call CPU, /proc masks, off-P flag)")
 
 
