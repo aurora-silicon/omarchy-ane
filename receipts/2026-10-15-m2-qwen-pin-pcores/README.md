@@ -62,6 +62,6 @@ One boot and one session. The run does not show that the move repeats on another
 ## Files
 
 - `data/summary.json`, `data/steps.tsv`: harness output (per-step walls, per-call CPU summary, thread placement, schedstat sums, busy ticks).
-- `data/split_by_placement.out`, `data/analyze_pin.out`, `data/irq_by_arm.out`, `data/smc_by_arm.out`, `data/ARM-TIMES.txt`: the analysis outputs. `tools-used/` holds the harness, its host test, the wrapper, the sampler and the analysis scripts.
+- `data/split_by_placement.txt`, `data/analyze_pin.txt`, `data/irq_by_arm.txt`, `data/smc_by_arm.txt`, `data/ARM-TIMES.txt`: the analysis outputs. `tools-used/` holds the harness, its host test, the wrapper, the sampler and the analysis scripts.
 - The raw per-call data (`raw-arms.json`, `calls.tsv`, the four 15,892,480-byte logits files and the 1 Hz sensor file) are kept with the lab artifacts. `data/SHA256SUMS-lab-artifacts.txt` lists their hashes.
 - `SHA256SUMS`: the hashes of the files in this directory.

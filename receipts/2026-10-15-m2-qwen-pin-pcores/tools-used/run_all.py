@@ -5,8 +5,8 @@ from pathlib import Path
 
 A = Path.home() / ".local/share/apple-silicon-lab/artifacts/w73/m2-qwen-pin-ab-20261015"
 an = A / "analysis"
-for script, arg, out in (("analyze_pin.py", str(A), "analyze_pin.out"), ("smc_by_arm.py", str(A / "qwen-pin-smc-20261015T164534Z.txt"), "smc_by_arm.out"),
-                         ("irq_by_arm.py", str(A / "ab/raw-arms.json"), "irq_by_arm.out")):
+for script, arg, out in (("analyze_pin.py", str(A), "analyze_pin.txt"), ("smc_by_arm.py", str(A / "qwen-pin-smc-20261015T164534Z.txt"), "smc_by_arm.txt"),
+                         ("irq_by_arm.py", str(A / "ab/raw-arms.json"), "irq_by_arm.txt")):
     res = subprocess.run(["python3", str(an / script), arg], capture_output=True, text=True, check=True)
     (an / out).write_text(res.stdout)
 (an / "ARM-TIMES.txt").write_text(
@@ -32,5 +32,5 @@ for i, name in ((0, "arm1 U"), (2, "arm3 U")):
 P = [x["wall_s"] for i in (1, 3) for x in r[i]["rows"] if x["generated"]]
 g3 = [x for x in r[2]["rows"] if x["generated"] and sum(c["cpu"] < 4 for c in x["calls"]) == 38]
 lines.append(f"P arms pooled: n={len(P)} mean {s.mean(P) * 1000:.2f} ms; P over the {len(g3)} all-E steps of arm3: {s.mean(P) / s.mean(x['wall_s'] for x in g3):.4f} (post hoc subset, not the gate)")
-(an / "split_by_placement.out").write_text("\n".join(lines) + "\n")
+(an / "split_by_placement.txt").write_text("\n".join(lines) + "\n")
 print("\n".join(lines))
