@@ -48,6 +48,7 @@ LINE = re.compile(r"^\s*(?:tensor<)?([^=]*?)>?\s+(\w+)\s*=\s*(\w+)\((.*)\)\[(.*)
 FUNC = re.compile(r"func main<[^>]*>\((.*)\)\s*\{")
 OUTPUTS = re.compile(r"\}\s*->\s*\((.*)\);")
 OFFSET = re.compile(r"offset\s*=\s*uint64\(\d+\)")
+ATTR_NAME = re.compile(r'name\s*=\s*string\("[^"]*"\)\s*,?\s*')
 TUPLE = re.compile(r"\(\s*(\w+(?:\s*,\s*\w+)*)\s*\)")
 ROUNDS = 64  # the refinement must be at least as deep as the longest chain of ops (44 for the staged fold pair)
 
@@ -94,7 +95,7 @@ def parse_mil(text: str) -> dict:
         match = LINE.match(line)
         if not match:
             continue
-        kind, name, op, operands, _ = match.groups()
+        kind, name, op, operands, attrs = match.groups()
         literals, refs = [], []
         for operand in split_top(operands):
             key, _, value = operand.partition("=")
@@ -106,6 +107,7 @@ def parse_mil(text: str) -> dict:
                 refs.append((key, value))
             else:
                 literals.append((key, OFFSET.sub("offset=*", value)))
+        literals.append(("attrs", OFFSET.sub("offset=*", ATTR_NAME.sub("", attrs).strip())))
         nodes[name] = (op, kind, tuple(sorted(literals)), tuple(refs))
     if not args or not outputs or not nodes:
         raise MilError("no function signature, outputs or ops found")

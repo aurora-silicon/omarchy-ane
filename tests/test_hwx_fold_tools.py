@@ -107,6 +107,28 @@ def test_a_changed_op_is_caught():
     assert not compare(fused, first, second, LINK, LANES, OUTS)["equal"]
 
 
+def _equal_after(replace_text):
+    text = (FIX / "fused.mil").read_text()
+    mutated = replace_text(text)
+    assert mutated != text
+    fused, first, second = programs(mutated)
+    return compare(fused, first, second, LINK, LANES, OUTS)["equal"]
+
+
+def test_inline_const_values_are_compared():
+    """Slice begins, reshape shapes and scalar consts sit in the op attribute bracket; a fused program that slices the wrong head must not pass."""
+    import re
+    assert not _equal_after(lambda s: s.replace("([0, 2048])", "([0, 1024])", 1))
+    assert not _equal_after(lambda s: s.replace("([16, 1, 128])", "([16, 128, 1])", 1))
+    assert not _equal_after(lambda s: re.sub(r"(val = tensor<int32, \[\d+\]>\()\[[^\]]*\](\))", r"\g<1>[7]\g<2>", s))
+    assert not _equal_after(lambda s: re.sub(r"(val = (?:fp16|int32|bool)\()[^)]*(\))", r"\g<1>5\g<2>", s, count=3))
+
+
+def test_a_blob_offset_is_masked_but_the_rest_of_the_const_is_not():
+    import re
+    assert _equal_after(lambda s: re.sub(r"offset = uint64\(64\)", "offset = uint64(65)", s, count=1))
+
+
 def test_a_wrong_link_is_refused_or_unequal():
     fused, first, second = programs()
     with pytest.raises(MilError):
