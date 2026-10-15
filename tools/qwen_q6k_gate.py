@@ -62,6 +62,9 @@ def numerics(head_q6k, ab, hidden_dir, rows):
         worst, rel, margin, ids_ok = 0.0, 0.0, float("inf"), True
         for s in range(hidden.shape[0]):
             got = head_q6k.logits(hidden[s])
+            if not np.isfinite(got).all():
+                bad.append(f"{pid} step {s}: non-finite logits")
+                ids_ok = False
             ref = sealed[s]
             worst = max(worst, float(np.abs(got - ref).max()))
             rel = max(rel, float(np.linalg.norm(got - ref) / np.linalg.norm(ref)))
