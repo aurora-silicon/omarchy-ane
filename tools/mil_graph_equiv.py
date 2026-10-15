@@ -20,8 +20,9 @@ argument replaced by one FIRST output (--link). The two graphs are equal when
 their node label multisets match and every named output lane of the fused
 program carries the same label as the chain output it names.
 
-This proves the same ops on the same operands in the same order of
-dependence. It does not compare the constant bytes behind the BLOBFILE
+This is strong host evidence of the same ops on the same operands in the
+same order of dependence, not a proof of graph isomorphism (colour refinement
+cannot tell every pair of different graphs apart). It does not compare the constant bytes behind the BLOBFILE
 offsets (compare the ANEC constant sections for that), and it says nothing
 about what a chip does with an intermediate that no longer crosses a
 program boundary. Only a device run can show that.
@@ -48,7 +49,7 @@ FUNC = re.compile(r"func main<[^>]*>\((.*)\)\s*\{")
 OUTPUTS = re.compile(r"\}\s*->\s*\((.*)\);")
 OFFSET = re.compile(r"offset\s*=\s*uint64\(\d+\)")
 TUPLE = re.compile(r"\(\s*(\w+(?:\s*,\s*\w+)*)\s*\)")
-ROUNDS = 8
+ROUNDS = 64  # the refinement must be at least as deep as the longest chain of ops (44 for the staged fold pair)
 
 
 class MilError(Exception):
