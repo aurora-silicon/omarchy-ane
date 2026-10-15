@@ -122,7 +122,7 @@ def run_exit_path(mode):
     try:
         FakeRunDecoder.mode, FakeRunDecoder.child = mode, child
         dec.Decoder, dec.reference_blas, dec.kernel_marks = FakeRunDecoder, (lambda: False), marks
-        dec.load_head = lambda path: (np.ones((4, 2), np.float16), np.ones((4, 2), np.float32), (2, 2, 10000.0))
+        dec.load_head = lambda path, q6k=False: (np.ones((4, 2), np.float16), np.ones((4, 2), np.float32), (2, 2, 10000.0))
         dec.rope_tables = lambda seq, dh, rot, base: (np.ones((seq, 2)), np.ones((seq, 2)))
         with tempfile.TemporaryDirectory() as tmp:
             t = Path(tmp)
