@@ -4,21 +4,26 @@
 
 """Keep an ANE host process on the performance cores.
 
-On Apple Silicon the kernel can place a task that sleeps most of each step, such as a decode thread and its
-ane-session child waiting on 38 ANE calls, on an efficiency core. On the M2 that cost 0.72 ms per call
-(+27 ms per Qwen step) with the exec time flat. Ten of ten steps whose calls all ran on efficiency cores were slow, and
-no call of a pinned arm ran there. Pinning the host side to the performance cores removes the slow state. It changes no
-arithmetic, so outputs are byte-identical.
+On Apple Silicon the kernel can place a task that sleeps most of each step on an efficiency core. A decode
+thread and its ane-session child, waiting on 38 ANE calls per step, were placed there on the M2. Every call then
+cost 0.72 ms more with the exec time unchanged. All 11 steps whose calls all ran there were slower than every
+step on the performance cores, by 27.0 ms in the ANE phase on average. No call of a pinned arm ran there.
+Pinning the host side to the performance cores removes the slow state. It changes no arithmetic, so outputs are
+byte-identical.
 
-The performance cores are the CPUs at the maximum `cpu_capacity`. The list comes from sysfs on every chip, so it is never
-hard-coded. A chip with no capacity files, or with all CPUs at one capacity, is left alone.
+The performance cores are the CPUs at the maximum `cpu_capacity`. The list comes from sysfs on every chip, so it
+is never hard-coded. A chip with no capacity files, or with all CPUs at one capacity, is left alone. A caller
+that already runs on fewer CPUs keeps its mask: the target is the performance cores it may already use, and a
+caller that may use only efficiency cores is not moved.
 
-Call `pin_self()` at the very top of a launcher, before numpy or any other import that starts threads. Threads and child
-processes inherit the mask, and the ane-session child inherits it when the launcher spawns it. `pin_tasks(pid)` re-applies the
-mask to every task of a running process. `OMARCHY_ANE_NO_PIN=1` turns pinning off.
+Call `pin_self()` at the very top of a launcher, before numpy or any other import that starts threads. Threads
+and child processes inherit the mask, and the ane-session child inherits it when the launcher spawns it. A
+thread that exists before the call keeps its old mask. `pin_tasks(pid)` re-applies the mask to every task of a
+running process. `OMARCHY_ANE_NO_PIN=1` turns pinning off; any other value leaves it on.
 
-Shell launchers can use the command line: `taskset -c "$(python3 pcore_mask.py)" cmd`. It prints the list in `taskset -c`
-form (for example 4-11) and nothing when there is nothing to pin.
+Shell launchers can use the command line: `taskset -c "$(python3 pcore_mask.py)" cmd`. It prints the list in
+`taskset -c` form (for example 4-11) and nothing when there is nothing to pin. It prints the chip's full list
+and ignores the caller's current mask, unlike `pin_self()`.
 """
 
 from __future__ import annotations
@@ -32,7 +37,7 @@ SYSFS_CPU = Path("/sys/devices/system/cpu")
 
 
 def p_core_cpus(root: Path = SYSFS_CPU) -> list[int] | None:
-    """The CPUs at the maximum capacity, or None when there are no efficiency cores or the capacities are unreadable."""
+    """The CPUs at the maximum capacity, or None when there are no efficiency cores or a capacity is unreadable."""
     capacity: dict[int, int] = {}
     for entry in Path(root).glob("cpu[0-9]*"):
         try:
@@ -62,7 +67,9 @@ def _target(allowed: set[int], root: Path, env) -> set[int] | None:
 
 
 def pin_self(root: Path = SYSFS_CPU, env=None) -> list[int] | None:
-    """Set the calling thread's mask to the performance cores it is allowed on. Returns the mask, or None when nothing changed."""
+    """Set the calling thread's mask to the performance cores it may use.
+
+    Returns the mask, or None when nothing changed."""
     mask = _target(set(os.sched_getaffinity(0)), root, env)
     if mask is None:
         return None
@@ -71,18 +78,29 @@ def pin_self(root: Path = SYSFS_CPU, env=None) -> list[int] | None:
 
 
 def pin_tasks(pid: int, root: Path = SYSFS_CPU, env=None) -> int:
-    """Set the mask of every task of `pid`. Returns how many tasks were set. A task that exits meanwhile is skipped."""
+    """Set the mask of every task of `pid`. Returns how many tasks were set.
+
+    A pid that is gone gives 0. A task that exits meanwhile, or one the caller may not change, is skipped.
+    The listing is repeated until no new task appears, so a thread started during the call is covered."""
     done = 0
-    for name in os.listdir(f"/proc/{pid}/task"):
-        tid = int(name)
+    seen: set[int] = set()
+    for _ in range(4):                    # a thread created meanwhile inherits the old mask, so list again
         try:
-            mask = _target(set(os.sched_getaffinity(tid)), root, env)
-            if mask is None:
+            tids = {int(name) for name in os.listdir(f"/proc/{pid}/task")} - seen
+        except OSError:
+            break
+        if not tids:
+            break
+        seen |= tids
+        for tid in sorted(tids):
+            try:
+                mask = _target(set(os.sched_getaffinity(tid)), root, env)
+                if mask is None:
+                    continue
+                os.sched_setaffinity(tid, mask)
+                done += 1
+            except (ProcessLookupError, FileNotFoundError, PermissionError):
                 continue
-            os.sched_setaffinity(tid, mask)
-            done += 1
-        except (ProcessLookupError, FileNotFoundError):
-            continue
     return done
 
 
