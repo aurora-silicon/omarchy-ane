@@ -55,6 +55,15 @@ def main():
         embed32, head32, rope32 = dec.load_head(str(path))
         embedq, headq, ropeq = dec.load_head(str(path), q6k=True)
         assert rope32 == ropeq == (64, 64, 10000.0)
+        assert headq.head.threads == dec.head_threads(), "the loaded Q6_K head uses head_threads() threads"
+        saved_p = pcore_mask.p_core_cpus
+        try:
+            for cpus, want in (([4, 5, 6, 7, 8, 9, 10, 11], 8), ([4, 5, 6, 7], 4), ([2, 3, 4, 5, 6, 7, 8, 9], 8)):
+                pcore_mask.p_core_cpus = lambda root=None, c=cpus: c
+                _, h, _ = dec.load_head(str(path), q6k=True)
+                assert h.head.threads == want == len(cpus), (cpus, h.head.threads)
+        finally:
+            pcore_mask.p_core_cpus = saved_p
         assert head32.dtype == np.float32 and head32.shape == (ROWS, K) and isinstance(headq, dec.Q6KMatrix) and isinstance(embedq, dec.Q6KEmbed)
         for token in range(ROWS):
             a, b = embed32[token], embedq[token]
