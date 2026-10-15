@@ -176,3 +176,69 @@ def test_the_python_wrapper_matches_the_reference(tmp_path):
         Q6KHead(blocks[:10], 64, 2048, lib=build(tmp_path))
     with pytest.raises(IndexError):
         head.embed_row(64)
+
+
+def _bench():
+    import sys
+
+    sys.path.insert(0, str(ROOT / "tools"))
+    import q6k_head_bench
+
+    return q6k_head_bench
+
+
+def _measure(tmp_path, blocks, check, threads=(1, 3)):
+    from q6k_head import build
+
+    bench = _bench()
+    x = np.random.default_rng(21).standard_normal(2048).astype(np.float32)
+    return bench.measure(blocks, 64, 2048, x, check, list(threads), 2, lib=build(tmp_path)), x
+
+
+def test_the_bench_passes_a_correct_kernel_and_fails_a_wrong_one(tmp_path):
+    bench = _bench()
+    clean = np.frombuffer(REAL.read_bytes(), dtype=np.uint8).reshape(64, 1680).copy()
+    x = np.random.default_rng(21).standard_normal(2048).astype(np.float32)
+    check = dequant_np(clean, 2048).astype(np.float64) @ x.astype(np.float64)          # the reference from the clean bytes
+    good, _ = _measure(tmp_path, clean, check)
+    assert bench.verdict(good, bench.DEFAULT_TOLERANCE) == (0, [])
+    damaged = clean.copy()
+    damaged[5, 100:140] ^= 0xFF                                                       # a corrupted block in the first 256 rows
+    wrong, _ = _measure(tmp_path, damaged, check)
+    code, reasons = bench.verdict(wrong, bench.DEFAULT_TOLERANCE)
+    assert code == 3 and len(reasons) == 2 and all(r["max_abs_err_first256"] > 1e-3 for r in wrong.values())
+
+
+def test_the_bench_fails_a_non_finite_error_and_honours_the_tolerance_option(tmp_path):
+    bench = _bench()
+    clean = np.frombuffer(REAL.read_bytes(), dtype=np.uint8).reshape(64, 1680).copy()
+    x = np.random.default_rng(21).standard_normal(2048).astype(np.float32)
+    check = dequant_np(clean, 2048).astype(np.float64) @ x.astype(np.float64)
+    nan_block = clean.copy()
+    nan_block[7, 208:210] = np.frombuffer(np.float16("nan").tobytes(), dtype=np.uint8)   # d = NaN in the first block of row 7
+    result, _ = _measure(tmp_path, nan_block, check, threads=(2,))
+    assert not np.isfinite(result["2"]["max_abs_err_first256"])
+    assert bench.verdict(result, 1e30)[0] == 3                                         # NaN fails whatever the tolerance is
+    mild = clean.copy()
+    mild[3, 208:210] = np.frombuffer(np.float16(0.0501).tobytes(), dtype=np.uint8)      # a changed scale: finite error
+    finite, _ = _measure(tmp_path, mild, check, threads=(2,))
+    err = finite["2"]["max_abs_err_first256"]
+    assert np.isfinite(err) and err > bench.DEFAULT_TOLERANCE
+    assert bench.verdict(finite, bench.DEFAULT_TOLERANCE)[0] == 3 and bench.verdict(finite, err * 2)[0] == 0
+
+
+def test_the_bench_command_line_returns_3_on_failure_and_0_on_success(tmp_path, capsys):
+    gguf = pytest.importorskip("gguf")
+    bench = _bench()
+    blocks = np.tile(np.frombuffer(REAL.read_bytes(), dtype=np.uint8).reshape(64, 1680), (10, 1))
+    path = tmp_path / "tiny.gguf"
+    writer = gguf.GGUFWriter(str(path), "qwen35")
+    writer.add_tensor("token_embd.weight", blocks, raw_dtype=gguf.GGMLQuantizationType.Q6_K)
+    writer.write_header_to_file()
+    writer.write_kv_data_to_file()
+    writer.write_tensors_to_file()
+    writer.close()
+    assert bench.main([str(path), "--reps", "2", "--threads", "1,2"]) == 0
+    assert '"ok": true' in capsys.readouterr().out
+    assert bench.main([str(path), "--reps", "2", "--threads", "1", "--tolerance", "1e-12"]) == 3
+    assert "FAIL" in capsys.readouterr().err
