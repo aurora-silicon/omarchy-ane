@@ -461,9 +461,13 @@ def run(args):
     out.mkdir(parents=True, exist_ok=True)
     results = out / "results.jsonl"
     done = set()
+    head_name = "q6k" if getattr(args, "q6k_head", False) else "fp32"
     if results.exists():
-        done = {r["prompt"] for r in map(json.loads, results.read_text().splitlines())
-                if r["type"] == "prompt"}
+        earlier = [json.loads(line) for line in results.read_text().splitlines()]
+        other = {r.get("head", "fp32") for r in earlier if r["type"] == "start"} - {head_name}
+        if other:
+            raise SystemExit(f"REFUSE: {results} already holds a run with the {sorted(other)[0]} head; the resume would mix heads, use a new --out")
+        done = {r["prompt"] for r in earlier if r["type"] == "prompt"}
 
     def record(rec):
         with results.open("a") as f:

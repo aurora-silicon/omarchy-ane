@@ -53,6 +53,8 @@ def numerics(head_q6k, ab, hidden_dir, rows):
     summary = json.loads((ab / "summary.json").read_text())
     ids_by_prompt = {e["prompt"]: e["A_ids"] for e in summary["identity_prompts"]}
     report, bad, worst_all, margin_all = {}, [], 0.0, float("inf")
+    if "p001" not in ids_by_prompt:
+        return {"prompts": {}, "max_abs_diff_all": None, "min_sealed_margin_all": None, "margin_fraction": MARGIN_FRACTION}, ["the sealed run has no p001 (the 16 anchor ids and the margin gate need it)"]
     for pid in sorted(ids_by_prompt):
         hidden = np.load(hidden_dir / f"hidden_{pid}.npy")
         sealed = np.fromfile(ab / f"identity-{pid}" / "A" / "logits.f32", dtype=np.float32).reshape(-1, rows)
@@ -75,9 +77,11 @@ def numerics(head_q6k, ab, hidden_dir, rows):
         worst_all, margin_all = max(worst_all, worst), min(margin_all, margin)
         if not ids_ok:
             bad.append(f"{pid}: argmax differs from the sealed ids")
-    if "p001" in report and ids_by_prompt["p001"][:16] != ANCHOR_TOKENS:
+    if "p001" not in report:
+        bad.append("p001 was not compared (missing or mismatched hidden vectors or logits)")
+    elif ids_by_prompt["p001"][:16] != ANCHOR_TOKENS:
         bad.append("p001 sealed ids do not start with the 16 anchor ids")
-    if worst_all >= MARGIN_FRACTION * margin_all:
+    if margin_all == float("inf") or worst_all >= MARGIN_FRACTION * margin_all:
         bad.append(f"max abs logit difference {worst_all:.3g} is not below {MARGIN_FRACTION} x the smallest sealed margin {margin_all:.3g}")
     return {"prompts": report, "max_abs_diff_all": worst_all, "min_sealed_margin_all": margin_all, "margin_fraction": MARGIN_FRACTION}, bad
 

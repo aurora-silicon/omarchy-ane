@@ -23,12 +23,12 @@ import numpy as np  # noqa: E402
 
 try:
     from gguf import GGMLQuantizationType, GGUFWriter  # noqa: E402
-    import q6k_head  # noqa: E402
-
-    q6k_head.build()
-except Exception as e:  # noqa: BLE001
-    print(f"SKIP q6k hook test: {e}")
+except ImportError as e:
+    print(f"SKIP q6k hook test: gguf-py is not importable ({e})")
     sys.exit(0)
+import q6k_head  # noqa: E402
+
+q6k_head.build()   # a failed C build raises here and FAILS the test: it must not skip
 
 import pcore_mask  # noqa: E402
 import qwen_m2_decode as dec  # noqa: E402
