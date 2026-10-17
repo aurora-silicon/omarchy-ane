@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- `tools/qwen_fold_layout.py` builds the manifest of a folded staged Qwen layout from the control manifest and the compile record of that layout. A fold joins the DeltaNet state block of a layer to the program after it. The tool checks on the host that every unfolded program has the control program's MIL, that every folded program is the state block followed by the next control program, and that its output lanes and states match. With `--self-check` it rebuilds all 38 control entries from the control's own record and compares them with the control manifest. All 38 are equal. Its 37 program layout equals a manifest built by hand for the same fold.
+- `tools/qwen_fold_set_ab.py` runs the control and any number of folded layouts in one decoder process, one session and one boot. It checks that every arm decodes the same token ids on ten prompts, reports the fp32 logits difference, and times the arms in rounds. The summary gives each layout's step time against the control arm of the same round, the control's own spread, and the exec time saved per fold. A difference counts only when it is larger than that spread. The harness pins itself to the performance cores. There is no speed gate. Tests in `tools/test_qwen_fold_set.py` use synthetic records and cover the builder checks, the spread rule and the integrity gates.
+
 ## 0.4.9 (2026-10-16)
 
 This release holds host tools and tests for the staged Qwen decode on the Apple M2 Max (T6021), one longer driver message, a NixOS lookup in the packaging scripts, and receipts for the Parakeet encoder on the M1 family. The driver calls and the libane interface are unchanged from 0.4.8. The decode launcher now pins itself to the performance cores. The Q6_K head is off by default. No decode speed gain from the Q6_K head is measured yet, because the decode run with the flag has not happened. The GitHub release notes list the measurements and their limits.
