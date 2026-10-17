@@ -142,6 +142,14 @@ def test_swapped_state_pairs_are_caught_by_shape(record):
     assert {(s["in_shape"] == s["out_shape"]) for s in manifest["programs"][1]["states"]} == {True}
 
 
+def test_fold_that_drops_a_state_block_input_is_refused(record):
+    root, control, folded = record
+    folded["programs"][1]["srcs"] = [s for s in folded["programs"][1]["srcs"] if s["lane"] != "beta"]
+    write_record(root / "F03", folded, {0: "000000000000", 1: "00000000ffff", 2: "000000000003"})
+    _, _, problems = layout.build(control, root / "control", root / "F03")
+    assert any("state block" in p and "beta" in p for p in problems)
+
+
 def test_a_layout_that_leaves_control_programs_over_is_refused(record):
     root, control, _ = record
     (root / "F00" / "probe.out").write_text("\n".join(line for line in (root / "F00" / "probe.out").read_text().splitlines() if not line.startswith("PORTMAP 2")) + "\n")
@@ -211,6 +219,19 @@ def test_identity_needs_every_arm_equal_to_the_control():
     good[1]["F"] = rec([0, 1, 9])
     bad, _ = ab.judge_identity(good, ["A", "F"], anchor=None, prompts=2, tokens=3)
     assert any("differ" in b for b in bad)
+
+
+def test_anchor_ids_gate_the_control():
+    def rec(tokens):
+        return {"tokens": tokens, "kernel_stop": [], "exch_new": 0}
+    ident = [{"prompt": "p001", "A": rec([5, 6, 7]), "F": rec([5, 6, 7])}]
+    assert ab.judge_identity(ident, ["A", "F"], anchor=[5, 6], prompts=1, tokens=3)[0] == []
+    bad, _ = ab.judge_identity(ident, ["A", "F"], anchor=[5, 9], prompts=1, tokens=3)
+    assert any("anchor" in b for b in bad)
+
+
+def test_default_order_alternates_the_layouts_between_rounds():
+    assert ab.default_order(["S", "F"], 3) == ["A", "S", "F", "A", "F", "S", "A", "S", "F"]
 
 
 def test_build_sets_reads_the_control_files_for_unfolded_programs(tmp_path):

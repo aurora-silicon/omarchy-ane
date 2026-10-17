@@ -146,6 +146,9 @@ def build(control: dict, rec_control: Path, rec_layout: Path):
             for lane in want:
                 if lane not in {s["lane"] for s in entry["srcs"]}:
                     problems.append(f"layout program {i}: input lane {lane} of control {cursor + 1} is not an input")
+            for lane in (s["lane"] for s in first["srcs"] if s["kind"] == "lane"):
+                if lane not in {s["lane"] for s in entry["srcs"]}:
+                    problems.append(f"layout program {i}: input lane {lane} of the state block (control {cursor}) is not an input")
             if (len([s for s in entry["states"]]) != len(first["states"]) + len(second["states"])):
                 problems.append(f"layout program {i}: {len(entry['states'])} states, control {cursor} and {cursor + 1} hold "
                                 f"{len(first['states']) + len(second['states'])}")

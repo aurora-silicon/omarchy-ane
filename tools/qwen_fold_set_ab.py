@@ -297,7 +297,10 @@ def speed_report(records, layouts, order):
     controls = [r for r in records if r["arm"] == CONTROL]
     ctl_p50 = [r["step_p50_s"] for r in controls]
     spread = max(ctl_p50) / min(ctl_p50) - 1.0 if len(ctl_p50) > 1 else None
-    report = {"rounds": rounds, "control_step_p50_s": ctl_p50, "control_spread": spread, "layouts": {}}
+    report = {"rounds": rounds, "control_step_p50_s": ctl_p50, "control_spread": spread, "control_arms": len(ctl_p50),
+              "spread_note": "the spread of the control arms is a screen over that many arms, not a significance test; "
+                             "a layout with one fold saves about 0.3 ms and cannot clear it, so read it as a pipeline check",
+              "layouts": {}}
     ctl_exec = {}
     for r in controls:
         for name, v in r["exec_ms_per_program_median"].items():
@@ -339,6 +342,15 @@ def speed_report(records, layouts, order):
     return report
 
 
+def default_order(layout_ids, rounds):
+    """The control first in every round, the layouts in alternating order (forward, reversed, forward, ...), so no layout always
+    follows the same arm or always sits at the same place after the idle and the reload."""
+    order = []
+    for r in range(rounds):
+        order += [CONTROL] + (layout_ids if r % 2 == 0 else layout_ids[::-1])
+    return order
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--layouts", required=True, help="comma list of layout ids, each with <layout-dir>/manifest-<id>.json and <fold-root>/<id>/progNN/")
@@ -364,7 +376,7 @@ def main(argv=None):
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
     layout_ids = [x for x in args.layouts.split(",") if x]
-    order = [x for x in args.order.split(",") if x] if args.order else ([CONTROL] + layout_ids) * args.rounds
+    order = [x for x in args.order.split(",") if x] if args.order else default_order(layout_ids, args.rounds)
     if CONTROL not in order or not set(order) <= {CONTROL, *layout_ids}:
         print("REFUSE: --order must hold the control A and only arms named in --layouts")
         return 2
