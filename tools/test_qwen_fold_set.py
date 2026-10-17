@@ -109,7 +109,7 @@ def test_self_check_rebuilds_every_control_entry(record):
 
 def test_fold_builds_and_maps(record):
     root, control, folded = record
-    manifest, mapping, problems = layout.build(control, root / "control", root / "F00")
+    manifest, mapping, problems = layout.build(control, root / "control", root / "F00", equiv=False)
     assert problems == []
     assert mapping == [[0], [1, 2], [3]]
     assert manifest["n_programs"] == 3 and manifest["fold_mapping"] == mapping
@@ -117,10 +117,17 @@ def test_fold_builds_and_maps(record):
     assert manifest["programs"][0] == control["programs"][0] and manifest["programs"][2] == control["programs"][3]
 
 
+def test_build_runs_the_chain_check_on_every_folded_program(record):
+    root, control, _ = record
+    # the synthetic fold is not a real chain of the synthetic programs, so the default build must refuse it
+    _, _, problems = layout.build(control, root / "control", root / "F00")
+    assert any("not the chain" in p for p in problems)
+
+
 def test_unfolded_program_with_other_mil_is_refused(record):
     root, control, _ = record
     (root / "F00" / "mil" / "00-000000000000.mil").rename(root / "F00" / "mil" / "00-0000000000aa.mil")
-    _, _, problems = layout.build(control, root / "control", root / "F00")
+    _, _, problems = layout.build(control, root / "control", root / "F00", equiv=False)
     assert any("is not control 0's" in p for p in problems)
 
 
@@ -128,7 +135,7 @@ def test_folded_output_lane_with_wrong_shape_is_refused(record):
     root, control, folded = record
     folded["programs"][1]["dsts"][1]["shape"] = [5]
     write_record(root / "F01", folded, {0: "000000000000", 1: "00000000ffff", 2: "000000000003"})
-    _, _, problems = layout.build(control, root / "control", root / "F01")
+    _, _, problems = layout.build(control, root / "control", root / "F01", equiv=False)
     assert any("output lane" in p for p in problems)
 
 
@@ -136,7 +143,7 @@ def test_swapped_state_pairs_are_caught_by_shape(record):
     root, control, folded = record
     folded["programs"][1]["states"][0]["out_port"], folded["programs"][1]["states"][1]["out_port"] = "a70", "a15"
     write_record(root / "F02", folded, {0: "000000000000", 1: "00000000ffff", 2: "000000000003"})
-    manifest, _, problems = layout.build(control, root / "control", root / "F02")
+    manifest, _, problems = layout.build(control, root / "control", root / "F02", equiv=False)
     # the MIL declares the outputs in its own order; the builder pairs by shape, so both pairs stay shape-consistent
     assert problems == []
     assert {(s["in_shape"] == s["out_shape"]) for s in manifest["programs"][1]["states"]} == {True}
@@ -146,7 +153,7 @@ def test_fold_that_drops_a_state_block_input_is_refused(record):
     root, control, folded = record
     folded["programs"][1]["srcs"] = [s for s in folded["programs"][1]["srcs"] if s["lane"] != "beta"]
     write_record(root / "F03", folded, {0: "000000000000", 1: "00000000ffff", 2: "000000000003"})
-    _, _, problems = layout.build(control, root / "control", root / "F03")
+    _, _, problems = layout.build(control, root / "control", root / "F03", equiv=False)
     assert any("state block" in p and "beta" in p for p in problems)
 
 
@@ -154,8 +161,34 @@ def test_a_layout_that_leaves_control_programs_over_is_refused(record):
     root, control, _ = record
     (root / "F00" / "probe.out").write_text("\n".join(line for line in (root / "F00" / "probe.out").read_text().splitlines() if not line.startswith("PORTMAP 2")) + "\n")
     (root / "F00" / "mil" / "02-000000000003.mil").rename(root / "F00" / "mil" / "xx-000000000003.mil.bak")
-    _, _, problems = layout.build(control, root / "control", root / "F00")
+    _, _, problems = layout.build(control, root / "control", root / "F00", equiv=False)
     assert any("consumes" in p for p in problems)
+
+
+FIX = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "hwx-fold"
+# The real layer-0 programs: the state block, the readout plus MLP plus next input block, and the fold of the two.
+PM_FIRST = {"h": {"o": "t17"}, "states": {"t2": [16, 128, 128]}, "x": {"beta": "t0", "gt": "t1", "k": "t4", "q": "t14", "v": "t7"}}
+PM_SECOND = {"h": {"beta": "t41", "gt": "t50", "k": "t35", "q": "t31", "v": "t37", "x": "t15", "z": "t52"}, "states": {"t20": [6144, 3]},
+             "x": {"o": "t2", "x": "t7", "z": "t0"}}
+PM_FUSED = {"h": {"beta": "t58", "gt": "t67", "k": "t52", "q": "t48", "v": "t54", "x": "t32", "z": "t69"}, "states": {"t37": [6144, 3], "t4": [16, 128, 128]},
+            "x": {"beta": "t2", "gt": "t3", "k": "t6", "q": "t16", "v": "t9", "x": "t24", "z": "t0"}}
+
+
+def test_the_real_fold_is_the_chain_and_a_changed_op_is_not(tmp_path):
+    first, second, fused = FIX / "state-block.mil", FIX / "readout-mlp-input.mil", FIX / "fused.mil"
+    assert layout.chain_equivalent((PM_FUSED, fused), (PM_FIRST, first), (PM_SECOND, second))[0] is True
+    text = fused.read_text()
+    assert "silu(" in text
+    changed = tmp_path / "changed.mil"
+    changed.write_text(text.replace("silu(", "sigmoid(", 1))
+    assert layout.chain_equivalent((PM_FUSED, changed), (PM_FIRST, first), (PM_SECOND, second))[0] is False
+
+
+def test_a_folded_program_that_swaps_two_lanes_is_not_the_chain():
+    first, second, fused = FIX / "state-block.mil", FIX / "readout-mlp-input.mil", FIX / "fused.mil"
+    swapped = json.loads(json.dumps(PM_FUSED))
+    swapped["x"]["q"], swapped["x"]["k"] = swapped["x"]["k"], swapped["x"]["q"]
+    assert layout.chain_equivalent((swapped, fused), (PM_FIRST, first), (PM_SECOND, second))[0] is False
 
 
 np = pytest.importorskip("numpy")
@@ -228,6 +261,14 @@ def test_anchor_ids_gate_the_control():
     assert ab.judge_identity(ident, ["A", "F"], anchor=[5, 6], prompts=1, tokens=3)[0] == []
     bad, _ = ab.judge_identity(ident, ["A", "F"], anchor=[5, 9], prompts=1, tokens=3)
     assert any("anchor" in b for b in bad)
+
+
+def test_a_custom_order_must_be_complete_rounds():
+    assert ab.check_order(["A", "S", "F", "A", "F", "S"], ["S", "F"]) is None
+    assert ab.check_order(["A"], ["F"]) is not None                      # a layout never timed
+    assert ab.check_order(["F", "A"], ["F"]) is not None                 # a layout before the first control
+    assert ab.check_order(["A", "S", "A", "S", "F"], ["S", "F"]) is not None
+    assert ab.check_order(["A", "S", "S", "F"], ["S", "F"]) is not None
 
 
 def test_default_order_alternates_the_layouts_between_rounds():

@@ -13,6 +13,8 @@ result against the control, on the host, without a device:
     manifest entry is copied from the control manifest unchanged.
   * A folded program must be the control state block (inputs beta, gt, k, q, v, output o) followed by the next
     control program, in that order. Its entry is built from its PORTMAP line and its MIL signature.
+  * With the equivalence check on (the default) every folded program must also be the chain of those two control programs, op for op
+    (tools/mil_graph_equiv.py, lanes labelled), so a stale or miscompiled fold with the right ports is refused.
   * With --self-check the same builder rebuilds every entry of the control from the control's own record and
     compares it with the control manifest. The builder is trusted only when that comparison holds.
 
@@ -25,6 +27,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -118,7 +121,46 @@ def is_state_block(entry: dict) -> bool:
             and [d["lane"] for d in entry["dsts"]] == ["o"])
 
 
-def build(control: dict, rec_control: Path, rec_layout: Path):
+def _labels(pm: dict, mil: Path):
+    """Lane labels for the MIL arguments and outputs of one program. Lanes and context tables keep their names; state tensors are
+    labelled by shape and position (the k-th input of a shape and the k-th output of that shape), the pairing the manifest uses."""
+    args, outs = signature(mil)
+    shape_key = lambda shape: "x".join(str(d) for d in shape)  # noqa: E731
+    inl = {name: lane for lane, name in pm.get("x", {}).items()}
+    inl |= {name: key for key, name in ((k, pm[k]) for k in CTX if k in pm)}
+    seen: dict[str, int] = {}
+    for name, shape in args:
+        if name in pm.get("states", {}):
+            seen[shape_key(shape)] = seen.get(shape_key(shape), 0) + 1
+            inl[name] = f"st:{shape_key(shape)}:{seen[shape_key(shape)]}"
+    outl = {name: lane for lane, name in pm.get("h", {}).items()}
+    seen = {}
+    for name, shape in outs:
+        if name not in outl:
+            seen[shape_key(shape)] = seen.get(shape_key(shape), 0) + 1
+            outl[name] = f"st:{shape_key(shape)}:{seen[shape_key(shape)]}"
+    return inl, outl
+
+
+def chain_equivalent(fused: tuple[dict, Path], first: tuple[dict, Path], second: tuple[dict, Path]):
+    """Run tools/mil_graph_equiv.py: is the fused program the first program followed by the second, op for op, with the lanes labelled?
+    Returns (equal, text). Each argument is (PORTMAP line, MIL file)."""
+    fl, fo = _labels(*fused)
+    f1, o1 = _labels(*first)
+    f2, o2 = _labels(*second)
+    link_in = next((n for n, lane in f2.items() if lane == "o"), None)
+    link_out = next((n for n, lane in o1.items() if lane == "o"), None)
+    if link_in is None or link_out is None:
+        return False, "the pair has no o lane to link"
+    join = lambda d: ",".join(f"{k}={v}" for k, v in d.items())  # noqa: E731
+    cmd = [sys.executable, str(Path(__file__).resolve().with_name("mil_graph_equiv.py")), str(fused[1]), str(first[1]), str(second[1]),
+           "--link", f"{link_in}={link_out}", "--lanes-fused", join(fl), "--lanes-first", join(f1), "--lanes-second", join(f2),
+           "--out-fused", join(fo), "--out-first", join(o1), "--out-second", join(o2)]
+    run = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    return run.returncode == 0, (run.stdout + run.stderr).strip()[-300:]
+
+
+def build(control: dict, rec_control: Path, rec_layout: Path, equiv: bool = True):
     """Return (manifest, mapping, problems). mapping[i] = the control program indices that layout program i replaces."""
     problems = []
     cmaps, cmils = portmaps(rec_control / "probe.out"), mil_files(rec_control / "mil")
@@ -152,6 +194,10 @@ def build(control: dict, rec_control: Path, rec_layout: Path):
             if (len([s for s in entry["states"]]) != len(first["states"]) + len(second["states"])):
                 problems.append(f"layout program {i}: {len(entry['states'])} states, control {cursor} and {cursor + 1} hold "
                                 f"{len(first['states']) + len(second['states'])}")
+            if equiv:
+                equal, text = chain_equivalent((lmaps[i], lmils[i]), (cmaps[cursor], cmils[cursor]), (cmaps[cursor + 1], cmils[cursor + 1]))
+                if not equal:
+                    problems.append(f"layout program {i}: the MIL is not the chain of control {cursor} and {cursor + 1}: {text}")
             programs.append(entry)
             mapping.append([cursor, cursor + 1])
             cursor += 2
@@ -192,7 +238,8 @@ def self_check(control: dict, rec_control: Path):
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     check = "--self-check" in argv
-    argv = [a for a in argv if a != "--self-check"]
+    equiv = "--no-equiv" not in argv    # only for host tests of the port checks; a run uses the default
+    argv = [a for a in argv if a not in ("--self-check", "--no-equiv")]
     if len(argv) != 4:
         print(__doc__)
         return 2
@@ -206,7 +253,7 @@ def main(argv=None):
         for line in bad:
             print("  " + line)
         status = 1 if bad else 0
-    manifest, mapping, problems = build(control, record / "control", record / layout)
+    manifest, mapping, problems = build(control, record / "control", record / layout, equiv)
     for line in problems:
         print("PROBLEM: " + line)
     if manifest is None or problems:

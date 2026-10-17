@@ -351,6 +351,23 @@ def default_order(layout_ids, rounds):
     return order
 
 
+def check_order(order, layout_ids):
+    """None when --order is complete rounds (one control followed by every declared layout once), else the reason it is not."""
+    if not order or order[0] != CONTROL:
+        return "the order must start with the control"
+    rounds, current = [], []
+    for arm in order:
+        if arm == CONTROL and current:
+            rounds.append(current)
+            current = []
+        current.append(arm)
+    rounds.append(current)
+    for r in rounds:
+        if r[0] != CONTROL or sorted(r[1:]) != sorted(layout_ids):
+            return f"round {r} is not one {CONTROL} followed by every declared layout once ({sorted(layout_ids)})"
+    return None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--layouts", required=True, help="comma list of layout ids, each with <layout-dir>/manifest-<id>.json and <fold-root>/<id>/progNN/")
@@ -377,8 +394,9 @@ def main(argv=None):
     args = ap.parse_args(argv)
     layout_ids = [x for x in args.layouts.split(",") if x]
     order = [x for x in args.order.split(",") if x] if args.order else default_order(layout_ids, args.rounds)
-    if CONTROL not in order or not set(order) <= {CONTROL, *layout_ids}:
-        print("REFUSE: --order must hold the control A and only arms named in --layouts")
+    problem = check_order(order, layout_ids)
+    if problem:
+        print(f"REFUSE: --order must be complete rounds: {problem}")
         return 2
     if args.dry_run:
         print("DRY: no ANE call. One decoder process, one ane-session, one boot; host-chained states in every arm")
