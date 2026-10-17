@@ -17,8 +17,10 @@ The ANE buffer window cannot hold the control and a 20 program layout together, 
     ratio is a screen. The exec sum is the measurement.
 
 usage: qwen_fold_set_compare.py CONTROL_SUMMARY LAYOUT_SUMMARY LAYOUT_MANIFEST
-Exit 0 when the report was produced, 2 on a usage or input problem. The report is JSON on stdout."""
+Exit 0 when the report was produced, 2 on a usage or input problem, on a summary that is not a frozen run or lists failures, and when the
+layout summary was made against a different control summary (its recorded control_summary_sha256 must equal the hash of CONTROL_SUMMARY). The report is JSON on stdout."""
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -65,13 +67,32 @@ def compare(control: dict, layout: dict, manifest: dict) -> dict:
     }
 
 
+def validate(control: dict, layout: dict, control_sha256: str) -> list[str]:
+    """Reasons the two summaries cannot be compared: not frozen, listed failures, or a layout run made against another control summary."""
+    problems = []
+    for label, s in (("control", control), ("layout", layout)):
+        if s.get("frozen") is not True:
+            problems.append(f"the {label} summary is not a frozen run")
+        if s.get("failures"):
+            problems.append(f"the {label} summary lists failures: {s['failures'][:2]}")
+    recorded = layout.get("inputs", {}).get("control_summary_sha256")
+    if recorded != control_sha256:
+        problems.append(f"the layout run was made against control summary {str(recorded)[:16]}, the one given is {control_sha256[:16]}")
+    return problems
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     if len(argv) != 3:
         print(__doc__)
         return 2
     try:
-        report = compare(*(json.loads(Path(p).read_text()) for p in argv))
+        control, layout, manifest = (json.loads(Path(p).read_text()) for p in argv)
+        problems = validate(control, layout, hashlib.sha256(Path(argv[0]).read_bytes()).hexdigest())
+        if problems:
+            print("ERROR: " + "; ".join(problems))
+            return 2
+        report = compare(control, layout, manifest)
     except (OSError, ValueError, KeyError) as error:
         print(f"ERROR: {error}")
         return 2

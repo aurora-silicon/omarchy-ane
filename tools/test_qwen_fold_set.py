@@ -443,3 +443,95 @@ def test_compare_exec_saved_per_fold_and_boot_comparability():
     layout["timing"]["exec_ms_median"]["prog_002"] = 1.0
     layout["timing"]["exec_ms_median"]["prog_001"] = 7.0          # saved 0.0, inside the noise
     assert cmp.compare(control, layout, manifest)["exec"]["outside_noise"] is False
+
+
+# ---- w7K's survivors: classes against nominal bytes, one count per path, the load order, the compare checks, --only with --order
+def test_the_class_rule_refuses_the_calibration_set_that_nominal_bytes_would_pass(tmp_path):
+    def make(name, size):
+        p = tmp_path / name
+        sparse(p, size)
+        return p
+    control = [make(f"c{i}", s) for i, s in enumerate(CTL_SIZES)]
+    spares = [make("s0", 117996160), make("s1", 117996160)]
+    big = make("s2", 223007872)
+    assert ab.window_class_bytes(control + spares) < ab.WINDOW_LIMIT          # loaded on the device (3.38 GiB in classes)
+    with_big = control + spares + [big]
+    assert sum(p.stat().st_size for p in with_big) < ab.WINDOW_LIMIT           # 3.03 GiB nominal: the nominal rule would let it through
+    assert ab.window_class_bytes(with_big) > ab.WINDOW_LIMIT                   # 3.63 GiB in classes: refused (the load failed here)
+
+
+def test_a_file_shared_by_two_programs_is_counted_once(tmp_path):
+    big = tmp_path / "anec" / "prog_000" / "program-0.anec"
+    sparse(big, 3 << 29)                                                      # 1.5 GiB, a 2 GiB class
+    control = {"programs": [{}]}
+    layouts = {"L": {"programs": [{}, {}], "fold_mapping": [[0], [0]]}}       # two layout programs, one file
+    sets = ab.build_sets(control, layouts, tmp_path / "anec", tmp_path / "ports", tmp_path / "fold")
+    paths = ab.loaded_paths(sets, ["L"], [])
+    assert len(paths) == 1
+    assert ab.window_class_bytes(paths.values()) == 2 << 30 < 3 << 30
+
+
+def test_sections_load_largest_first(tmp_path, monkeypatch):
+    sizes = [10, 300, 20]
+    files = []
+    for i, size in enumerate(sizes):
+        a, t = tmp_path / f"a{i}", tmp_path / f"t{i}.json"
+        sparse(a, size)
+        t.write_text(json.dumps({"program": f"prog_{i:03d}", "exceptions": []}))
+        files.append((a, t, f"prog_{i:03d}"))
+    manifest = {"max_len": 50, "programs": [{"srcs": [{"port": "x", "shape": [1]}], "dsts": [], "states": []}] * 3}
+
+    class Session:
+        names = ["prog_000"]
+        calls = []
+
+        def free(self, name):
+            pass
+
+        def load(self, name, anec, table):
+            Session.calls.append(name)
+            return (1, 0)
+    monkeypatch.setattr(ab.dec, "manifest_at", lambda m, max_len: m)
+    monkeypatch.setattr(ab.dec, "port_map_from_table", lambda table: {"x": {"direction": "input", "shape": [1]}})
+    monkeypatch.setattr(ab.FoldDecoder, "reset", lambda self: None)
+    d = object.__new__(ab.FoldDecoder)
+    d.arm, d.sets, d.session = "A", {"A": {"manifest": manifest, "files": files, "mapping": [[0], [1], [2]]}}, Session()
+    d.configure(50)
+    assert Session.calls == ["prog_001", "prog_002", "prog_000"]
+
+
+def test_compare_refuses_summaries_that_do_not_belong_together(tmp_path):
+    import hashlib
+
+    import qwen_fold_set_compare as cmp
+    manifest = {"fold_mapping": [[0], [1, 2], [3]]}
+    prog = {f"prog_{i:03d}": 1.0 for i in range(4)}
+    rng = {k: [0.9, 1.1] for k in prog}
+    control = {"frozen": True, "failures": [], "identity": {}, "timing": {"arm": "A", "exec_ms_median": prog, "exec_ms_range": rng, "step_p50_s": [0.17], "spread": None}}
+    layout_t = {"arm": "S", "exec_ms_median": {k: 1.0 for k in list(prog)[:3]}, "exec_ms_range": {k: [0.9, 1.1] for k in list(prog)[:3]}, "step_p50_s": [0.17], "spread": None}
+    c_path = tmp_path / "control.json"
+    c_path.write_text(json.dumps(control))
+    sha = hashlib.sha256(c_path.read_bytes()).hexdigest()
+    layout = {"frozen": True, "failures": [], "identity": {}, "timing": layout_t, "inputs": {"control_summary_sha256": sha}}
+    m_path = tmp_path / "manifest.json"
+    m_path.write_text(json.dumps(manifest))
+
+    def run(layout_summary, control_summary=None):
+        l_path = tmp_path / "layout.json"
+        l_path.write_text(json.dumps(layout_summary))
+        if control_summary is not None:
+            c_path.write_text(json.dumps(control_summary))
+        return cmp.main([str(c_path), str(l_path), str(m_path)])
+    assert run(layout) == 0
+    assert run({**layout, "inputs": {"control_summary_sha256": "0" * 64}}) == 2           # made against another control summary
+    assert run({**layout, "frozen": False}) == 2
+    assert run({**layout, "failures": ["identity: x"]}) == 2
+    c_path.write_text(json.dumps({**control, "frozen": False}))
+    sha2 = hashlib.sha256(c_path.read_bytes()).hexdigest()
+    assert run({**layout, "inputs": {"control_summary_sha256": sha2}}) == 2               # the hash matches, the control is not a frozen run
+
+
+def test_only_with_order_is_refused(window_world, capsys):
+    _, args = window_world
+    assert ab.main(args("--only", "A", "--order", "A,A")) == 2
+    assert "--order does not apply" in capsys.readouterr().out

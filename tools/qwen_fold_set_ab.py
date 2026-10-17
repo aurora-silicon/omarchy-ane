@@ -99,6 +99,11 @@ def window_class_bytes(paths):
     return sum(class_bytes(Path(p).stat().st_size) for p in paths)
 
 
+def loaded_paths(sets, run_arms, spares):
+    """The ANEC files loaded in this boot, one entry per path: a control program shared by two arms or two layout programs is held once."""
+    return {str(f[0]): f[0] for arm in run_arms for f in sets[arm]["files"]} | {str(a): a for _, a, _ in spares}
+
+
 def spare_loads(sets):
     """The distinct folded programs of every layout: (key, anec, table) for loading under spare names."""
     seen, out = {}, []
@@ -440,6 +445,9 @@ def main(argv=None):
     layout_ids = [x for x in args.layouts.split(",") if x]
     if only and only != CONTROL and only not in layout_ids:
         layout_ids = [only]
+    if only and args.order:
+        print("REFUSE: --only runs one arm for --rounds rounds; --order does not apply to it")
+        return 2
     if only:
         order = [only] * args.rounds
         problem = None if only == CONTROL or args.control_summary else "--only LAYOUT needs --control-summary (the token ids and logits hashes of the control's boot)"
@@ -476,8 +484,7 @@ def main(argv=None):
     cap_mb = rs.read_cap_mb()
     sets = build_sets(manifest, layout_manifests, args.anec_dir, args.ports_dir, args.fold_root)
     spares = spare_loads({k: v for k, v in sets.items() if k in run_arms}) if len(run_arms) > 1 else []
-    loaded_files = {str(f[0]): f[0] for arm in run_arms for f in sets[arm]["files"]} | {str(a): a for _, a, _ in spares}
-    present = [p for p in loaded_files.values() if Path(p).is_file()]
+    present = [p for p in loaded_paths(sets, run_arms, spares).values() if Path(p).is_file()]
     window_bytes = window_class_bytes(present)
     if not args.unfrozen:
         problems = []
