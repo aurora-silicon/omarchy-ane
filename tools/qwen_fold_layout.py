@@ -218,6 +218,7 @@ def build(control: dict, rec_control: Path, rec_layout: Path, equiv: bool = True
     manifest["programs"] = programs
     manifest["n_programs"] = len(programs)
     manifest["fold_mapping"] = mapping
+    manifest["equiv_checked"] = bool(equiv)    # False when built with --no-equiv: the harness refuses such a manifest
     return manifest, mapping, problems
 
 

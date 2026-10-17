@@ -24,6 +24,11 @@ Phases, in this order:
 Integrity gates (exit 1 when one fails): one boot id; bo_total_bytes unchanged after the load; no new EXCH failed line and no STOP
 line over the whole span; every arm has exactly its program count of finite positive exec medians; every arm's first 16 ids equal
 the anchor ids. There is no speed gate: a fold saves a fraction of one call per layer, so the result is a measurement.
+The ANE buffers live in a 4 GiB window with power-of-two size classes, and program sections are held until the next reboot. The control
+and a 20 program layout each take about 3.1 GiB of it, so they cannot share a boot. --only ARM runs one arm in one boot (A on one boot,
+a layout on another): identity compares the token ids and the logits hash with the control summary of the other boot
+(--control-summary), and tools/qwen_fold_set_compare.py reads the two summaries. The refusal counts power-of-two classes against
+3.5 GiB, not the software cap.
 The harness pins itself to the performance cores (tools/pcore_mask.py) before numpy starts its BLAS threads and records the
 placement. --unfrozen lets a host test use another size and never exits 0. --dry-run runs nothing."""
 import sys
@@ -78,6 +83,22 @@ def build_sets(control_manifest, layout_manifests, anec_dir, ports_dir, fold_roo
     return sets
 
 
+WINDOW_LIMIT = int(3.5 * 2 ** 30)   # in classes: the control alone (3.13 GiB) and the control with two 128 MiB spares (3.38 GiB) loaded; a 256 MiB spare on top (3.63 GiB) failed
+
+
+def class_bytes(size):
+    """The power-of-two size class of one program section."""
+    c = 1
+    while c < size:
+        c <<= 1
+    return c
+
+
+def window_class_bytes(paths):
+    """Bytes the sections take in the window: each file rounded up to its power-of-two class."""
+    return sum(class_bytes(Path(p).stat().st_size) for p in paths)
+
+
 def spare_loads(sets):
     """The distinct folded programs of every layout: (key, anec, table) for loading under spare names."""
     seen, out = {}, []
@@ -96,10 +117,10 @@ def spare_loads(sets):
 class FoldDecoder(dec.Decoder):
     """The decoder with a per-arm program set: self.arm picks the manifest and the files of configure()."""
 
-    def __init__(self, args, sets):
+    def __init__(self, args, sets, arm=CONTROL):
         self.sets = sets
-        self.arm = CONTROL
-        super().__init__(args, sets[CONTROL]["manifest"])
+        self.arm = arm
+        super().__init__(args, sets[arm]["manifest"])
 
     def configure(self, m):
         s = self.sets[self.arm]
@@ -128,7 +149,9 @@ class FoldDecoder(dec.Decoder):
         if self.session is not None:
             for name in [n for n in list(self.session.names) if n.startswith("prog_")]:
                 self.session.free(name)
-            for i, (anec, path, ports) in enumerate(self.tables):
+            by_size = sorted(range(len(self.tables)), key=lambda k: -Path(self.tables[k][0]).stat().st_size)   # large sections first (fragmentation)
+            for i in by_size:
+                anec, path, ports = self.tables[i]
                 n_in = len([p for p in ports.values() if p["direction"] == "input"])
                 n_out = len([p for p in ports.values() if p["direction"] == "output"])
                 got = self.session.load(f"prog_{i:03d}", anec, path)
@@ -237,16 +260,20 @@ def check_arm(r, steps, programs, where, anchor):
     return bad
 
 
-def judge_identity(ident, arms, anchor=ANCHOR_TOKENS, prompts=FROZEN["identity_prompts"], tokens=FROZEN["identity_tokens"]):
-    """Gate 1: every arm's ids equal the control's on every prompt; the control's p001 ids start with the anchor ids."""
+def judge_identity(ident, arms, anchor=ANCHOR_TOKENS, prompts=FROZEN["identity_prompts"], tokens=FROZEN["identity_tokens"], control_ids=None):
+    """Gate 1: every arm's ids equal the control's on every prompt; the control's p001 ids start with the anchor ids.
+    control_ids ({prompt: ids}, from the control summary of another boot) stands in for the control record when the control is not in this run."""
     bad = []
     if not isinstance(ident, list) or len(ident) != prompts:
         return [f"identity: {len(ident) if hasattr(ident, '__len__') else '?'} prompts, need {prompts}"], {}
+    here = CONTROL in arms
+    if not here and not isinstance(control_ids, dict):
+        return ["identity: the control is not in this run and no control ids were given"], {}
     equal = {arm: 0 for arm in arms if arm != CONTROL}
     for e in ident:
         pid = e.get("prompt")
-        base = e.get(CONTROL)
-        if not isinstance(base, dict):
+        base = e.get(CONTROL) if here else {"tokens": control_ids.get(pid)}
+        if not isinstance(base, dict) or (not here and not isinstance(base["tokens"], list)):
             bad.append(f"identity {pid}: no control record")
             continue
         for arm in arms:
@@ -263,9 +290,9 @@ def judge_identity(ident, arms, anchor=ANCHOR_TOKENS, prompts=FROZEN["identity_p
                     equal[arm] += 1
                 else:
                     bad.append(f"identity {pid}: arm {arm} ids differ from the control's")
-    first = ident[0].get(CONTROL, {}).get("tokens") if ident else None
+    first = ident[0].get(arms[0], {}).get("tokens") if ident else None
     if anchor is not None and (not isinstance(first, list) or first[:len(anchor)] != anchor):
-        bad.append("identity: the control's p001 ids do not start with the receipt's anchor ids")
+        bad.append(f"identity: arm {arms[0]}'s p001 ids do not start with the receipt's anchor ids")
     return bad, {"prompts": prompts, "tokens_each": tokens, "prompts_with_ids_equal_to_control": equal}
 
 
@@ -288,7 +315,22 @@ def judge_timing(records, run, layouts, order, steps, anchor=ANCHOR_TOKENS):
         for k in ("bo_total_before", "bo_total_after"):
             if r[k] != run["bo_loaded"]:
                 failures.append(f"arm {i + 1}: {k} {r[k]} differs from the {run['bo_loaded']} read after the load (limit: zero growth)")
+    if len(set(order)) == 1:
+        return failures, single_arm_report(records)
     return failures, speed_report(records, layouts, order)
+
+
+def single_arm_report(records):
+    """One arm timed alone in this boot: its step p50 per round, its own spread, and the per-program exec medians over its rounds."""
+    p50 = [r["step_p50_s"] for r in records]
+    per_prog = {}
+    for r in records:
+        for name, v in r["exec_ms_per_program_median"].items():
+            per_prog.setdefault(name, []).append(v)
+    return {"arm": records[0]["arm"], "step_p50_s": p50, "spread": max(p50) / min(p50) - 1.0 if len(p50) > 1 else None, "arms": len(p50),
+            "exec_ms_median": {k: float(np.median(v)) for k, v in per_prog.items()},
+            "exec_ms_range": {k: [min(v), max(v)] for k, v in per_prog.items()},
+            "note": "one arm in this boot: compare it with the other boot's summary with tools/qwen_fold_set_compare.py"}
 
 
 def speed_report(records, layouts, order):
@@ -370,9 +412,11 @@ def check_order(order, layout_ids):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--layouts", required=True, help="comma list of layout ids, each with <layout-dir>/manifest-<id>.json and <fold-root>/<id>/progNN/")
-    ap.add_argument("--layout-dir", required=True)
-    ap.add_argument("--fold-root", required=True)
+    ap.add_argument("--layouts", default="", help="comma list of layout ids, each with <layout-dir>/manifest-<id>.json and <fold-root>/<id>/progNN/")
+    ap.add_argument("--layout-dir", default=".")
+    ap.add_argument("--fold-root", default=".")
+    ap.add_argument("--only", help="run ONE arm in this boot: the control A or one layout id (the 4 GiB window cannot hold the control and a layout)")
+    ap.add_argument("--control-summary", help="with --only LAYOUT: summary.json of the control's boot, for the token ids and logits hashes to compare with")
     ap.add_argument("--order", help="comma list of arms for the timing phase (default: control then the layouts in --layouts order, for --rounds rounds)")
     ap.add_argument("--rounds", type=int, default=3)
     ap.add_argument("--prompt", default=FROZEN["prompt"])
@@ -392,40 +436,60 @@ def main(argv=None):
     ap.add_argument("--unfrozen", action="store_true", help="host tests only: another size, no preflight; never exits 0")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
+    only = args.only
     layout_ids = [x for x in args.layouts.split(",") if x]
-    order = [x for x in args.order.split(",") if x] if args.order else default_order(layout_ids, args.rounds)
-    problem = check_order(order, layout_ids)
+    if only and only != CONTROL and only not in layout_ids:
+        layout_ids = [only]
+    if only:
+        order = [only] * args.rounds
+        problem = None if only == CONTROL or args.control_summary else "--only LAYOUT needs --control-summary (the token ids and logits hashes of the control's boot)"
+        if only == CONTROL:
+            layout_ids = []
+    else:
+        order = [x for x in args.order.split(",") if x] if args.order else default_order(layout_ids, args.rounds)
+        problem = check_order(order, layout_ids)
     if problem:
-        print(f"REFUSE: --order must be complete rounds: {problem}")
+        print(f"REFUSE: {problem}")
         return 2
     if args.dry_run:
         print("DRY: no ANE call. One decoder process, one ane-session, one boot; host-chained states in every arm")
-        print(f"  arms: control A (38 programs) and layouts {layout_ids} from {args.layout_dir}")
-        print("  0. refuse unless: p001, idle >= 60 s, OpenBLAS mapped, every layout manifest, ANEC and port table is present, bo_total_bytes and bo_total_max_mb readable "
-              "and start + the control and folded ANEC sections is below the cap")
-        print("  1. read boot id and bo_total_bytes; load the 38 programs of arm A and every folded program under a spare name; read bo_total_bytes again; take the kernel mark")
-        print(f"  2. IDENTITY: {args.identity_prompts} prompts x {args.identity_tokens} tokens, arm A then every layout; gate: ids equal A's on every prompt")
+        print(f"  arms in this boot: {[only] if only else [CONTROL] + layout_ids}; layouts from {args.layout_dir}")
+        print("  0. refuse unless: p001, idle >= 60 s, OpenBLAS mapped, every manifest, ANEC and port table is present, bo_total_bytes and bo_total_max_mb readable "
+              "and the power-of-two classes of the loaded sections are below 3.5 GiB of the 4 GiB window")
+        print("  1. read boot id and bo_total_bytes; load the programs of the arms; read bo_total_bytes again; take the kernel mark")
+        print(f"  2. IDENTITY: {args.identity_prompts} prompts x {args.identity_tokens} tokens per arm"
+              + ("; gate: ids equal the control summary's" if only and only != CONTROL else "; gate: ids equal A's on every prompt"))
         for i, arm in enumerate(order):
             print(f"  {i + 3}. TIMING idle {args.idle}s; arm {arm}: {args.prompt}, {args.new_tokens} new tokens")
-        print("  last. judge the integrity gates; report the step ratios against the control spread and the exec saved per fold")
+        print("  last. judge the integrity gates; report")
         return 0
     manifest = json.loads(Path(args.manifest).read_text())
     layout_manifests = {i: json.loads((Path(args.layout_dir) / f"manifest-{i}.json").read_text()) for i in layout_ids}
+    run_arms = [only] if only else [CONTROL] + layout_ids
+    control_ids, control_logits = None, {}
+    if only and only != CONTROL:
+        saved = json.loads(Path(args.control_summary).read_text())
+        control_ids = {e["prompt"]: e.get(f"{CONTROL}_ids") for e in saved.get("identity_prompts", [])}
+        control_logits = {e["prompt"]: e.get(f"{CONTROL}_logits_sha256") for e in saved.get("identity_prompts", [])}
     env = rs.environment()
     start = rs.snapshot() if not args.unfrozen else {"boot_id": Path("/proc/sys/kernel/random/boot_id").read_text().strip(), "bo_total_bytes": old_ab.bo_total_bytes(), "exch_lines": 0}
     cap_mb = rs.read_cap_mb()
     sets = build_sets(manifest, layout_manifests, args.anec_dir, args.ports_dir, args.fold_root)
-    spares = spare_loads(sets)
-    control_bytes = sum(Path(f[0]).stat().st_size for f in sets[CONTROL]["files"])
-    spare_bytes = sum(Path(a).stat().st_size for _, a, _ in spares)
+    spares = spare_loads({k: v for k, v in sets.items() if k in run_arms}) if len(run_arms) > 1 else []
+    loaded_files = {str(f[0]): f[0] for arm in run_arms for f in sets[arm]["files"]} | {str(a): a for _, a, _ in spares}
+    present = [p for p in loaded_files.values() if Path(p).is_file()]
+    window_bytes = window_class_bytes(present)
     if not args.unfrozen:
         problems = []
         if args.prompt != FROZEN["prompt"] or args.identity_prompts != FROZEN["identity_prompts"] or args.identity_tokens != FROZEN["identity_tokens"]:
             problems.append("the frozen run is p001 in the timing phase and 10 prompts of 32 tokens in the identity phase")
         if len(manifest["programs"]) != FROZEN["control_programs"]:
             problems.append("the control manifest does not hold 38 programs")
-        for layout, s in sets.items():
-            for anec, table, _ in s["files"]:
+        for layout in layout_ids:
+            if layout in run_arms and layout_manifests[layout].get("equiv_checked") is not True:
+                problems.append(f"{layout}: the manifest was built without the MIL chain check (equiv_checked is not true); rebuild it with qwen_fold_layout.py")
+        for layout in run_arms:
+            for anec, table, _ in sets[layout]["files"]:
                 if not (Path(anec).is_file() and Path(table).is_file()):
                     problems.append(f"{layout}: {anec} or {table} is missing")
                     break
@@ -435,8 +499,13 @@ def main(argv=None):
             problems.append("numpy is not on OpenBLAS (the reference BLAS or no BLAS mapped)")
         if start["bo_total_bytes"] is None or cap_mb is None:
             problems.append("bo_total_bytes or bo_total_max_mb is unreadable")
-        elif start["bo_total_bytes"] + control_bytes + spare_bytes >= cap_mb << 20:
-            problems.append(f"bo_total_bytes {start['bo_total_bytes']} plus the control {control_bytes} and folded {spare_bytes} bytes is not below the {cap_mb} MiB cap")
+        elif start["bo_total_bytes"] + window_bytes >= cap_mb << 20:
+            problems.append(f"bo_total_bytes {start['bo_total_bytes']} plus the sections {window_bytes} is not below the {cap_mb} MiB cap")
+        if window_bytes > WINDOW_LIMIT:
+            problems.append(f"the sections take {window_bytes / 2 ** 30:.2f} GiB in power-of-two classes, above {WINDOW_LIMIT / 2 ** 30:.1f} GiB (the 4 GiB window is not usable to its bound) "
+                            "(the control alone is 3.13 GiB; the window cannot hold the control and a layout, use --only in two boots)")
+        if only and only != CONTROL and (not control_ids or any(not isinstance(v, list) for v in control_ids.values())):
+            problems.append("the control summary holds no token ids per prompt")
         if problems:
             print("REFUSE: " + "; ".join(problems) + " (use --unfrozen for a host test, which never exits 0)")
             return 2
@@ -449,7 +518,7 @@ def main(argv=None):
                                resident=True, session_bin=args.session_bin, resident_lock="call", per_m_dir="/var/tmp/qwen-perM", session_lock=args.session_lock,
                                dump=None, band=None, resident_states=False)
     mark0 = max((t for t, _ in dec.kernel_marks()), default=0.0)   # before the load: the span covers the load too
-    decoder = FoldDecoder(dargs, sets)
+    decoder = FoldDecoder(dargs, sets, run_arms[0])
     for name, anec, table in spares:
         got = decoder.session.load(name, anec, table)
         ports = dec.port_map_from_table(json.loads(Path(table).read_text())).values()
@@ -460,19 +529,24 @@ def main(argv=None):
     embed, head, (dh, rotary, base) = dec.load_head(args.gguf)
     cos, sin = dec.rope_tables(decoder.max_len, dh, rotary, base)
     exch0 = start["exch_lines"] if not args.unfrozen else 0
-    arms = [CONTROL] + layout_ids
     ident = []
     for prompt in prompts:
         d = out / f"identity-{prompt['id']}"
         entry = {"prompt": prompt["id"]}
-        for arm in arms:
+        for arm in run_arms:
             (d / arm).mkdir(parents=True, exist_ok=True)
             entry[arm] = decode_run(decoder, arm, prompt, args.identity_tokens, cos, sin, embed, head, d / arm)
-        entry["logits"] = {arm: logits_compare(d / CONTROL / "logits.f32", d / arm / "logits.f32") for arm in layout_ids}
-        entry["control_matches_reference_ids"] = entry[CONTROL]["tokens"] == prompt["generated_ids"][:len(entry[CONTROL]["tokens"])]
+        if CONTROL in run_arms:
+            entry["logits"] = {arm: logits_compare(d / CONTROL / "logits.f32", d / arm / "logits.f32") for arm in run_arms if arm != CONTROL}
+            entry["control_matches_reference_ids"] = entry[CONTROL]["tokens"] == prompt["generated_ids"][:len(entry[CONTROL]["tokens"])]
+            print(f"identity {prompt['id']}: ids equal {[(a, entry[a]['tokens'] == entry[CONTROL]['tokens']) for a in run_arms if a != CONTROL]}, "
+                  f"logits bytes equal {[(a, entry['logits'][a]['bytes_equal']) for a in run_arms if a != CONTROL]}", flush=True)
+        else:
+            arm = run_arms[0]
+            entry["logits_sha256_equals_control_boot"] = entry[arm]["logits_sha256"] == control_logits.get(prompt["id"])
+            print(f"identity {prompt['id']}: ids equal control boot {entry[arm]['tokens'] == control_ids.get(prompt['id'])}, "
+                  f"logits sha equal control boot {entry['logits_sha256_equals_control_boot']}", flush=True)
         ident.append(entry)
-        print(f"identity {prompt['id']}: ids equal {[(a, entry[a]['tokens'] == entry[CONTROL]['tokens']) for a in layout_ids]}, "
-              f"logits bytes equal {[(a, entry['logits'][a]['bytes_equal']) for a in layout_ids]}", flush=True)
     records = []
     for i, arm in enumerate(order):
         time.sleep(args.idle)
@@ -484,18 +558,21 @@ def main(argv=None):
     end = rs.snapshot() if not args.unfrozen else {"exch_lines": 0}
     run = {"boot_id_pre": start["boot_id"], "bo_loaded": loaded["bo_total_bytes"],
            "kernel_stop": [line for t, line in dec.kernel_marks() if t > mark0 and dec.STOP_KERNEL.search(line)],
-           "exch_new": end["exch_lines"] - exch0, "bo_start": start["bo_total_bytes"], "bo_cap_mb": cap_mb}
+           "exch_new": end["exch_lines"] - exch0, "bo_start": start["bo_total_bytes"], "bo_cap_mb": cap_mb, "window_class_bytes": window_bytes}
     anchor = ANCHOR_TOKENS if not args.unfrozen else None
-    f_ident, s_ident = judge_identity(ident, arms, anchor, args.identity_prompts, args.identity_tokens)
+    f_ident, s_ident = judge_identity(ident, run_arms, anchor, args.identity_prompts, args.identity_tokens, control_ids)
     layouts = {CONTROL: {"n": len(manifest["programs"]), "mapping": sets[CONTROL]["mapping"]},
                **{k: {"n": len(layout_manifests[k]["programs"]), "mapping": sets[k]["mapping"]} for k in layout_ids}}
     f_time, s_time = judge_timing(records, run, layouts, order, args.new_tokens, anchor)
     failures = f_ident + f_time + (["unfrozen run: not a gate run"] if args.unfrozen else [])
     inputs = {"manifest": sha256_file(args.manifest), **{f"manifest-{i}": sha256_file(Path(args.layout_dir) / f"manifest-{i}.json") for i in layout_ids},
               "folded": {name: {"anec_sha256": sha256_file(a), "table_sha256": sha256_file(t)} for name, a, t in spares}}
+    if only and only != CONTROL:
+        inputs["control_summary_sha256"] = sha256_file(args.control_summary)
     summary = {"identity": s_ident, "timing": s_time, "timing_logits_equal_in_all_arms": len({r["logits_sha256"] for r in records}) == 1, "failures": failures,
-               "frozen": not args.unfrozen, "run": run, "environment": env, "placement": {"pinned": PINNED}, "inputs": inputs, "order": order,
-               "identity_prompts": [{k: v for k, v in e.items() if k not in arms} | {f"{a}_logits_sha256": e[a]["logits_sha256"] for a in arms} for e in ident],
+               "frozen": not args.unfrozen, "run": run, "environment": env, "placement": {"pinned": PINNED}, "inputs": inputs, "order": order, "only": only,
+               "identity_prompts": [{k: v for k, v in e.items() if k not in run_arms} | {f"{a}_logits_sha256": e[a]["logits_sha256"] for a in run_arms}
+                                    | {f"{a}_ids": e[a]["tokens"] for a in run_arms} for e in ident],
                "arms": [{k: v for k, v in r.items() if k != "walls_s"} for r in records]}
     (out / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
     print(json.dumps({"identity": s_ident, "speed": s_time, "failures": failures}, indent=1))

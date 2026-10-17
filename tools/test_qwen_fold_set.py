@@ -157,6 +157,30 @@ def test_fold_that_drops_a_state_block_input_is_refused(record):
     assert any("state block" in p and "beta" in p for p in problems)
 
 
+def test_the_manifest_records_whether_the_chain_check_ran(record):
+    root, control, _ = record
+    manifest, _, _ = layout.build(control, root / "control", root / "F00", equiv=False)
+    assert manifest["equiv_checked"] is False
+
+
+def test_a_fold_with_the_wrong_number_of_states_is_refused(record):
+    root, control, folded = record
+    f = folded["programs"][1]
+    f["srcs"] = [s for s in f["srcs"] if s["port"] != "a37"]
+    f["states"] = [s for s in f["states"] if s["in_port"] != "a37"]
+    write_record(root / "F04", folded, {0: "000000000000", 1: "00000000ffff", 2: "000000000003"})
+    _, _, problems = layout.build(control, root / "control", root / "F04", equiv=False)
+    assert any("states, control" in p for p in problems)
+
+
+def test_a_pair_without_an_o_lane_cannot_be_linked():
+    first, second, fused = FIX / "state-block.mil", FIX / "readout-mlp-input.mil", FIX / "fused.mil"
+    no_o = json.loads(json.dumps(PM_SECOND))
+    del no_o["x"]["o"]
+    equal, text = layout.chain_equivalent((PM_FUSED, fused), (PM_FIRST, first), (no_o, second))
+    assert equal is False and "no o lane" in text
+
+
 def test_a_layout_that_leaves_control_programs_over_is_refused(record):
     root, control, _ = record
     (root / "F00" / "probe.out").write_text("\n".join(line for line in (root / "F00" / "probe.out").read_text().splitlines() if not line.startswith("PORTMAP 2")) + "\n")
@@ -282,3 +306,140 @@ def test_build_sets_reads_the_control_files_for_unfolded_programs(tmp_path):
     files = sets["F"]["files"]
     assert files[0] == sets["A"]["files"][0] and files[2] == sets["A"]["files"][3]
     assert files[1][0] == tmp_path / "fold" / "F" / "prog01" / "program-0.anec" and files[1][2] == "prog_001_fold"
+
+
+# ---- the window gate and the one-arm mode (sizes are the real program sections of the control and of the 20 program layout)
+CTL_SIZES = [34098240, 22464, 117994432, 22464, 117994432, 22464, 223006144, 22464, 117994432, 22464, 117994432, 22464, 223006144, 22464, 117994432, 22464,
+             117994432, 22464, 223006144, 22464, 83900608, 34098240, 22464, 117994432, 22464, 223006144, 22464, 117994432, 22464, 117994432, 22464, 223006144,
+             22464, 117994432, 22464, 117994432, 22464, 188917120]
+S18_MAPPING = [[0], [1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16], [17, 18], [19, 20], [21], [22, 23], [24, 25], [26, 27], [28, 29],
+               [30, 31], [32, 33], [34, 35], [36, 37]]
+S18_FOLD = {1: 117996160, 2: 117996160, 3: 223007872, 4: 117996160, 5: 117996160, 6: 223007872, 7: 117996160, 8: 117996160, 9: 223007872, 10: 83902336,
+            12: 117996160, 13: 223007872, 14: 117996160, 15: 117996160, 16: 223007872, 17: 117996160, 18: 117996160, 19: 188918848}
+
+
+class Loaded(Exception):
+    pass
+
+
+def sparse(path, size):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("wb") as f:
+        f.truncate(size)
+
+
+@pytest.fixture()
+def window_world(tmp_path, monkeypatch):
+    for i, size in enumerate(CTL_SIZES):
+        sparse(tmp_path / "anec" / f"prog_{i:03d}" / "program-0.anec", size)
+        (tmp_path / "ports" / f"prog_{i:03d}").mkdir(parents=True)
+        (tmp_path / "ports" / f"prog_{i:03d}" / "ports.resolved.json").write_text("{}")
+    for i, size in S18_FOLD.items():
+        sparse(tmp_path / "fold" / "S18" / f"prog{i:02d}" / "program-0.anec", size)
+        (tmp_path / "fold" / "S18" / f"prog{i:02d}" / "ports.resolved.json").write_text("{}")
+    (tmp_path / "manifest.json").write_text(json.dumps({"max_len": 50, "programs": [{}] * 38}))
+    (tmp_path / "layouts").mkdir()
+    (tmp_path / "layouts" / "manifest-S18.json").write_text(json.dumps({"max_len": 50, "programs": [{}] * 20, "fold_mapping": S18_MAPPING,
+                                                                        "equiv_checked": True}))
+    (tmp_path / "ref.json").write_text(json.dumps({"prompts": [{"id": "p001", "prompt_token_ids": [1], "generated_ids": []}]}))
+    (tmp_path / "control-summary.json").write_text(json.dumps({"identity_prompts": [{"prompt": "p001", "A_ids": [1], "A_logits_sha256": "a" * 64}]}))
+    monkeypatch.setattr(ab.rs, "environment", lambda: {"reference_blas": False, "blas": [{"path": "x"}]})
+    monkeypatch.setattr(ab.rs, "snapshot", lambda: {"boot_id": "b", "bo_total_bytes": 0, "exch_lines": 0})
+    monkeypatch.setattr(ab.rs, "read_cap_mb", lambda: 12288)
+    monkeypatch.setattr(ab.dec, "kernel_marks", lambda: [])
+
+    def no_decoder(*a, **k):
+        raise Loaded()
+    monkeypatch.setattr(ab, "FoldDecoder", no_decoder)
+
+    def args(*extra):
+        return ["--layout-dir", str(tmp_path / "layouts"), "--fold-root", str(tmp_path / "fold"), "--manifest", str(tmp_path / "manifest.json"),
+                "--anec-dir", str(tmp_path / "anec"), "--ports-dir", str(tmp_path / "ports"), "--ref", str(tmp_path / "ref.json"),
+                "--out", str(tmp_path / "out"), *extra]
+    return tmp_path, args
+
+
+def test_size_classes_are_powers_of_two():
+    assert ab.class_bytes(117994432) == 128 << 20 and ab.class_bytes(223006144) == 256 << 20 and ab.class_bytes(22464) == 32768
+    control = sum(ab.class_bytes(s) for s in CTL_SIZES)
+    layout = sum(ab.class_bytes(S18_FOLD[i]) if i in S18_FOLD else ab.class_bytes(CTL_SIZES[S18_MAPPING[i][0]]) for i in range(20))
+    assert control < ab.WINDOW_LIMIT and layout < ab.WINDOW_LIMIT          # each alone fits
+    assert control + sum(ab.class_bytes(s) for s in S18_FOLD.values()) > ab.WINDOW_LIMIT   # together they cannot
+
+
+def test_control_and_layout_together_are_refused_before_any_load(window_world, capsys):
+    _, args = window_world
+    assert ab.main(args("--layouts", "S18")) == 2          # a Loaded exception would escape if the gate let it through
+    assert "power-of-two classes" in capsys.readouterr().out
+
+
+def test_the_window_gate_is_the_reason(window_world, monkeypatch, capsys):
+    _, args = window_world
+    monkeypatch.setattr(ab, "WINDOW_LIMIT", 1 << 40)
+    with pytest.raises(Loaded):
+        ab.main(args("--layouts", "S18"))                  # with the window limit lifted the same run reaches the decoder
+
+
+def test_the_control_alone_and_the_layout_alone_pass_the_gate(window_world):
+    _, args = window_world
+    with pytest.raises(Loaded):
+        ab.main(args("--only", "A"))
+    with pytest.raises(Loaded):
+        ab.main(args("--layouts", "S18", "--only", "S18", "--control-summary", str(window_world[0] / "control-summary.json")))
+
+
+def test_a_bad_order_is_refused_by_main(window_world, monkeypatch, capsys):
+    _, args = window_world
+    monkeypatch.setattr(ab, "WINDOW_LIMIT", 1 << 40)          # so the order is the only thing that can refuse
+    assert ab.main(args("--layouts", "S18", "--order", "A")) == 2
+    assert "followed by every declared layout" in capsys.readouterr().out
+    assert ab.main(args("--layouts", "S18", "--order", "S18,A")) == 2
+
+
+def test_a_manifest_built_without_the_chain_check_is_refused(window_world, capsys):
+    root, args = window_world
+    path = root / "layouts" / "manifest-S18.json"
+    manifest = json.loads(path.read_text())
+    manifest["equiv_checked"] = False
+    path.write_text(json.dumps(manifest))
+    assert ab.main(args("--layouts", "S18", "--only", "S18", "--control-summary", str(root / "control-summary.json"))) == 2
+    assert "equiv_checked" in capsys.readouterr().out
+
+
+def test_a_layout_alone_needs_the_control_summary(window_world, capsys):
+    _, args = window_world
+    assert ab.main(args("--layouts", "S18", "--only", "S18")) == 2
+    assert "control-summary" in capsys.readouterr().out
+
+
+def test_identity_against_the_control_boot():
+    def rec(tokens):
+        return {"tokens": tokens, "kernel_stop": [], "exch_new": 0}
+    ident = [{"prompt": "p001", "S": rec([1, 2, 3])}]
+    bad, summary = ab.judge_identity(ident, ["S"], anchor=None, prompts=1, tokens=3, control_ids={"p001": [1, 2, 3]})
+    assert bad == [] and summary["prompts_with_ids_equal_to_control"] == {"S": 1}
+    bad, _ = ab.judge_identity(ident, ["S"], anchor=None, prompts=1, tokens=3, control_ids={"p001": [1, 2, 4]})
+    assert any("differ" in b for b in bad)
+    assert ab.judge_identity(ident, ["S"], anchor=None, prompts=1, tokens=3, control_ids=None)[0]
+
+
+def test_compare_exec_saved_per_fold_and_boot_comparability():
+    import qwen_fold_set_compare as cmp
+    mapping = [[0], [1, 2], [3]]
+    manifest = {"fold_mapping": mapping}
+
+    def summary(arm, med, rng, p50, spread):
+        return {"timing": {"arm": arm, "exec_ms_median": med, "exec_ms_range": rng, "step_p50_s": p50, "spread": spread}, "failures": [], "identity": {}}
+    control = summary("A", {"prog_000": 2.0, "prog_001": 3.0, "prog_002": 4.0, "prog_003": 1.0}, {k: [v - 0.01, v + 0.01] for k, v in
+                      {"prog_000": 2.0, "prog_001": 3.0, "prog_002": 4.0, "prog_003": 1.0}.items()}, [0.170, 0.171, 0.172], 0.012)
+    layout = summary("S", {"prog_000": 2.0, "prog_001": 6.7, "prog_002": 1.0}, {k: [v - 0.01, v + 0.01] for k, v in
+                     {"prog_000": 2.0, "prog_001": 6.7, "prog_002": 1.0}.items()}, [0.169, 0.170, 0.171], 0.012)
+    report = cmp.compare(control, layout, manifest)
+    assert report["exec"]["folds"] == 1 and report["exec"]["per_fold"][0]["saved_ms"] == pytest.approx(0.3)
+    assert report["exec"]["outside_noise"] is True and report["exec"]["boots_comparable"] is True
+    assert report["step"]["outside_both_spreads"] is False
+    layout["timing"]["exec_ms_median"]["prog_002"] = 1.2          # a shared program moved 20 percent between the boots
+    assert cmp.compare(control, layout, manifest)["exec"]["boots_comparable"] is False
+    layout["timing"]["exec_ms_median"]["prog_002"] = 1.0
+    layout["timing"]["exec_ms_median"]["prog_001"] = 7.0          # saved 0.0, inside the noise
+    assert cmp.compare(control, layout, manifest)["exec"]["outside_noise"] is False
