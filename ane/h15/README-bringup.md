@@ -18,12 +18,22 @@ template is `ane/h16/`.
   word to read ACTUAL=0xf, re-read all five, then log the value
   and ACTUAL of each one. The pmgr window is mapped and read; the
   engine window is **not** touched at stage 1.
-- `stage=2` or `stage=wrapper`: refused on H15. The CPU_STATUS and
-  RVBAR words are MEASURED addresses (ADT 27.0 reg[0] / reg[1]) but
-  their roles are INFERENCE; the standing rule (the b0 doc) limits
-  reads to MEASURED-safe words or words inside DT windows another
-  kernel driver already maps. The wrapper window is neither. The
-  stage prints the word list and the clearing condition.
+- `stage=2` or `stage=wrapper`: refused unless `confirm_read=1`. The
+  CPU_STATUS and RVBAR words are MEASURED addresses (ADT 27.0 reg[0] and
+  reg[1]), but their roles are INFERENCE. Without `confirm_read=1` the
+  stage prints the word list and refuses before any engine access.
+  With `confirm_read=1` it runs the read-only preflight from the b0
+  plan, after the same ACTUAL=0xf gate as stage 1. It reads CPU_STATUS,
+  RVBAR (two 32-bit reads) and the two mailbox CTRL words. Each address
+  is logged before its read, so a hang leaves the last address in the
+  log. Reads stay inside the two windows the ADT publishes for the ANE
+  node: the wrapper (engine + 0x1400000, 0x6c000 bytes) and the RVBAR
+  block (engine + 0x1050000, 0x4000 bytes). The code refuses CPU_CONTROL,
+  the CoreSight line and the T6021 fatal range whatever the SoC row
+  says. Nothing is written and no CPU is released. The result line
+  compares CPU_STATUS with the value a stopped T6021 core reads (0x2a).
+  The meaning of the bits on H15 is not measured, so the line only says
+  whether the values are equal.
 - `stage=3` or `stage=boot`: refused without `fw_path=` and
   `confirm_boot=1`. With them, the stage prints one line per
   still-unmeasured fact from the `ane_h15_facts` table (stub
@@ -74,6 +84,9 @@ the module fails the induced fault correctly:
     make -C ane/h15 sim-negative-wrong-stage    # unknown stage, wrong optin
     make -C ane/h15 sim-negative-truncated-dt   # reg property missing
     make -C ane/h15 sim-negative-nopsguard      # a guard-deleted build must fail
+    make -C ane/h15 sim-negative-read-ps-stuck  # stage 2 with a stuck pmgr word reads nothing
+    make -C ane/h15 sim-negative-read-forbidden # stage 2 words outside the ADT windows are refused
+    make -C ane/h15 sim-mutation-read-noguard   # three mutants of the stage 2 gates must fail
 
 A sim is not silicon: a green sim proves control flow and gate
 logic in the module code, not any M3 hardware behavior.
@@ -122,6 +135,17 @@ fields. These are validated by `tools/test_ane_overlays.py
 trees via `.github/workflows/aurora-dtbs.yml`; no M3 driver binds
 them.
 
+## Capture before stage 2 (no register access)
+
+    bash ane/h15/h15-capture.sh | tee h15-capture.txt
+
+The script reads the running device tree, `/proc/interrupts`,
+`/proc/iomem`, the genpd summary and dmesg. It loads no module and
+writes no file. It records the firmware version string that selects the
+image iBoot preloads (H1), the ANE, DART and mailbox nodes with their
+interrupt lines (H2), and the reserved firmware regions with their
+iommu addresses (H3). Send the output file with the stage results.
+
 ## Bring-up protocol for the first owner
 
 Run in this order; stop at the first unexpected result and send
@@ -139,10 +163,14 @@ the dmesg back.
    `ane_h15 word=ANE_… pa=… value=… actual=0xf pass=true` lines,
    and `verdict=PASS reason=ps-guard+reads`. Send `dmesg | grep
    ane_h15`.
-3. **stage=2** (`stage=2` or `stage=wrapper`). Expected:
-   `verdict=REFUSED reason="<N> ADDR_MEASURED word(s) lack a
-   macOS capture; role INFERENCE"`. This is the expected
-   outcome on H15.
+3. **stage=2** (`stage=2` or `stage=wrapper`). Without
+   `confirm_read=1` the expected result is `verdict=REFUSED`. With
+   `confirm_read=1` (run it only after the capture step below and
+   stages 0 and 1), expect five `ane_h15 read` lines, five
+   `ane_h15 word=` lines, one `ane_h15 preflight` line and
+   `verdict=PASS reason=preflight-read-only`. Send `dmesg | grep
+   ane_h15`. If the machine hangs, the last `ane_h15 read` line names
+   the address.
 4. **stage=3** (`stage=3 confirm_boot=1 fw_path=…`): the refusal
    prints one line per unfilled row of the `ane_h15_facts` table
    (`ane_h15 hole=H… …`), then
@@ -170,6 +198,12 @@ window:
     dmesg | grep ane_h15
 
     insmod ane/h15/ane_h15.ko optin=t8122 stage=1
+    dmesg | grep ane_h15
+
+The read-only preflight (reads four words and one 64-bit word in the
+engine window, writes nothing):
+
+    insmod ane/h15/ane_h15.ko optin=t6030 stage=2 confirm_read=1
     dmesg | grep ane_h15
 
 Substitute `t6030` or `t6031` (or `t6034` with a t6031-style
