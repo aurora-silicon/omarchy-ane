@@ -42,6 +42,8 @@ Please send the `/chosen` stub OS version string with your logs.
 
 ## Step 1 — build and install the overlay
 
+The overlays ship the four ANE DART nodes as `status = "disabled"`. On a T6030, equivalent enabled nodes made the DART driver probe unpowered hardware at boot and hang the machine before display and network. That was not measured with this exact overlay. Stage 0 and stage 1 need no DART. Do not enable them by hand.
+
 ```
 git clone https://github.com/joshuaswarren/omarchy-ane
 cd omarchy-ane/ane/h15
