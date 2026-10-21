@@ -50,6 +50,7 @@
 #include <linux/errno.h>
 #include <linux/firmware.h>
 #include <linux/io.h>
+#include <linux/ioport.h>
 #include <linux/iommu.h>
 #include <linux/bitops.h>
 #include <linux/iopoll.h>
@@ -327,6 +328,21 @@ static int ane_h15_stage_status(struct ane_h15 *ane)
  * T6021 fatal range are refused by ane_h15_read_ok(), whatever the
  * soc row says. Nothing is written.
  */
+/* Sources of the numbers below, by exact commit.
+ * - Wrapper (CPU_CONTROL +0x44, CPU_STATUS +0x48), RVBAR +0x1050000,
+ *   mailbox CTRL words +0x1408110 and +0x1408114, and the fatal range
+ *   0x1854000..0x1c04000: ane/t6021/ane_t6021.h at 16cfa8720b80677dbcdf8fd1d04077a8b72768bf
+ *   (lines 104-109, 142-143 and 160-163). These are T6021 values. Their
+ *   H15 roles are INFERENCE (see the b0 receipt).
+ * - The two ADT windows (wrapper 0x6c000 bytes at engine + 0x1400000,
+ *   RVBAR block 0x4000 bytes at engine + 0x1050000): the macOS 27.0 ADT
+ *   summary adt-27.0.txt, sha256
+ *   04fe38b8ee009700f02e2c01e83bf608afab5e843f5878a83f162973a1ffdb84,
+ *   as tabulated (A1, A3) in receipts/2026-10-03-ane-h15/README.md at
+ *   71ed021859a3f7e55c04756a1c6ab456fa48fc9f.
+ * - CoreSight line engine + 0x1010000: docs/t6021-ane-bringup-findings.md
+ *   section 7 at 16cfa8720b80677dbcdf8fd1d04077a8b72768bf.
+ */
 #define ANE_H15_WRAP_OFF	0x1400000u
 #define ANE_H15_WRAP_SIZE	0x6c000u
 #define ANE_H15_RVBAR_WIN_OFF	0x1050000u
@@ -377,6 +393,7 @@ static int ane_h15_stage_wrapper(struct ane_h15 *ane)
 {
 	const struct ane_h15_soc *s = ane->soc;
 	u32 status = 0, rvbar_lo = 0, rvbar_hi = 0, a2i = 0, i2a = 0;
+	struct resource res;
 	unsigned int i, refused = 0;
 	char why[128];
 	int ret;
@@ -399,6 +416,18 @@ static int ane_h15_stage_wrapper(struct ane_h15 *ane)
 		return -EPERM;
 	}
 
+	/* The static offsets hold only for the window the SoC row
+	 * describes. Compare the live reg[0] resource, the one of_iomap()
+	 * mapped, before any engine read. */
+	ret = of_address_to_resource(ane->dev->of_node, 0, &res);
+	if (ret || res.start != s->engine_pa || resource_size(&res) != s->engine_size) {
+		dev_err(ane->dev,
+			"ane_h15 engine window mismatch: reg[0] start=%#llx size=%#llx, SoC row wants start=%#llx size=%#x\n",
+			ret ? 0ULL : (u64)res.start, ret ? 0ULL : (u64)resource_size(&res),
+			s->engine_pa, s->engine_size);
+		ane_h15_result(ane, 2, "FAIL", "engine-window-mismatch");
+		return -EINVAL;
+	}
 	ret = ane_h15_ps_wait(ane);
 	if (ret) {
 		ane_h15_result(ane, 2, "FAIL", "pmgr-actual-stuck");

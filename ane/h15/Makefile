@@ -82,6 +82,9 @@ sim-negative-pd-eacces-alone: sim/sim_h15
 sim-negative-read-ps-stuck: sim/sim_h15
 	./sim/sim_h15 neg-read-ps-stuck
 
+sim-negative-read-window: sim/sim_h15
+	./sim/sim_h15 neg-read-window
+
 sim-negative-read-forbidden: sim/sim_h15
 	./sim/sim_h15 neg-read-forbidden
 
@@ -126,6 +129,10 @@ sim-mutation-read-noguard:
 # stage 2 read allowlist (two ADT windows, no CPU_CONTROL, no fatal range) skipped
 sim-mutation-read-nocheck:
 	$(call pd_mutant,read-nocheck,s/if (!ane_h15_read_ok(ane->soc$(COMMA) off$(COMMA) 4)) {/if (0 \/* NEG: read allowlist skipped *\/) {/,NEG: read allowlist skipped,neg-read-forbidden)
+
+# stage 2 trusts the SoC row without comparing the live reg[0] resource
+sim-mutation-read-nowindow:
+	$(call pd_mutant,read-nowindow,s/res.start != s->engine_pa/0 \/* NEG: window check skipped *\//,NEG: window check skipped,neg-read-window)
 
 # stage 2 runs without confirm_read=1
 sim-mutation-read-noconfirm:
@@ -187,7 +194,8 @@ clean:
 	sim-negative-pd-rpm-err sim-negative-pd-eacces-alone \
 	sim-mutation-pd-nolinkdetach sim-mutation-pd-anyerrignored \
 	sim-mutation-pd-noremovedetach sim-mutation-pd-noidleleak \
-	sim-negative-read-ps-stuck sim-negative-read-forbidden \
+	sim-negative-read-ps-stuck sim-negative-read-forbidden sim-negative-read-window \
+	sim-mutation-read-nowindow \
 	sim-mutation-read-noguard sim-mutation-read-nocheck \
 	sim-mutation-read-noconfirm sim-mutation-nofillrefusal clean
 endif

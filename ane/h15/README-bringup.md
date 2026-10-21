@@ -22,8 +22,11 @@ template is `ane/h16/`.
   CPU_STATUS and RVBAR words are MEASURED addresses (ADT 27.0 reg[0] and
   reg[1]), but their roles are INFERENCE. Without `confirm_read=1` the
   stage prints the word list and refuses before any engine access.
+  The probe has already powered the ANE domains by then, as it does
+  for stage 1.
   With `confirm_read=1` it runs the read-only preflight from the b0
-  plan, after the same ACTUAL=0xf gate as stage 1. It reads CPU_STATUS,
+  plan. It first compares the live reg[0] resource with the SoC row and
+  refuses on a mismatch. Then it runs the same ACTUAL=0xf gate as stage 1. It reads CPU_STATUS,
   RVBAR (two 32-bit reads) and the two mailbox CTRL words. Each address
   is logged before its read, so a hang leaves the last address in the
   log. Reads stay inside the two windows the ADT publishes for the ANE
@@ -86,6 +89,7 @@ the module fails the induced fault correctly:
     make -C ane/h15 sim-negative-nopsguard      # a guard-deleted build must fail
     make -C ane/h15 sim-negative-read-ps-stuck  # stage 2 with a stuck pmgr word reads nothing
     make -C ane/h15 sim-negative-read-forbidden # stage 2 words outside the ADT windows are refused
+    make -C ane/h15 sim-negative-read-window    # stage 2 refuses a reg[0] that is not the SoC row's window
     make -C ane/h15 sim-mutation-read-noguard   # three mutants of the stage 2 gates must fail
 
 A sim is not silicon: a green sim proves control flow and gate

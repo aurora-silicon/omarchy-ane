@@ -553,6 +553,49 @@ static void pos_stage2(void)
 	ane_h15_remove(&pdev);
 }
 
+/* reg[0] that is not the window the SoC row describes (shifted base, or
+ * shorter): stage 2 refuses before any bus access, pmgr included
+ */
+static int neg_read_window(void)
+{
+	unsigned int rstage;
+	char verdict[32], reason[128];
+	int i, bad = 0;
+
+	for (i = 0; i < 3; i++) {
+		int ret;
+
+		stage2_setup(&ane_t6030_soc, "apple,t6030-ane", -1);
+		if (i == 0)
+			node.reg_pa[0] += 0x1000000;	/* base moved */
+		else if (i == 1)
+			node.reg_size[0] -= 0x100000;	/* window shorter */
+		else
+			node.reg_pa[0] = ane_t6030_soc.pmgr_pa + 0x100000;	/* some other block */
+		ret = probe_now();
+		if (ret != -EINVAL) {
+			printf("    NEG-READ-WINDOW case %d: expected -EINVAL, got %d\n", i, ret);
+			bad = 1;
+		}
+		if (!parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) ||
+		    rstage != 2 || strcmp(verdict, "FAIL") || strcmp(reason, "engine-window-mismatch")) {
+			printf("    NEG-READ-WINDOW case %d: expected RESULT stage=2 FAIL engine-window-mismatch\n", i);
+			bad = 1;
+		}
+		if (sim_n_events != 0 || sim_bus_faults) {
+			printf("    NEG-READ-WINDOW case %d: bus access before the window check\n", i);
+			bad = 1;
+		}
+		if (sim_n_iomap != sim_n_iounmap || sim_pm_get != sim_pm_put) {
+			printf("    NEG-READ-WINDOW case %d: a refused probe leaked a window or the power claim\n", i);
+			bad = 1;
+		}
+	}
+	printf("%s\n", bad ? "  neg-read-window: harness FAILED the module (BAD)"
+			   : "  neg-read-window: module refuses as required");
+	return bad;
+}
+
 /* stuck pmgr word: no engine read at all */
 static int neg_read_ps_stuck(void)
 {
@@ -1131,6 +1174,9 @@ int main(int argc, char **argv)
 	} else if (!strcmp(mode, "neg-read-ps-stuck")) {
 		printf("sim-h15 negative control: stage 2 with a stuck pmgr word\n");
 		fails = neg_read_ps_stuck();
+	} else if (!strcmp(mode, "neg-read-window")) {
+		printf("sim-h15 negative control: stage 2 with a reg[0] that is not the SoC row's window\n");
+		fails = neg_read_window();
 	} else if (!strcmp(mode, "neg-read-forbidden")) {
 		printf("sim-h15 negative control: stage 2 words outside the ADT windows or on CPU_CONTROL\n");
 		fails = neg_read_forbidden();
@@ -1151,7 +1197,7 @@ int main(int argc, char **argv)
 		fails = neg_pd_eacces_alone();
 	} else {
 		fprintf(stderr,
-			"usage: sim_h15 [pos|neg-ps-stuck|neg-wrong-stage|neg-truncated-dt|neg-rpm-fail|neg-pd-attach-fail|neg-pd-link-fail|neg-pd-rpm-err|neg-pd-eacces-alone|neg-read-ps-stuck|neg-read-forbidden]\n");
+			"usage: sim_h15 [pos|neg-ps-stuck|neg-wrong-stage|neg-truncated-dt|neg-rpm-fail|neg-pd-attach-fail|neg-pd-link-fail|neg-pd-rpm-err|neg-pd-eacces-alone|neg-read-ps-stuck|neg-read-window|neg-read-forbidden]\n");
 		return 2;
 	}
 	return fails ? 1 : 0;
