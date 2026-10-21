@@ -553,8 +553,8 @@ static void pos_stage2(void)
 	ane_h15_remove(&pdev);
 }
 
-/* reg[0] that is not the window the SoC row describes (shifted base, or
- * shorter): stage 2 refuses before any bus access, pmgr included
+/* reg[0] or reg[1] that is not the window the SoC row describes (shifted
+ * base, shorter, or another block): stage 2 refuses before any bus access
  */
 static int neg_read_window(void)
 {
@@ -562,7 +562,7 @@ static int neg_read_window(void)
 	char verdict[32], reason[128];
 	int i, bad = 0;
 
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 6; i++) {
 		int ret;
 
 		stage2_setup(&ane_t6030_soc, "apple,t6030-ane", -1);
@@ -570,16 +570,22 @@ static int neg_read_window(void)
 			node.reg_pa[0] += 0x1000000;	/* base moved */
 		else if (i == 1)
 			node.reg_size[0] -= 0x100000;	/* window shorter */
-		else
+		else if (i == 2)
 			node.reg_pa[0] = ane_t6030_soc.pmgr_pa + 0x100000;	/* some other block */
+		else if (i == 3)
+			node.reg_pa[1] += 0x10000;	/* pmgr base moved */
+		else if (i == 4)
+			node.reg_size[1] -= 0x4000;	/* pmgr window shorter */
+		else
+			node.reg_pa[1] = ane_t6030_soc.engine_pa + 0x100000;	/* pmgr is some other block */
 		ret = probe_now();
 		if (ret != -EINVAL) {
 			printf("    NEG-READ-WINDOW case %d: expected -EINVAL, got %d\n", i, ret);
 			bad = 1;
 		}
 		if (!parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) ||
-		    rstage != 2 || strcmp(verdict, "FAIL") || strcmp(reason, "engine-window-mismatch")) {
-			printf("    NEG-READ-WINDOW case %d: expected RESULT stage=2 FAIL engine-window-mismatch\n", i);
+		    rstage != 2 || strcmp(verdict, "FAIL") || strcmp(reason, "window-mismatch")) {
+			printf("    NEG-READ-WINDOW case %d: expected RESULT stage=2 FAIL window-mismatch\n", i);
 			bad = 1;
 		}
 		if (sim_n_events != 0 || sim_bus_faults) {

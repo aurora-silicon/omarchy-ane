@@ -130,9 +130,9 @@ sim-mutation-read-noguard:
 sim-mutation-read-nocheck:
 	$(call pd_mutant,read-nocheck,s/if (!ane_h15_read_ok(ane->soc$(COMMA) off$(COMMA) 4)) {/if (0 \/* NEG: read allowlist skipped *\/) {/,NEG: read allowlist skipped,neg-read-forbidden)
 
-# stage 2 trusts the SoC row without comparing the live reg[0] resource
+# stage 2 trusts the SoC row without comparing the live reg[0] and reg[1] resources
 sim-mutation-read-nowindow:
-	$(call pd_mutant,read-nowindow,s/res.start != s->engine_pa/0 \/* NEG: window check skipped *\//,NEG: window check skipped,neg-read-window)
+	$(call pd_mutant,read-nowindow,s/res.start == pa \&\& resource_size(\&res) == size/1 \/* NEG: window check skipped *\//,NEG: window check skipped,neg-read-window)
 
 # stage 2 runs without confirm_read=1
 sim-mutation-read-noconfirm:

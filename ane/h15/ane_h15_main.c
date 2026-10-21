@@ -389,11 +389,27 @@ static int ane_h15_read_word(struct ane_h15 *ane, const char *name, u32 off,
 	return 0;
 }
 
+/* The static offsets hold only for the windows the SoC row describes.
+ * Compare a live reg resource, the one of_iomap() mapped, with the row. */
+static bool ane_h15_window_ok(struct ane_h15 *ane, int idx, const char *what,
+			      u64 pa, u32 size)
+{
+	struct resource res;
+	int ret = of_address_to_resource(ane->dev->of_node, idx, &res);
+
+	if (!ret && res.start == pa && resource_size(&res) == size)
+		return true;
+	dev_err(ane->dev,
+		"ane_h15 %s window mismatch: reg[%d] start=%#llx size=%#llx, SoC row wants start=%#llx size=%#x\n",
+		what, idx, ret ? 0ULL : (u64)res.start,
+		ret ? 0ULL : (u64)resource_size(&res), pa, size);
+	return false;
+}
+
 static int ane_h15_stage_wrapper(struct ane_h15 *ane)
 {
 	const struct ane_h15_soc *s = ane->soc;
 	u32 status = 0, rvbar_lo = 0, rvbar_hi = 0, a2i = 0, i2a = 0;
-	struct resource res;
 	unsigned int i, refused = 0;
 	char why[128];
 	int ret;
@@ -416,16 +432,11 @@ static int ane_h15_stage_wrapper(struct ane_h15 *ane)
 		return -EPERM;
 	}
 
-	/* The static offsets hold only for the window the SoC row
-	 * describes. Compare the live reg[0] resource, the one of_iomap()
-	 * mapped, before any engine read. */
-	ret = of_address_to_resource(ane->dev->of_node, 0, &res);
-	if (ret || res.start != s->engine_pa || resource_size(&res) != s->engine_size) {
-		dev_err(ane->dev,
-			"ane_h15 engine window mismatch: reg[0] start=%#llx size=%#llx, SoC row wants start=%#llx size=%#x\n",
-			ret ? 0ULL : (u64)res.start, ret ? 0ULL : (u64)resource_size(&res),
-			s->engine_pa, s->engine_size);
-		ane_h15_result(ane, 2, "FAIL", "engine-window-mismatch");
+	/* Both windows are checked before any bus access: the pmgr gate
+	 * below reads through reg[1], the preflight through reg[0]. */
+	if (!ane_h15_window_ok(ane, 0, "engine", s->engine_pa, s->engine_size) ||
+	    !ane_h15_window_ok(ane, 1, "pmgr", s->pmgr_pa, s->pmgr_size)) {
+		ane_h15_result(ane, 2, "FAIL", "window-mismatch");
 		return -EINVAL;
 	}
 	ret = ane_h15_ps_wait(ane);

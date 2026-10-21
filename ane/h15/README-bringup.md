@@ -25,8 +25,8 @@ template is `ane/h16/`.
   The probe has already powered the ANE domains by then, as it does
   for stage 1.
   With `confirm_read=1` it runs the read-only preflight from the b0
-  plan. It first compares the live reg[0] resource with the SoC row and
-  refuses on a mismatch. Then it runs the same ACTUAL=0xf gate as stage 1. It reads CPU_STATUS,
+  plan. It first compares the live reg[0] and reg[1] resources with the SoC
+  row and refuses on a mismatch. Then it runs the same ACTUAL=0xf gate as stage 1. It reads CPU_STATUS,
   RVBAR (two 32-bit reads) and the two mailbox CTRL words. Each address
   is logged before its read, so a hang leaves the last address in the
   log. Reads stay inside the two windows the ADT publishes for the ANE
@@ -153,7 +153,10 @@ The script reads the running device tree, `/proc/interrupts`,
 writes no file. It records the firmware version string that selects the
 image iBoot preloads (H1), the ANE, DART and mailbox nodes with their
 interrupt lines (H2), and the reserved firmware regions with their
-iommu addresses (H3). Send the output file with the stage results.
+iommu addresses (part of H3). It does not fill H3: the ADT
+segment-ranges, the ASC tunables and the DART sid, vm-base and vm-size
+are not in the Linux device tree and need the boot ADT. Send the output
+file with the stage results.
 
 ## Bring-up protocol for the first owner
 
