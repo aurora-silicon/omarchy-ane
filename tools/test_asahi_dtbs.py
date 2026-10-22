@@ -30,6 +30,7 @@ with tempfile.TemporaryDirectory(prefix="asahi-dtbs-test-") as tmp:
     version = source / "scripts/dtc/version.txt"
     version.parent.mkdir(parents=True)
     version.write_text("first\n")
+    (version.parent / ".gitignore").write_text("*.generated.h\n")
     git("add", ".")
     git("-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "-qm", "first")
     first = git("rev-parse", "HEAD")
@@ -76,4 +77,29 @@ with tempfile.TemporaryDirectory(prefix="asahi-dtbs-test-") as tmp:
     result = run(str(BUILDER), str(out), str(root / "wrong-source"), first, env=env)
     assert result.returncode not in (0, 75) and "source-ready" not in result.stderr, result
 
-print("test_asahi_dtbs: ok (cold/warm SHA, cache hit, branch, tag, dirty and foreign cache)")
+    # Untracked DTS inputs, even ignored headers, must not enter a pinned build.
+    failures = []
+    for name in ("injected.dts", "injected.generated.h"):
+        injected = cached.parent / name
+        injected.write_text("not in the requested commit\n")
+        if name.endswith(".generated.h"):
+            assert not run("git", "-C", str(out / "linux"), "status", "--porcelain",
+                           "--untracked-files=all", check=True).stdout
+        result = run(str(BUILDER), str(out), str(source), first, env=env)
+        if result.returncode in (0, 75) or "source-ready" in result.stderr:
+            failures.append(f"accepted {name}")
+        assert injected.exists(), "untracked inputs must not be deleted"
+        injected.unlink()
+
+    # A removed/renamed board must not leave a DTB from the old revision.
+    stale = out / "dtbs/removed-board.dtb"
+    stale.write_bytes(b"old revision")
+    keep = out / "dtbs/keep.txt"
+    keep.write_text("not a generated DTB")
+    prepare(second, second)
+    if stale.exists():
+        failures.append("stale DTB survived the revision switch")
+    assert keep.read_text() == "not a generated DTB"
+    assert not failures, failures
+
+print("test_asahi_dtbs: ok (refs, offline hit, dirty/untracked/foreign cache, stale DTBs)")

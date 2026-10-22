@@ -29,13 +29,17 @@ fi
 [[ $(git -C "$src" remote get-url origin) == "$url" ]] || {
   echo "asahi-dtbs: $src belongs to a different repository" >&2; exit 2;
 }
+# Check before checkout as Git may otherwise replace ignored source files.
+state=$(git -C "$src" status --porcelain --untracked-files=all --ignored)
+[[ -z $state ]] || {
+  echo "asahi-dtbs: $src has modified or extra source files" >&2; exit 1;
+}
 if [[ $(git -C "$src" rev-parse --verify HEAD 2>/dev/null || true) != "$tag" ]]; then
   git -C "$src" fetch -q --depth 1 --filter=blob:none -- origin "$tag"
   git -C "$src" -c advice.detachedHead=false checkout -q --detach FETCH_HEAD
 fi
-git -C "$src" diff --quiet HEAD -- || {
-  echo "asahi-dtbs: $src has modified source files" >&2; exit 1;
-}
+# Only generated DTBs are replaced; unrelated output files are left alone.
+rm -f -- "$out/dtbs/"*.dtb
 
 flex -o "$out/dtc-lexer.lex.c" "$d/dtc-lexer.l"
 bison -o "$out/dtc-parser.tab.c" --defines="$out/dtc-parser.tab.h" -t -l "$d/dtc-parser.y"
