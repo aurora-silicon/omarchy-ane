@@ -111,7 +111,8 @@ def test_a_row_beyond_the_buffer_is_refused_and_nothing_is_written_there():
 
 
 def test_negative_strides_and_dimensions_are_refused_in_python():
-    for port in ({"shape": [1, 2, 1, 4], "strides": [0, -4, 8, 2]}, {"shape": [1, 2, 1, 4], "strides": [0, 8, -8, 2]}, {"shape": [1, 0, 1, 4], "strides": [0, 8, 8, 2]}):
+    for port in ({"shape": [1, 2, 1, 4], "strides": [0, -4, 8, 2]}, {"shape": [1, 2, 1, 4], "strides": [0, 8, -8, 2]}, {"shape": [1, 0, 1, 4], "strides": [0, 8, 8, 2]},
+                 {"shape": [1, 2, 1, 4], "strides": [0, 2 ** 64 + 8, 8, 2]}, {"shape": [1, 2, 1, 4], "strides": [0, 8, 2 ** 62, 2]}):
         with pytest.raises(ValueError):
             sp.pack_into(ctypes.create_string_buffer(64), np.zeros(8, dtype=np.float32), port)
         with pytest.raises(ValueError):
