@@ -21,7 +21,7 @@ Step time, p50 over the prompts, measured in one session on one boot with the ar
 
 | Chip | Pair | First | Second | Change |
 |---|---|---|---|---|
-| 13-inch M1 | fp16, int8 GPTQ | 0.0863 s | 0.0610 s | 29.4 percent lower |
+| 13-inch M1 | fp16, int8 GPTQ | 0.0863 s | 0.0610 s | 29.4 percent lower (means of both arms of each) |
 | 14-inch M2 Max | fp16, int8 GPTQ | 0.1579 s | 0.1243 s | 21.3 percent lower |
 | 13-inch M1 | int8 plain rounding, int8 GPTQ | 0.0678 s | 0.0680 s | equal (a different harness, so not comparable with the rows above) |
 | 14-inch M2 Max | int8 plain rounding, int8 GPTQ | 0.1234 s | 0.1232 s | equal |
