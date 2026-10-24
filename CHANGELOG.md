@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `ane_h15` gains `stage=4` (`stage=run`), behind `confirm_run=1`: the first stage that writes. A 16-inch M3 Pro (T6030) owner ran stages 0, 1 and 2 (PR 175): all five power domains reached ACTUAL=0xf, CPU_STATUS read 0x0030002a, RVBAR read 0x0000010000000001 and both mailbox CTRL words read 0x20001. Stage 4 uses those numbers. It refuses on any SoC row without a measured RVBAR (`rvbar_expect`, only `t6030` today), and refuses unless the core is stopped, CPU_CONTROL RUN is clear, RVBAR is exactly the measured value and both mailbox words read EMPTY. It then sets CPU_CONTROL bit 4 as macOS does, watches CPU_STATUS and the I2A mailbox for `run_wait_ms` (default 300), logs at most four raw I2A messages without replying, and clears bit 4 then bit 5. A core that does not report STOPPED afterwards keeps its power claim and `remove()` refuses. Stage 3 is unchanged. It writes only CPU_CONTROL bits 4 and 5, never RVBAR, the mailbox or the DART (the ANE DART nodes stay disabled). The userspace sim covers the run (5 cases, a device model for STOPPED and the mailbox) and the refusals (13 cases). Five mutants are killed: confirm ignored, RVBAR check skipped, mailbox check skipped, RUN never cleared, a stuck core accepted. The module builds with `W=1` against the omarchy-linux tree and warns about nothing. It has not run on hardware. The M6 (T8152) RUN write cleared STOPPED and then showed no message with the DART unprogrammed, so a started H15 core may do the same.
+
 ## 0.4.10 (2026-10-23)
 
 - `ane_h15` attaches each of the ANE's five power domains by id and links them with `RPM_ACTIVE` device links, the pattern `ane_t6021` uses (#173). Before, only the driver core's automatic attach ran, which handles one domain, so stage 1 stopped at `pm_runtime_get_sync` with `-EACCES`. The contributor reports stage 0 and stage 1 passing on a 16-inch M3 Pro (T6030). We did not run it on hardware.
