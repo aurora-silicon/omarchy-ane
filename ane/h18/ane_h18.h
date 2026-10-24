@@ -14,6 +14,9 @@
  *   PSD slots on (stage power) and that CPU_CONTROL reads 0 before the core runs (read_ctrl).
  * - PSD slot window layout and request protocol: drivers/pmdomain/apple/pmgr-psd.c of the same kernel tree,
  *   proven on this board for slot 71 (ATC0 USB).
+ * - RTKit management protocol and power state values (drivers/soc/apple/rtkit.c) and the T8152 counted FIFO of a Postoffice channel (mailbox.c):
+ *   linux-aurora commit dc7b5b9c539b85bdf2557f2a0eb44223a4219de9. Gen3 DART layout: drivers/iommu/apple-dart.c of the kernel tree this Image is
+ *   built from, which no public commit carries yet; its sha256 is 2904d16b83d0ae065586e16157cc5b54e7233c174c51dcda1c70c2b02a637621.
  * INFERENCE, not measured: that ANE slots 30 and 31 accept state 0 (run) and what the ASC wrapper reads
  * once they are on. The ANE needs more than the PSD slots (clock-ids 329, 328 and 375 are not modeled).
  */
@@ -71,10 +74,12 @@
 #define ANE_H18_RTK_EPMAP	8	/* the reply has the same type */
 #define ANE_H18_RTK_AP_PWR	0xb	/* SET_AP_PWR_STATE */
 #define ANE_H18_RTK_PWR_ON	0x20
-#define ANE_H18_RTK_PWR_OFF	0x00
+#define ANE_H18_RTK_PWR_OFF	0x00	/* rtkit_stop=2: OFF on both sides, cannot be restarted (apple_rtkit_poweroff) */
+#define ANE_H18_RTK_PWR_QUIESCED	0x10	/* the AP state of apple_rtkit_shutdown */
+#define ANE_H18_RTK_PWR_SLEEP	0x01	/* the IOP state of apple_rtkit_shutdown: sleeping, can be restarted (OFF cannot) */
 #define ANE_H18_RTK_IOP_IDLE	0xc
 #define ANE_H18_RTK_SET_IOP_PWR	6
-#define ANE_H18_RTK_STOP_WAIT_MS	600	/* how long the shutdown handshake waits for the IOP idle message */
+#define ANE_H18_RTK_STOP_WAIT_MS	600	/* how long the shutdown handshake waits for the IOP acknowledgement */
 #define ANE_H18_RTK_APP_EP	0x20	/* endpoints from here are application endpoints, started only once the coprocessor runs */
 #define ANE_H18_RTK_VERSION	12	/* the version macOS and Linux answer with on this firmware family */
 

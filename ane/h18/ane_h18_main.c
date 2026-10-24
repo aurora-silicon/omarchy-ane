@@ -94,9 +94,9 @@ static bool map_fw;
 module_param(map_fw, bool, 0444);
 MODULE_PARM_DESC(map_fw, "Stage=boot: before RUN, attach the ANE to its DART through the iommu API and map the two preloaded firmware segments at their IOVAs. Needs power-domains and iommus in the node. Default off.");
 
-static bool rtkit_stop;
-module_param(rtkit_stop, bool, 0444);
-MODULE_PARM_DESC(rtkit_stop, "Stage=boot with rtkit_start=1: before RUN is cleared, send AP power state OFF and IOP power state OFF and wait for the acknowledgements and the IOP idle message. Default off.");
+static unsigned int rtkit_stop;
+module_param(rtkit_stop, uint, 0444);
+MODULE_PARM_DESC(rtkit_stop, "Stage=boot with rtkit_start=1: before RUN is cleared, run the RTKit shutdown and wait for the acknowledgements. 1: AP power state QUIESCED then IOP power state SLEEP (apple_rtkit_shutdown, restartable). 2: OFF then OFF (apple_rtkit_poweroff, cannot be restarted). Default 0: none.");
 
 static bool rtkit_start;
 module_param(rtkit_start, bool, 0444);
@@ -128,10 +128,12 @@ struct ane_h18 {
 	bool kpsd;		/* the node has power-domains: the kernel's PSD driver owns the slots, this module only holds a runtime PM reference */
 	bool rpm_held;
 	u32 rtk_eps[8];		/* RTKit endpoints the firmware announced, one bit per endpoint number */
-	bool rtk_ap_on;
+	bool rtk_ap_sent;	/* AP power ON was sent */
+	bool rtk_ap_on;		/* the firmware acknowledged AP power ON */
 	bool rtk_app_started;
 	bool rtk_shutdown;	/* the shutdown handshake is under way */
-	bool rtk_ap_off_acked, rtk_iop_off_acked, rtk_iop_idle;
+	bool rtk_ap_acked, rtk_iop_acked, rtk_iop_idle;
+	u32 rtk_ap_state, rtk_iop_state;	/* the states the shutdown asked for */
 	bool psd_on[ANE_H18_NPSD];
 	bool fw_started;
 };
@@ -665,19 +667,21 @@ static int ane_h18_rtkit_step(struct ane_h18 *ane, u32 chan_off, const char *tag
 		}
 	} else if (type == ANE_H18_RTK_IOP_PWR_ACK) {
 		dev_info(ane->dev, "ane_h18 rtkit: IOP power state acknowledged: %#llx\n", msg0 & 0xffff);
-		if (ane->rtk_shutdown && (msg0 & 0xffff) == ANE_H18_RTK_PWR_OFF)
-			ane->rtk_iop_off_acked = true;
-		else if (rtkit_start && !ane->rtk_ap_on && (msg0 & 0xff) == ANE_H18_RTK_PWR_ON &&
+		if (ane->rtk_shutdown && (msg0 & 0xffff) == ane->rtk_iop_state)
+			ane->rtk_iop_acked = true;
+		else if (rtkit_start && !ane->rtk_ap_sent && (msg0 & 0xff) == ANE_H18_RTK_PWR_ON &&
 			 !ane_h18_rtkit_send(ane, chan_off, tag, ((u64)ANE_H18_RTK_AP_PWR << ANE_H18_RTK_TYPE_SHIFT) | ANE_H18_RTK_PWR_ON, sent))
-			ane->rtk_ap_on = true;
+			ane->rtk_ap_sent = true;
 	} else if (type == ANE_H18_RTK_AP_PWR) {
 		dev_info(ane->dev, "ane_h18 rtkit: AP power state acknowledged: %#llx\n", msg0 & 0xffff);
-		if (ane->rtk_shutdown && (msg0 & 0xffff) == ANE_H18_RTK_PWR_OFF) {
-			ane->rtk_ap_off_acked = true;
-			/* the IOP power state follows the AP one: OFF, as the Linux driver does at shutdown */
-			ane_h18_rtkit_send(ane, chan_off, tag, ((u64)ANE_H18_RTK_SET_IOP_PWR << ANE_H18_RTK_TYPE_SHIFT) | ANE_H18_RTK_PWR_OFF, sent);
+		if (ane->rtk_shutdown && (msg0 & 0xffff) == ane->rtk_ap_state) {
+			ane->rtk_ap_acked = true;
+			/* the IOP power state follows the AP one, as apple_rtkit_shutdown and apple_rtkit_poweroff do */
+			ane_h18_rtkit_send(ane, chan_off, tag, ((u64)ANE_H18_RTK_SET_IOP_PWR << ANE_H18_RTK_TYPE_SHIFT) | ane->rtk_iop_state, sent);
 		} else if (rtkit_start && !ane->rtk_shutdown && (msg0 & 0xff) == ANE_H18_RTK_PWR_ON && !ane->rtk_app_started) {
 			unsigned int i;
+
+			ane->rtk_ap_on = true;
 
 			/* the coprocessor is running now: start the application endpoints it announced */
 			ane->rtk_app_started = true;
@@ -720,8 +724,8 @@ static int ane_h18_stage_boot(struct ane_h18 *ane)
 		ane_h18_result(ane, "boot", "REFUSED", "rtkit_hello=1 needs alias_mbox=1");
 		return -EINVAL;
 	}
-	if (rtkit_stop && !rtkit_start) {
-		ane_h18_result(ane, "boot", "REFUSED", "rtkit_stop=1 needs rtkit_start=1");
+	if (rtkit_stop > 2 || (rtkit_stop && !rtkit_start)) {
+		ane_h18_result(ane, "boot", "REFUSED", "rtkit_stop=1 or 2 needs rtkit_start=1");
 		return -EINVAL;
 	}
 	if (rtkit_start && !rtkit_hello) {
@@ -820,19 +824,23 @@ static int ane_h18_stage_boot(struct ane_h18 *ane)
 		}
 	}
 	if (rtkit_stop && ane->rtk_ap_on) {
-		/* RTKit shutdown as the Linux driver does it: AP power state OFF, then IOP power state OFF once that is acknowledged, then wait for IOP idle */
+		/* RTKit shutdown as apple_rtkit_shutdown does it: AP power state QUIESCED, then IOP power state SLEEP once that is acknowledged, then wait for the
+		 * IOP acknowledgement (or an idle message). rtkit_stop=2 sends OFF on both sides instead (apple_rtkit_poweroff), which cannot be restarted. */
 		u32 chan_off = ANE_H18_PO_ALIAS_OFF + s->mbox_num * 2 * ANE_H18_PO_STRIDE;
 		char tag[16];
 
 		snprintf(tag, sizeof(tag), "alias%u", s->mbox_num * 2);
+		sent = 0;	/* the shutdown has its own send budget: the boot messages cannot starve it */
 		ane->rtk_shutdown = true;
-		if (!ane_h18_rtkit_send(ane, chan_off, tag, ((u64)ANE_H18_RTK_AP_PWR << ANE_H18_RTK_TYPE_SHIFT) | ANE_H18_RTK_PWR_OFF, &sent)) {
-			for (waited = 0; waited < ANE_H18_RTK_STOP_WAIT_MS && !ane->rtk_iop_idle; waited += 10) {
+		ane->rtk_ap_state = rtkit_stop == 2 ? ANE_H18_RTK_PWR_OFF : ANE_H18_RTK_PWR_QUIESCED;
+		ane->rtk_iop_state = rtkit_stop == 2 ? ANE_H18_RTK_PWR_OFF : ANE_H18_RTK_PWR_SLEEP;
+		if (!ane_h18_rtkit_send(ane, chan_off, tag, ((u64)ANE_H18_RTK_AP_PWR << ANE_H18_RTK_TYPE_SHIFT) | ane->rtk_ap_state, &sent)) {
+			for (waited = 0; waited < ANE_H18_RTK_STOP_WAIT_MS && !ane->rtk_iop_acked && !ane->rtk_iop_idle; waited += 10) {
 				usleep_range(10000, 11000);
 				ane_h18_rtkit_step(ane, chan_off, tag, &sent);
 			}
 		}
-		dev_info(ane->dev, "ane_h18 rtkit shutdown: ap_off_acked=%d iop_off_acked=%d iop_idle=%d after %ums\n", ane->rtk_ap_off_acked, ane->rtk_iop_off_acked,
+		dev_info(ane->dev, "ane_h18 rtkit shutdown: ap_acked=%d iop_acked=%d iop_idle=%d after %ums\n", ane->rtk_ap_acked, ane->rtk_iop_acked,
 			 ane->rtk_iop_idle, waited);
 	}
 	/* Stop the core again. */
@@ -860,6 +868,10 @@ static int ane_h18_stage_boot(struct ane_h18 *ane)
 	if (ret) {
 		ane_h18_result(ane, "boot", "FAIL", "read-refused");
 		return ret;
+	}
+	if (rtkit_stop && !(ane->rtk_ap_on && ane->rtk_ap_acked && ane->rtk_iop_acked)) {
+		ane_h18_result(ane, "boot", "FAIL", "rtkit-shutdown-incomplete");
+		return -EIO;
 	}
 	ane_h18_result(ane, "boot", "PASS", running_seen ? "core-ran-and-stopped" : "core-never-reported-running");
 	return 0;
