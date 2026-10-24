@@ -58,7 +58,10 @@ def _lib() -> ctypes.CDLL:
 
 def _dims(port):
     n, c, h, w = (int(v) for v in port["shape"])
-    return n, c, h, w, int(port["strides"][1]), int(port["strides"][2])
+    plane, row = int(port["strides"][1]), int(port["strides"][2])
+    if min(n, c, h, w) < 1 or plane < 0 or row < 0:
+        raise ValueError(f"the port has a non-positive dimension or a negative stride: shape {port['shape']}, strides {port['strides']}")
+    return n, c, h, w, plane, row
 
 
 def pack_into(buffer, dense, port) -> None:

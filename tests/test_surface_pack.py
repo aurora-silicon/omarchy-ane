@@ -108,3 +108,28 @@ def test_a_row_beyond_the_buffer_is_refused_and_nothing_is_written_there():
         sp.unpack(bytes(64), port)
     with pytest.raises(ValueError):
         sp.pack_into(ctypes.create_string_buffer(256), np.zeros(31, dtype=np.float32), port)
+
+
+def test_negative_strides_and_dimensions_are_refused_in_python():
+    for port in ({"shape": [1, 2, 1, 4], "strides": [0, -4, 8, 2]}, {"shape": [1, 2, 1, 4], "strides": [0, 8, -8, 2]}, {"shape": [1, 0, 1, 4], "strides": [0, 8, 8, 2]}):
+        with pytest.raises(ValueError):
+            sp.pack_into(ctypes.create_string_buffer(64), np.zeros(8, dtype=np.float32), port)
+        with pytest.raises(ValueError):
+            sp.unpack(bytes(64), port)
+
+
+def test_a_stride_that_wraps_the_offset_is_refused_in_c():
+    """plane = 2**64 - 4 (what a negative stride becomes as a size_t) must not move the write below the buffer."""
+    lib = sp._lib()
+    arena = ctypes.create_string_buffer(b"\x5a" * 12288, 12288)
+    inner = ctypes.addressof(arena) + 4096
+    dense = np.ones(8, dtype=np.float32)
+    for plane, row in ((2 ** 64 - 4, 8), (2 ** 63, 2 ** 63), (2 ** 62, 8)):
+        rc = lib.surface_pack_f32(inner, 4096, dense.ctypes.data, 1, 2, 1, 4, plane, row)
+        assert rc == -1, (plane, row)
+    assert lib.surface_pack_f32(inner, 4096, dense.ctypes.data, 1, 1, 2, 4, 8, 2 ** 64 - 8) == -1     # h = 2: the row stride wraps
+    raw = bytes(arena.raw)
+    assert raw[:4096] == b"\x5a" * 4096 and raw[8192:] == b"\x5a" * 4096          # nothing outside the 4096 byte surface changed
+    out = np.empty(8, dtype=np.float16)
+    assert lib.surface_unpack(inner, 4096, out.ctypes.data, 1, 2, 1, 4, 2 ** 64 - 4, 8) == -1
+

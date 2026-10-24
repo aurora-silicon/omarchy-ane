@@ -20,6 +20,14 @@
 #include <arm_neon.h>
 #endif
 
+// Byte offset of row (in, ic, ih) of a surface, or SIZE_MAX when the arithmetic overflows or the row of w fp16 values would end beyond `size`.
+static inline size_t row_offset(size_t in, size_t ic, size_t ih, size_t c, size_t plane, size_t row, size_t w, size_t size) {
+    size_t a, b, d, off;
+    if (__builtin_mul_overflow(in * c + ic, plane, &a) || __builtin_mul_overflow(ih, row, &b) || __builtin_add_overflow(a, b, &off) || __builtin_mul_overflow(w, (size_t)2, &d)) return SIZE_MAX;
+    if (off > size || d > size - off) return SIZE_MAX;
+    return off;
+}
+
 static inline uint16_t f32_to_f16_bits(float x) {
     _Float16 h = (_Float16)x;
     uint16_t b;
@@ -33,8 +41,8 @@ int surface_pack_f32(uint8_t *dst, size_t dst_size, const float *dense, size_t n
     for (size_t in = 0; in < n; in++)
         for (size_t ic = 0; ic < c; ic++)
             for (size_t ih = 0; ih < h; ih++) {
-                const size_t off = in * c * plane + ic * plane + ih * row;
-                if (off + w * 2 > dst_size) return -1;
+                const size_t off = row_offset(in, ic, ih, c, plane, row, w, dst_size);
+                if (off == SIZE_MAX) return -1;
                 const float *s = dense + ((in * c + ic) * h + ih) * w;
                 uint16_t *d = (uint16_t *)(void *)(dst + off);
                 size_t x = 0;
@@ -53,8 +61,8 @@ int surface_pack_f16(uint8_t *dst, size_t dst_size, const uint16_t *dense, size_
     for (size_t in = 0; in < n; in++)
         for (size_t ic = 0; ic < c; ic++)
             for (size_t ih = 0; ih < h; ih++) {
-                const size_t off = in * c * plane + ic * plane + ih * row;
-                if (off + w * 2 > dst_size) return -1;
+                const size_t off = row_offset(in, ic, ih, c, plane, row, w, dst_size);
+                if (off == SIZE_MAX) return -1;
                 memcpy(dst + off, dense + ((in * c + ic) * h + ih) * w, w * 2);
             }
     return 0;
@@ -65,8 +73,8 @@ int surface_unpack(const uint8_t *src, size_t src_size, uint16_t *dense, size_t 
     for (size_t in = 0; in < n; in++)
         for (size_t ic = 0; ic < c; ic++)
             for (size_t ih = 0; ih < h; ih++) {
-                const size_t off = in * c * plane + ic * plane + ih * row;
-                if (off + w * 2 > src_size) return -1;
+                const size_t off = row_offset(in, ic, ih, c, plane, row, w, src_size);
+                if (off == SIZE_MAX) return -1;
                 memcpy(dense + ((in * c + ic) * h + ih) * w, src + off, w * 2);
             }
     return 0;
