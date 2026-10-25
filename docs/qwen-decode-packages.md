@@ -52,7 +52,7 @@ The gate above uses technical text. The GPTQ calibration used prose and multilin
 | long position, 50 prompts of 170 positions | fp16 | 0.1574 s | 0.000293 | 0.9926 |
 | long position | int8, GPTQ | 0.1243 s | 0.000604 | 0.9898 |
 
-The step is 21 percent lower on both sets. The KL is 1.57 times the fp16 KL on code and 2.06 times on the long-position set. Top-1 is lower by 0.0013 and 0.0028. The rule set before the run asked for at most 2 times the fp16 KL and a top-1 within 0.001. Both sets miss it. So the int8 GPTQ package is a speed tier: it passes the technical gate and costs more quality on text unlike its calibration. It is lower on 48 of 50 code prompts and 49 of 50 long-position prompts. The 13-inch M1 has not run these two sets.
+The step is 21.7 percent lower on the code set and 21.0 percent lower on the long-position set. The KL is 1.57 times the fp16 KL on code and 2.06 times on the long-position set. Top-1 is lower by 0.0013 and 0.0028. The rule set before the run asked for at most 2 times the fp16 KL and a top-1 within 0.001. Both sets miss it. So the int8 GPTQ package is a speed tier: it passes the technical gate and costs more quality on text unlike its calibration. Its KL is higher than the fp16 KL on 48 of 50 code prompts and on 49 of 50 long-position prompts. The 13-inch M1 has not run these two sets.
 
 The recipe scripts and the calibration notes are in the compiler repo: `receipts/2026-10-24-int8-gptq-qwen38-h13-h14` in [mil-hwx-compiler](https://github.com/joshuaswarren/mil-hwx-compiler).
 
