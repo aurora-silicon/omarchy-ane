@@ -1854,6 +1854,13 @@ static void ane_t6021_postclose(struct drm_device *drm, struct drm_file *file)
 	list_for_each_entry_safe(bo, tmp, &fd->bos, pool.node)
 		ane_t6021_bo_drop(bo);
 	mutex_unlock(&ane_t6021_bo_lock);
+	/* The firmware holds no program now (each was unloaded and acknowledged) and is not quarantined: nothing can read or write a parked io
+	 * BO any more. Free them, so the next session finds the dma32 window whole instead of cut up by the io shapes of the last one. The
+	 * file's own io BOs were just parked above, which is why this runs after the drop. fw_lock keeps a LOAD from starting meanwhile. */
+	mutex_lock(&ane_t6021_fw_lock);
+	if (!atomic_read(&ane_t6021_quarantined) && ane_t6021_progtab_idle(&ane_t6021_progtab))
+		ane_t6021_pool_drain_io(&ane_t6021_bo_pool, ane_t6021_pool_release_ent);
+	mutex_unlock(&ane_t6021_fw_lock);
 	kfree(fd);
 	file->driver_priv = NULL;
 }

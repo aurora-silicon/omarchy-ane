@@ -86,6 +86,44 @@ ane_t6021_pool_evict_oldest(struct ane_t6021_pool *p)
 	return NULL;
 }
 
+/* Unlink the OLDEST uncharged entry (a parked io BO), or NULL. Only for the moment the firmware holds no program and no process: see
+ * ane_t6021_pool_drain_io(). Budgeted entries are not touched. The caller does the real free. */
+static inline struct ane_t6021_pool_ent *
+ane_t6021_pool_evict_oldest_io(struct ane_t6021_pool *p)
+{
+	struct ane_t6021_pool_ent *e;
+
+	spin_lock(&p->lock);
+	list_for_each_entry(e, &p->list, node) {
+		if (!e->pooled_sec) {
+			list_del(&e->node);
+			spin_unlock(&p->lock);
+			return e;
+		}
+	}
+	spin_unlock(&p->lock);
+	return NULL;
+}
+
+/* Free every parked io BO (RELEASE really frees each; returns the page-aligned bytes freed). Call it ONLY when the firmware program table is
+ * idle (every program unloaded and acknowledged) and the device is not quarantined: then no command can read or write these buffers any more.
+ * Without it an io BO parks forever and only a BO_INIT of the identical size reuses it, so a session with other io shapes (another package)
+ * finds the 32-bit dma window (usable about 2.98 GB, the shipped package's sections alone take 2.754 GB) cut up by them, and its 222 MiB
+ * section BO_INIT fails (measured on the M2: device-open-failed after about three sessions on one boot, bo_total growing across sessions).
+ * The budgeted section parks stay: BO_INIT already evicts them when it needs the room. */
+static inline size_t ane_t6021_pool_drain_io(struct ane_t6021_pool *p,
+					     ane_t6021_pool_release_fn release)
+{
+	struct ane_t6021_pool_ent *e;
+	size_t freed = 0;
+
+	while ((e = ane_t6021_pool_evict_oldest_io(p)) != NULL) {
+		freed += PAGE_ALIGN(e->size);
+		release(e);
+	}
+	return freed;
+}
+
 /* Park ENT (uncharged class: an io BO the firmware may write again).
  * SIZE is recorded here for the same reason as in park(). It keeps its
  * memory and IOVA; a quarantined firmware is the caller's concern (the

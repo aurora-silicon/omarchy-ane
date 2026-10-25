@@ -196,6 +196,17 @@ int main(void)
 		check(!ane_t6021_fdprogs_ref(a, &extra) && extra.users == 0, "the 251st reference is refused without a count");
 	}
 
+	/* idle: only when every slot is FREE (a LIVE or HELD program keeps firmware state) */
+	memset(t, 0, sizeof(*t));
+	check(ane_t6021_progtab_idle(t), "an empty table is idle");
+	t->progs[3].state = ANE_T6021_PROG_LIVE;
+	t->hi = 4;
+	check(!ane_t6021_progtab_idle(t), "a LIVE program makes the table busy");
+	t->progs[3].state = ANE_T6021_PROG_HELD;
+	check(!ane_t6021_progtab_idle(t), "a HELD program makes the table busy");
+	t->progs[3].state = ANE_T6021_PROG_FREE;
+	check(ane_t6021_progtab_idle(t), "all slots FREE again: idle");
+
 	free(t);
 	free(a);
 	free(b);

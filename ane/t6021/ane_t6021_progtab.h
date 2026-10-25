@@ -78,6 +78,18 @@ static inline struct ane_t6021_prog *ane_t6021_progtab_by_id(struct ane_t6021_pr
 	return NULL;
 }
 
+/* True when the firmware holds no program from this table: every slot is FREE, so each program was unloaded (process, then program, both
+ * acknowledged) and released. A LIVE or HELD program keeps firmware state that may still use buffers. */
+static inline bool ane_t6021_progtab_idle(const struct ane_t6021_progtab *t)
+{
+	unsigned int i;
+
+	for (i = 0; i < t->hi; i++)
+		if (t->progs[i].state != ANE_T6021_PROG_FREE)
+			return false;
+	return true;
+}
+
 /* True when a new program can be added: a free slot or room to grow. */
 static inline bool ane_t6021_progtab_has_room(const struct ane_t6021_progtab *t)
 {

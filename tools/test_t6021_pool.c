@@ -63,6 +63,62 @@ static int retry_attempt(void *data)
 	return 0;
 }
 
+/* A fake dma32 window for the idle-drain model: a BO is a size; the allocator refuses when the window would overflow. */
+struct sim_bo {
+	struct ane_t6021_pool_ent ent;
+	size_t size;
+};
+struct sim_ctx {
+	size_t size;
+	struct sim_bo *bo;
+};
+static struct sim_ctx sim_c;
+static long long sim_used;
+#define SIM_WINDOW	(2980ll << 20)
+
+static int sim_attempt(void *data)
+{
+	struct sim_ctx *c = data;
+
+	if (sim_used + (long long)PAGE_ALIGN(c->size) > SIM_WINDOW)
+		return -ENOMEM;
+	c->bo = calloc(1, sizeof(*c->bo));
+	c->bo->size = c->size;
+	sim_used += PAGE_ALIGN(c->size);
+	return 0;
+}
+
+static void sim_release(struct ane_t6021_pool_ent *ent)
+{
+	struct sim_bo *b = container_of(ent, struct sim_bo, ent);
+
+	sim_used -= PAGE_ALIGN(b->size);
+	free(b);
+}
+
+static void sim_free(struct sim_bo *b)
+{
+	sim_used -= PAGE_ALIGN(b->size);
+	free(b);
+}
+
+/* BO_INIT as the driver does it: a parked BO of the same size first, else the allocator with the budgeted-eviction retry. */
+static int sim_bo_init(struct ane_t6021_pool *p, size_t size, struct sim_bo **out)
+{
+	struct ane_t6021_pool_ent *ent = ane_t6021_pool_take(p, size, false);
+	int ret;
+
+	if (ent) {
+		*out = container_of(ent, struct sim_bo, ent);
+		return 0;
+	}
+	sim_c.size = size;
+	sim_c.bo = NULL;
+	ret = ane_t6021_pool_alloc_retry(p, sim_attempt, &sim_c, sim_release);
+	*out = ret ? NULL : sim_c.bo;
+	return ret;
+}
+
 static struct fake_bo fake_bo_new(int id, size_t size)
 {
 	struct fake_bo b = { .id = id, .req_size = size };
@@ -234,6 +290,63 @@ int main(void)
 	      "drain: every budgeted park was really freed");
 	check(ane_t6021_pool_sec_bytes(&p) == 0,
 	      "drain: the budget emptied");
+
+	/* Idle drain (the M2 leak): parked io BOs are freed when the firmware holds no program; budgeted section parks stay. */
+	ane_t6021_pool_init(&p, 400, POOL_TEST_MIN_KIB);
+	a = fake_bo_new(1, 64u << 20);	/* budgeted section park */
+	u = fake_bo_new(2, 32u << 20);	/* io park, uncharged */
+	d = fake_bo_new(3, 8u << 20);	/* io park, uncharged */
+	check(park_bo(&p, &a, fake_release) == 0, "drain_io: the section park lands");
+	ane_t6021_pool_park_uncharged(&p, &u.ent, 32u << 20);
+	ane_t6021_pool_park_uncharged(&p, &d.ent, 8u << 20);
+	n_freed = 0;
+	check(ane_t6021_pool_drain_io(&p, fake_release) == (size_t)PAGE_ALIGN(40u << 20), "drain_io: returns the io bytes freed");
+	check(u.freed == 1 && d.freed == 1 && a.freed == 0, "drain_io: both io parks freed, the section park stays");
+	check(n_freed == 2 && freed_log[0] == &u && freed_log[1] == &d, "drain_io: oldest first");
+	check(ane_t6021_pool_sec_bytes(&p) == (s64)PAGE_ALIGN(64u << 20), "drain_io: the section charge is untouched");
+	check(ane_t6021_pool_drain_io(&p, fake_release) == 0, "drain_io: a second drain finds nothing");
+	check(ane_t6021_pool_take(&p, 64u << 20, false) == &a.ent, "drain_io: the section park is still handed out");
+
+	/* The M2 sequence with the real pool code over a fake dma32 window (usable 2.98 GB; the shipped package's sections are 2.754 GB).
+	 * Three S1-family sessions (16 io BOs of 32 MiB each) then three shipped sessions (12 section BOs of 229.5 MiB, 8 io BOs of 20 MiB).
+	 * A session frees its sections when its programs unload and parks its io BOs uncharged when it closes. After the S1 sessions 512 MiB
+	 * of S1 io shapes sit parked: without the idle drain no shipped session loads its sections (device-open-failed); with it all do. */
+	{
+		int with_drain, n_s1_ok[2] = {0, 0}, n_ship_ok[2] = {0, 0}, s, i;
+
+		for (with_drain = 0; with_drain < 2; with_drain++) {
+			ane_t6021_pool_init(&p, 512, POOL_TEST_MIN_KIB);
+			sim_used = 0;
+			for (s = 0; s < 6; s++) {
+				int shipped = s >= 3;
+				struct sim_bo *sec[12] = { 0 }, *io[16] = { 0 };
+				int nsec = shipped ? 12 : 0, nio = shipped ? 8 : 16, ok = 1;
+
+				for (i = 0; i < nsec; i++)
+					if (sim_bo_init(&p, 229u * 1024 * 1024 + (1u << 19), &sec[i]))
+						ok = 0;
+				for (i = 0; ok && i < nio; i++)
+					if (sim_bo_init(&p, shipped ? (20u << 20) : (32u << 20), &io[i]))
+						ok = 0;
+				for (i = 0; i < nsec; i++)
+					if (sec[i])
+						sim_free(sec[i]);
+				for (i = 0; i < nio; i++)
+					if (io[i])
+						ane_t6021_pool_park_uncharged(&p, &io[i]->ent, io[i]->size);
+				if (with_drain)
+					ane_t6021_pool_drain_io(&p, sim_release);
+				if (shipped)
+					n_ship_ok[with_drain] += ok;
+				else
+					n_s1_ok[with_drain] += ok;
+			}
+		}
+		check(n_s1_ok[0] == 3 && n_s1_ok[1] == 3, "model: the S1 sessions load with and without the drain");
+		check(n_ship_ok[0] == 0, "model: WITHOUT the idle drain no shipped session loads once S1 io is parked");
+		check(n_ship_ok[1] == 3, "model: WITH the idle drain all three shipped sessions load");
+		check(sim_used == 0, "model: with the idle drain the window is empty after the last session");
+	}
 
 	printf(failures == before ? "POOL-CHECK PASS\n" :
 				    "POOL-CHECK FAIL\n");
