@@ -8,7 +8,7 @@ default-on chip can drop back to opt-in, and how to submit a row.
 `omarchy-ane-check --smoke` produces one JSON line per run: `name`, `chip`,
 `die`, `sha256`, `golden_sha256`, `errors`, `min_ms`, `median_ms`. The `die`
 field is the bound device's ANE die index, 0 except on an Ultra board's
-second device ([docs/collector-die-field.md](docs/collector-die-field.md)).
+second device ([docs/collector-die-field.md](collector-die-field.md)).
 
 Each row also records `driver_source`: `intree` when the kernel's own ANE
 driver ran (aurora-silicon/linux builds it under `kernel/drivers/accel/ane`),
