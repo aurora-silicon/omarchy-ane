@@ -60,7 +60,7 @@ The recipe scripts and the calibration notes are in the compiler repo: `receipts
 
 ## Mixed calibration
 
-The first GPTQ package was calibrated on prose and multilingual prompts. The mixed package adds code: its calibration is 20 prose, 20 multilingual and 24 code prompts (the code prompts come from 12 of the 25 source documents of the code set) at 128 positions, 9,136 rows per tensor. The 13 other source documents (26 prompts) stay unseen as the code test. The 13-inch M1 ran all three sets with the fp16 package and both GPTQ packages. KL is against the fp32 reference. The decode uses the older runner without the Q6_K head, so the numbers differ from the tables above.
+The first GPTQ package was calibrated on prose and multilingual prompts. The mixed package adds code: its calibration is 20 prose, 20 multilingual and 24 code prompts (the code prompts come from 12 of the 25 source documents of the code set) at 128 forced positions, 9,136 captured rows per tensor (the 64 prompts give 8,192 forced positions and 944 prompt-token rows). The 13 other source documents (26 prompts) stay unseen as the code test. The 13-inch M1 ran all three sets with the fp16 package and both GPTQ packages. KL is against the fp32 reference. The decode uses the older runner without the Q6_K head, so the numbers differ from the tables above.
 
 | Set | fp16 | int8 GPTQ | int8 GPTQ, mixed |
 |---|---|---|---|
@@ -68,7 +68,7 @@ The first GPTQ package was calibrated on prose and multilingual prompts. The mix
 | code, the 26 unseen prompts: KL, top-1 | 0.000254, 0.9958 | 0.000407 (1.60 times), 0.9934 | 0.000351 (1.38 times), 0.9952 |
 | long position, 50 prompts of 170 positions: KL, top-1 | 0.000293, 0.9935 | 0.000605 (2.06 times), 0.9896 | 0.000663 (2.26 times), 0.9898 |
 
-The mixed package passes the same rule as before on the code prompts it never saw (at most 2 times the fp16 KL and top-1 within 0.001). The first package failed it on top-1 there. On the long-position prompts neither package passes, and the mixed one is 10 percent worse. Those prompts are the old prompt set. Neither calibration contains them. The mixed package costs nothing on the technical set. Both packages stay opt-in speed tiers. The mixed H14 package for the M2 Max has not been run yet. The step time of the mixed package was not measured, because the 13-inch ran with a GPU load. The weight bytes are the same as the first package.
+The mixed package passes the same rule as before on the code prompts it never saw (at most 2 times the fp16 KL and top-1 within 0.001). The first package failed it on top-1 there. On the long-position prompts neither package passes, and the mixed one is 10 percent worse. Those prompts are the old prompt set. Neither calibration contains them. Against the first GPTQ package the mixed package costs nothing on the technical set (0.000390 against 0.000397; fp16 is 0.000267). Both packages stay opt-in speed tiers. The mixed H14 package for the M2 Max has not been run yet. The step time of the mixed package was not measured, because the 13-inch ran with a GPU load. The weight bytes are the same as the first package.
 
 ## What this does not show
 
