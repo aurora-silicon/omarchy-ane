@@ -27,16 +27,16 @@ device-tree overlays and verification tools.
   for newer chips sits in `data/ane-soc/`
   ([docs/ane-soc-data.md](docs/ane-soc-data.md)).
 
-| Mac | SoC | Driver | State | Opt-in key |
-| --- | --- | --- | --- | --- |
-| M1 | T8103 | `ane` | enabled by default | none |
-| M1 Pro | T6000 | `ane` | enabled by default | none |
-| M1 Max | T6001 | `ane` | enabled by default | none |
-| M1 Ultra | T6002 | `ane` | opt in, untested (die 0) | `ane-t6002` |
-| M2 | T8112 | `ane_t6021` | opt in, untested | `ane-t8112` + note |
-| M2 Pro | T6020 | `ane_t6021` | enabled by default | none |
-| M2 Max | T6021 | `ane_t6021` | enabled by default | none |
-| M2 Ultra | T6022 | `ane_t6021` | opt in, untested (die 0) | `ane-t6022` + note |
+| Mac | SoC | Internal | Linux `compatible` | Driver | State | Opt-in key | Tested by |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| M1 | T8103 | H13G | `apple,t8103-ane` | `ane` | on by default | none | fp16 execution verified |
+| M1 Pro | T6000 | H13J | `apple,t6000-ane` | `ane` | on by default | none | fp16 execution verified |
+| M1 Max | T6001 | H13J | `apple,t6000-ane` | `ane` | on by default | none | fp16 execution verified |
+| M1 Ultra | T6002 | H13J | `apple,t6000-ane` | `ane` | opt-in, untested (die 0) | `ane-t6002` | not tested |
+| M2 | T8112 | H14G | `apple,t8112-ane` | `ane_t6021` | opt-in, untested | `ane-t8112` + note | not tested |
+| M2 Pro | T6020 | H14J | `apple,t6020-ane` | `ane_t6021` | on by default | none | fp16 execution verified |
+| M2 Max | T6021 | H14J | `apple,t6021-ane` | `ane_t6021` | on by default | none | fp16 execution verified |
+| M2 Ultra | T6022 | H14J | `apple,t6022-ane` | `ane_t6021` | opt-in, untested (die 0) | `ane-t6022` + note | not tested |
 
 The T8112 and T6022 note: after adding the key, run
 `sudo omarchy-ane-firmware-fetch` before `omarchy-ane-dt apply`. The M2 Pro
@@ -253,3 +253,25 @@ Bringing up a new chip takes more than a capture. Its overlay goes in
 `packaging/dt/`, with a cited source for every value, and
 `tools/test_ane_overlays.py` must pass. Expect PMGR, DART and SET offset
 work, netconsole, and reboots. Do not write SET `0xf` from userspace.
+
+## Newer chip data
+
+These chips have data records, not a packaged inference driver.
+The table is generated from `data/ane-soc/` and the data-only overlays.
+
+<!-- BEGIN DATA-ONLY TABLE -->
+| SoC | Internal | Boards | Overlay |
+| --- | --- | --- | --- |
+| T6030 | H15J | 2 | yes |
+| T6031 | H15J | 5 | yes |
+| T6034 | H15J | 2 | no |
+| T6040 | H16 | 3 | yes |
+| T6041 | H16 | 3 | yes |
+| T6050 | H17 | 7 | no |
+| T8122 | H15G | 5 | yes |
+| T8132 | H16 | 6 | yes |
+| T8140 | H17 | 1 | yes |
+| T8142 | H17 | 3 | no |
+| T8150 | H18 | 5 | no |
+| T8152 | H18 | 1 | yes |
+<!-- END DATA-ONLY TABLE -->
