@@ -105,7 +105,7 @@ The selective package keeps about half of the step gain of the first GPTQ packag
 
 ## Proposed default: long-position selective int8
 
-This section proposes a new default. It is not merged as one until the reviewers have signed off. The repo has no switch for the package. The runner takes the package as an argument, and this page says which one to run.
+This section proposes a new default for the 13-inch M1 (H13) only. The 14-inch M2 Max has not run a quality set, so its default stays fp16 until it does. It is not merged as a default until the reviewers have signed off. The repo has no switch for the package. The runner takes the package as an argument, and this page says which one to run.
 
 The package is the selective package with one change: its GPTQ calibration adds windows of the long-position prompts, taken from half of the base streams. The other half stays unseen and is the test. The attention programs stay in fp16 and the ten MLP programs are int8. The seals are in the package table above. The 2,048 position package for the M1 is the 192 position package with its six attention programs replaced by those of the shipped 2,048 position fp16 package. It runs with the manifest of that shipped package.
 
@@ -116,11 +116,11 @@ Quality against the fp32 reference. The rule was fixed before each run: the KL i
 | technical, 50 prompts of 128 positions | 0.000267, 0.9955 | 0.000331, 0.9966 | 1.24 | -0.0011 | pass |
 | code, 26 unseen prompts | 0.000254, 0.9958 | 0.000323, 0.9955 | 1.27 | 0.0003 | pass |
 | long position, 25 unseen prompts | 0.000295, 0.9929 | 0.000348, 0.9918 | 1.18 | 0.0012 | misses top-1 by 0.0002 |
-| large unseen set, 161 prompts, 27,370 positions | 0.000257, 0.9955 | | 1.28 | 0.0003 | pass |
+| large unseen set, 161 prompts, 27,370 positions | 0.000257, 0.9955 | 0.000328, 0.9952 | 1.28 | 0.0003 | pass |
 | 2,048 positions, 3 prompts, 72 positions | 0.000380, 1.0000 | 0.000518, 1.0000 | 1.36 | 0.0000 | KL pass, top-1 not resolved |
 | 2,048 positions, 12 prompts, 288 positions | 0.000481, 0.9896 | 0.000509, 0.9826 | 1.06 | 0.0069 | KL pass, top-1 not resolved |
 
-On the large set the paired standard error of the top-1 gap is 0.00038, and the bootstrap interval over prompts is -0.0004 to +0.0010. Its upper end sits on the limit. The 161 prompts are the 136 of a large set that no package saw, plus 25 older unseen prompts. On the 2,048 position sets the KL ratio per prompt runs from 0.52 to 1.56, and no text type reaches 2.0. The twelve prompts hold three technical, three code, three prose and two multilingual prompts, and one on the boundary of prose and multilingual text.
+On the large set the paired standard error of the top-1 gap is 0.00038, and the bootstrap interval over prompts is -0.0004 to +0.0010. Its upper end sits on the limit. The 161 prompts are the 136 of a large set that no package saw, plus 25 older unseen prompts. The 50 technical prompts of the first row are among them, so the two rows are not independent. On the 2,048 position sets the KL ratio per prompt runs from 0.52 to 1.56, and no text type reaches 2.0. The twelve prompts hold three technical, three code, three prose and two multilingual prompts, and one on the boundary of prose and multilingual text.
 
 Step time, p50, with the arms interleaved in one session. The fp16 package is the first arm.
 
@@ -141,7 +141,7 @@ The two rows marked with a difference above 1 percent miss the 1 percent agreeme
 - The 13-inch M1 second session and the 16-inch M1 Max run miss the 1 percent agreement rule. The 16-inch M1 Max repeat that should fix its miss has not finished, and the table will be updated before the merge.
 - The M2 Max speed rests on one session of 10 code prompts. It clears the 10 percent bar by 0.6 points. There is no M2 Max package built for 1,024 or 2,048 positions.
 - The package gives back about half of the int8 weight-byte saving. Its gain is 10 to 15 percent. The first GPTQ package gained 21 to 29 percent and failed the quality rule.
-- The long-position calibration helps the streams it saw: on the 25 prompts it was calibrated on, the KL is 1.03 times fp16. Only the unseen numbers above are used.
+- The long-position calibration helps the streams it saw: on the 25 prompts it was calibrated on, the KL is 0.96 times fp16 (0.000280 against 0.000292). Only the unseen numbers above are used.
 
 ### Opt out and roll back
 
