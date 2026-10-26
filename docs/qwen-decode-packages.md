@@ -107,7 +107,7 @@ The selective package keeps about half of the step gain of the first GPTQ packag
 
 This section proposes a new default for the 13-inch M1 (H13) only. The 14-inch M2 Max has not run a quality set, so its default stays fp16 until it does. It is not merged as a default until the reviewers have signed off. The repo has no switch for the package. The runner takes the package as an argument, and this page says which one to run.
 
-The package is the selective package with one change: its GPTQ calibration adds windows of the long-position prompts, taken from half of the base streams. The other half stays unseen and is the test. The attention programs stay in fp16 and the ten MLP programs are int8. The seals are in the package table above. The 2,048 position package for the M1 is the 192 position package with its six attention programs replaced by those of the shipped 2,048 position fp16 package. It runs with the manifest of that shipped package.
+The package is the selective package with one change: its GPTQ calibration adds windows of the long-position prompts, taken from half of the base streams. The other half stays unseen and is the test. All six attention programs stay in fp16: five that the plain int8 package converts, plus one that is fp16 in every package. The ten MLP programs are int8. The seals are in the package table above. The 2,048 position package for the M1 is the 192 position package with its six attention programs replaced by those of the shipped 2,048 position fp16 package. It runs with the manifest of that shipped package.
 
 Quality against the fp32 reference. The rule was fixed before each run: the KL is at most 2 times the fp16 KL, and the top-1 gap is at most 0.001.
 
