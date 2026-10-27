@@ -129,16 +129,17 @@ Step time, p50, with the arms interleaved in one session. The fp16 package is th
 | 13-inch M1 | 2,048 | 0.0952 s, 0.0950 s | 0.0823 s, 0.0823 s | 13.5 percent lower | within 0.21 percent |
 | 13-inch M1, second session | 2,048 | 0.0954 s, 0.0951 s | 0.0821 s, 0.0807 s | 14.5 percent lower | proposed arms differ 1.72 percent |
 | 16-inch M1 Max | 2,048 | 0.2191 s, 0.2163 s | 0.1927 s, 0.1928 s | 11.5 percent lower | fp16 arms differ 1.29 percent |
+| 16-inch M1 Max, repeat | 2,048 | 0.2164 s, 0.2153 s | 0.1921 s, 0.1908 s | 11.3 percent lower | fp16 arms differ 0.51 percent, proposed arms 0.68 percent |
 | 14-inch M2 Max | 192 | 0.1599 s, 0.1602 s | 0.1427 s, 0.1436 s | 10.6 percent lower | within 0.63 percent |
 
-The two rows marked with a difference above 1 percent miss the 1 percent agreement rule that was set before the runs. The speed bar was a gain of at least 10 percent. The step depends on the longest position the package is built for. It does not depend on the position inside it. The 2,048 position fp16 and int8 steps are therefore not comparable with the 192 position rows.
+The two rows marked with a difference above 1 percent miss the 1 percent agreement rule that was set before the runs. The 16-inch repeat meets it. A GPU job overlapped its first arm for about 4 minutes, and the step of that arm matches the first run's. The speed bar was a gain of at least 10 percent. The step depends on the longest position the package is built for. It does not depend on the position inside it. The 2,048 position fp16 and int8 steps are therefore not comparable with the 192 position rows.
 
 ### Limits
 
 - The quality rows run on the 13-inch M1 only. The 14-inch M2 Max package has run for speed and has not run any quality set. The 16-inch M1 Max has run speed only, and its logits matched the 13-inch ones on the 3 prompt set.
 - The top-1 gap is not resolved. The 25 unseen long-position prompts miss the limit by 0.0002, with a standard error of 0.0011. The 161 prompt set passes with the interval reaching the limit. The two 2,048 position sets cannot resolve 0.001. Their standard error is 0.0049 on 12 prompts.
 - The 2,048 position quality sets score one window of 24 positions per prompt, at positions 2,000 to 2,023. Nothing is measured between 100 and 2,000. The 3 prompts cover prose and multilingual text only.
-- The 13-inch M1 second session and the 16-inch M1 Max run miss the 1 percent agreement rule. The 16-inch M1 Max repeat that should fix its miss has not finished, and the table will be updated before the merge.
+- The 13-inch M1 second session misses the 1 percent agreement rule (its proposed arms differ by 1.72 percent). The first 16-inch M1 Max run missed it too (1.29 percent), and the repeat meets it. The repeat's last arm finished after the ticket's time cap, so its step comes from the arm's records file and not from the results file.
 - The M2 Max speed rests on one session of 10 code prompts. It clears the 10 percent bar by 0.6 points. There is no M2 Max package built for 1,024 or 2,048 positions.
 - The package gives back about half of the int8 weight-byte saving. Its gain is 10 to 15 percent. The first GPTQ package gained 21 to 29 percent and failed the quality rule.
 - The long-position calibration helps the streams it saw: on the 25 prompts it was calibrated on, the KL is 0.96 times fp16 (0.000280 against 0.000292). Only the unseen numbers above are used.
