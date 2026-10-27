@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- docs: the 14-inch M2 Max 8-bit package is about 9.5 percent faster than fp16 at 2,048 positions. Two sessions on one boot read 9.76 and 9.45 percent, both under the 10 percent bar, with no GPU job running. The page now says so. The earlier 10.6 percent was one session at 192 positions. The runs are in `receipts/2026-10-27-m2-l2048-speed`.
 - docs: the 14-inch M2 Max has a 2,048 position quality result for the 8-bit default package. On 12 prompts the KL ratio is 1.13 against the limit of 2. Each prompt has one window of 24 positions. The page lists the limits. The sample is thin. The int8 weights are calibrated at 192 positions. There is no 1,024 position check.
 
 - docs: the 14-inch M2 Max joins the 13-inch M1 on the 8-bit default Qwen decode package, with fp16 as the opt-out. The M2 Max met the rule fixed before the runs: on 161 unseen long-position prompts the KL ratio is 1.31 and the top-1 gap is +0.0006 against a limit of 0.001. The top-1 margin is thin, the interval reaches +0.0015, and there is no longer-context check on the M2 Max.
