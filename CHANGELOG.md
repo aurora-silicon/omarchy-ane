@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- docs: `docs/qwen-decode-packages.md` proposes the long-position selective int8 package as the default Qwen decode package on the 13-inch M1, with the fp16 package as the opt-out. It gives the evidence with every limit: the top-1 gap is not resolved, quality ran on the 13-inch M1 only, and two speed runs missed the 1 percent agreement rule. It has a rollback line. Docs only; the repo has no switch for the package.
+
 - `ane/h18`: a refused MCACHE_SIZE_GET (`hs_mcsz`) is now logged and the run goes on, like the other optional commands. Before, the refusal stopped the step with an I/O error. The module pin in the stage script changes with it.
 
 - `ane/h18`: two module parameters send more of what the macOS kext sends. `hs_defset` sends DEFAULT_SETTING_SET (0x2e, one setting, register id 2, value 10000) after the five property writes. The decode of the kext shows it sends this on this chip and the module never did. The firmware handler skips register id 2, and what consumes it is not known. `hs_mcsz` sends MCACHE_SIZE_GET (0x26), a read only command, after CONFIG_GET and logs the size from the reply. A size of 0 would point at the memory cache quota that the kext requests from the SoC and that Linux does not request. The M6 matmul still stalls after the PMU base, power gating and neural engine count changes, and these are the remaining commands of the kext's start sequence. The stage script takes two more arguments, `defset` and `mcsz`, and pins the rebuilt module.
