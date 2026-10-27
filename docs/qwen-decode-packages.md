@@ -103,7 +103,7 @@ Step time, p50. The shipped package and the selective package were interleaved i
 
 The selective package keeps about half of the step gain of the first GPTQ package. The 16-inch M1 Max has not run the quality sets.
 
-## Proposed default: long-position selective int8
+## Default: long-position selective int8
 
 This section sets the default for the 13-inch M1 (H13) and the 14-inch M2 Max (H14). The M2 Max follows the same rule as the M1: the rule was fixed before the quality runs, and the package met it. The margin on top-1 is thin on both chips, and the M2 Max section below says how thin. The M2 Max has no longer-context quality check. The 16-inch M1 Max has speed results only, so its default stays fp16. The repo has no switch for the package. The runner takes the package as an argument, and this page says which one to run.
 
