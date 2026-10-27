@@ -1,0 +1,17 @@
+== m2-kfull K=l2k 2026-10-27T11:00:45Z kernel 7.1.12-2-12.6-sep-ARCH boot 1daf657c bo_total 483508224
+script sha256 de196d64ac6278070a6bd7c4eaa7e7ec66dcf6e2f3f40871e7b07489531b857f
+call_settle_us 20
+[11:00:47] pins ok; fault lines at start: 0; GPU jobs: 0; free 34 GB
+[11:00:47] call_settle_us set to 20 for the run
+Q196-SHIM pinned to P cores [4, 5, 6, 7, 8, 9, 10, 11]
+loaded 38 programs in 8.9 s, max_len 2048
+Q196-SHIM fp16 head library libq6k_head_f16-bc6e8517aa5b730f.so
+p001 steps 24 step_p50 0.1889 finite True
+p002 steps 24 step_p50 0.1850 finite True
+p003 steps 24 step_p50 0.1857 finite True
+[11:19:11] ane-session processes still running after the run: 0
+[11:19:11] run rc=0; fault lines 0 (start 0); bo_total 506134528; GPU jobs at end: 0
+prompts done 3 all finite True steps 72 step p50 0.1858 s
+3
+[11:19:11] done
+[11:19:11] restored call_settle_us=20 (boot value 20)

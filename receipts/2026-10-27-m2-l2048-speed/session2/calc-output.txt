@@ -1,0 +1,8 @@
+A1: per-prompt step_p50 [0.1877, 0.1849, 0.1858]  arm median 0.1858  GPU jobs start 0 end 0  rc 0 fault lines 0
+G1: per-prompt step_p50 [0.1717, 0.1682, 0.169]  arm median 0.1690  GPU jobs start 0 end 0  rc 0 fault lines 0
+G2: per-prompt step_p50 [0.1706, 0.1683, 0.1678]  arm median 0.1683  GPU jobs start 0 end 0  rc 0 fault lines 0
+A2: per-prompt step_p50 [0.1878, 0.1852, 0.1867]  arm median 0.1867  GPU jobs start 0 end 0  rc 0 fault lines 0
+mean A 0.18625  mean G 0.16865  G below A 9.45 percent
+A arms differ 0.48 percent, G arms differ 0.42 percent
+gates: >=10 percent NO; A within 1 percent yes; G within 1 percent yes; GPU quiet at every arm start and end yes; rc 0 and 0 fault lines yes
+SESSION VALID FOR A CLAIM: NO
