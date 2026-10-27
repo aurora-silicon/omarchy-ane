@@ -105,7 +105,7 @@ The selective package keeps about half of the step gain of the first GPTQ packag
 
 ## Proposed default: long-position selective int8
 
-This section proposes a new default for the 13-inch M1 (H13) only. The 14-inch M2 Max has not run a quality set, so its default stays fp16 until it does. It is not merged as a default until the reviewers have signed off. The repo has no switch for the package. The runner takes the package as an argument, and this page says which one to run.
+This section sets the default for the 13-inch M1 (H13) and the 14-inch M2 Max (H14). The M2 Max follows the same rule as the M1: the rule was fixed before the quality runs, and the package met it. The margin on top-1 is thin on both chips, and the M2 Max section below says how thin. The M2 Max has no longer-context quality check. The 16-inch M1 Max has speed results only, so its default stays fp16. The repo has no switch for the package. The runner takes the package as an argument, and this page says which one to run.
 
 The package is the selective package with one change: its GPTQ calibration adds windows of the long-position prompts, taken from half of the base streams. The other half stays unseen and is the test. All six attention programs stay in fp16: five that the plain int8 package converts, plus one that is fp16 in every package. The ten MLP programs are int8. The seals are in the package table above. The 2,048 position package for the M1 is the 192 position package with its six attention programs replaced by those of the shipped 2,048 position fp16 package. It runs with the manifest of that shipped package.
 
@@ -134,9 +134,25 @@ Step time, p50, with the arms interleaved in one session. The fp16 package is th
 
 The two rows marked with a difference above 1 percent miss the 1 percent agreement rule that was set before the runs. The 16-inch repeat meets it. A GPU job overlapped its first arm for about 4 minutes, and the step of that arm matches the first run's. The speed bar was a gain of at least 10 percent. The step depends on the longest position the package is built for. It does not depend on the position inside it. The 2,048 position fp16 and int8 steps are therefore not comparable with the 192 position rows.
 
+### 14-inch M2 Max quality
+
+The 14-inch M2 Max (H14) ran the shipped fp16 package (seal `f04e973a...`) and the proposed package (seal `8468ee5a...`) on the same boot, with the same forced ids, at 192 positions. The scoring uses the same fp32 reference and the same rule as the 13-inch M1. The technical and code sets use 128 positions. The long-position sets use 170.
+
+| Set (14-inch M2 Max) | fp16 KL, top-1 | Proposed KL, top-1 | KL ratio | Top-1 gap | Rule |
+|---|---|---|---|---|---|
+| technical, 50 prompts | 0.000269, 0.9955 | 0.000340, 0.9962 | 1.27 | -0.0008 | pass |
+| code, 26 unseen prompts | 0.000256, 0.9958 | 0.000321, 0.9964 | 1.25 | -0.0006 | pass |
+| long position, 136 unseen prompts, four batches of 34 | 0.000247, 0.9960 | 0.000330, 0.9955 | 1.33 | +0.0005 | pass |
+| long position, the 25 older unseen prompts | 0.000291, 0.9929 | 0.000351, 0.9915 | 1.20 | +0.0014 | top-1 misses alone |
+| long position, all 161 prompts, 27,370 positions | 0.000254, 0.9955 | 0.000333, 0.9949 | 1.31 | +0.0006 | pass |
+
+The margin on top-1 is thin. On the 161 prompts the gap is +0.0006 against a limit of 0.001. Its paired standard error is 0.00041, and the 95 percent bootstrap interval over prompts is -0.0002 to +0.0015. The upper end is above the limit. The data cannot rule out a gap above 0.001. The standard error counts positions as independent, and positions inside a prompt are correlated, so the interval over prompts is the honest one. The proposed package has a higher KL than fp16 in every one of the five batches, with ratios from 1.20 to 1.45. It is a consistent small loss that stays inside the limit. Of the five long-position batches, three miss the limit alone: the gaps are -0.0010, +0.0017, +0.0010, +0.0002 and +0.0014, and their standard errors run from 0.0007 to 0.0013. None of them can resolve 0.001. Six of the 161 prompts have a KL ratio above 2, and the per-prompt ratio runs from 0.69 to 2.55 with a median of 1.20. The 13-inch M1 gave a ratio of 1.28 and a gap of +0.0003 on the same 161 prompts.
+
+The 136 long-position prompts contain the 50 technical and 26 code prompts at other lengths, so those rows are not independent. The 14-inch M2 Max ran under whatever GPU load other jobs put on it, and the harness printed two GPU jobs at the end of most arms. A longer-context quality check on the M2 Max (1,024 or 2,048 positions) has not been done, and no package for those lengths exists.
+
 ### Limits
 
-- The quality rows run on the 13-inch M1 only. The 14-inch M2 Max package has run for speed and has not run any quality set. The 16-inch M1 Max has run speed only, and its logits matched the 13-inch ones on the 3 prompt set.
+- The quality rows run on the 13-inch M1 and the 14-inch M2 Max, at 192 positions on the M2 Max. The 16-inch M1 Max has run speed only, and its logits matched the 13-inch ones on the 3 prompt set. The M2 Max has no longer-context quality check.
 - The top-1 gap is not resolved. The 25 unseen long-position prompts miss the limit by 0.0002, with a standard error of 0.0011. The 161 prompt set passes with the interval reaching the limit. The two 2,048 position sets cannot resolve 0.001. Their standard error is 0.0049 on 12 prompts.
 - The 2,048 position quality sets score one window of 24 positions per prompt, at positions 2,000 to 2,023. Nothing is measured between 100 and 2,000. The 3 prompts cover prose and multilingual text only.
 - The 13-inch M1 second session misses the 1 percent agreement rule (its proposed arms differ by 1.72 percent). The first 16-inch M1 Max run missed it too (1.29 percent), and the repeat meets it. The repeat's last arm finished after the ticket's time cap, so its step comes from the arm's records file and not from the results file.
