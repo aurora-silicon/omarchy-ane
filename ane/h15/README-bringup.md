@@ -76,8 +76,9 @@ template is `ane/h16/`.
   found every ENABLE_STREAMS word 0: iBoot left no stream enabled.
 - `stage=5` or `stage=run`: refused without `confirm_run=1`, with
   `run_wait_ms` outside 10 to 2000 (default 300), and on any SoC row whose
-  `rvbar_expect` is 0 (only t6030 has a measured RVBAR, from stage 2 on a
-  16-inch M3 Pro: `0x0000010000000001`). It is the only stage that writes.
+  `rvbar_expect` is 0 (t8122 and t6034 today; t6030 measured it at stage 2 on a
+  16-inch M3 Pro, t6031 at stage 2 on a 16-inch M3 Max, issue 176, both
+  `0x0000010000000001`). It is the only stage that writes.
   After the stage 1 ACTUAL=0xf gate it reads CPU_STATUS, CPU_CONTROL, RVBAR
   and both mailbox CTRL words and writes only if the core is stopped (STOPPED
   set, RUNNING clear), RUN is clear, RVBAR equals `rvbar_expect` and both
@@ -320,7 +321,7 @@ the dmesg back.
    `dart-no-stream-enabled`. Both are results. Send the whole `dmesg | grep
    ane_h15`. Do not run stage 5 on the strength of this alone: it needs a mapping we
    have not built (stage 6) unless this stage reports a live stream.
-6. **stage=5** (`stage=5 confirm_run=1`, T6030 only today). Run it only after
+6. **stage=5** (`stage=5 confirm_run=1`, T6030 and T6031 today). Run it only after
    stages 0, 1, 2 and 4 passed on the same boot, stage 4 reported a live stream
    (or the maintainers said GO on the issue for another reason). Expected, in dmesg: the pmgr lines, six `ane_h15 read`
    lines (CPU_STATUS, CPU_CONTROL, RVBAR_LO, RVBAR_HI, the two mailbox CTRL
@@ -377,7 +378,7 @@ The read-only DART scan:
     insmod ane/h15/ane_h15.ko optin=t6030 stage=4 confirm_read=1
     dmesg | grep ane_h15
 
-The run stage (writes CPU_CONTROL; T6030 only, refuses without a live DART
+The run stage (writes CPU_CONTROL; T6030 and T6031, refuses without a live DART
 stream, only after the maintainers' GO). With the DART overlay and `fw_seg`:
 
     insmod ane/h15/ane_h15.ko optin=t6030 stage=5 confirm_run=1 map_fw=1 fw_seg=TEXTPA:SIZE,DATAPA:SIZE

@@ -157,9 +157,9 @@ const struct ane_h15_soc ane_t6030_soc = {
 	.cpu_status  = 0x1400048,
 	.rvbar       = 0x1050000,
 	/* Measured by stage 2 on a 16-inch M3 Pro (J516S), PR 175 comment of 2026-10-23: RVBAR_LO 0x1,
-	 * RVBAR_HI 0x100. The same value the M2 Max macOS run and the M6 (T8152) carry: the firmware
-	 * entry IOVA 0x10000000000 with bit 0 set, i.e. iBoot already wrote it. The other rows have
-	 * no stage 2 result yet, so their rvbar_expect stays 0 and stage=run refuses on them. */
+	 * RVBAR_HI 0x100. The same value the M2 Max macOS run, the M6 (T8152) and the T6031 row carry: the
+	 * firmware entry IOVA 0x10000000000 with bit 0 set, i.e. iBoot already wrote it. T8122 and T6034
+	 * have no stage 2 result yet, so their rvbar_expect stays 0 and stage=run refuses on them. */
 	.rvbar_expect = 0x0000010000000001ull,
 	.dart_off    = 0x1800000,	/* ADT S1: 0x309800000 - engine, data/ane-soc/t6030.json */
 	.mbox        = 0x1408000,	/* INFERENCE */
@@ -178,6 +178,11 @@ const struct ane_h15_soc ane_t6031_soc = {
 	.cpu_control = 0x1400044,
 	.cpu_status  = 0x1400048,
 	.rvbar       = 0x1050000,
+	/* Measured by stage 2 on a 16-inch M3 Max (J516C), issue 176 comments of 2026-10-28: RVBAR_LO 0x1,
+	 * RVBAR_HI 0x100, the same value as the T6030 row: the firmware entry IOVA 0x10000000000 with bit 0
+	 * set, i.e. iBoot already wrote it. Two boots read the same word, and the ADT firmware ranges did
+	 * not move between them. Stage 5 with map_fw=1 uses the T6031 DART overlay, never booted. */
+	.rvbar_expect = 0x0000010000000001ull,
 	.dart_off    = 0x1800000,	/* ADT S1: 0x3c9800000 - engine, data/ane-soc/t6031.json */
 	.mbox        = 0x1408000,	/* INFERENCE */
 	.engine_pa   = 0x3c8000000ull,
