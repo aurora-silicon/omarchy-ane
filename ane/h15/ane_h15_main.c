@@ -222,6 +222,8 @@ struct ane_h15 {
 	unsigned int map_n;	/* segments mapped so far */
 	bool dom_own;		/* the domain was attached by this module (stage 7 maps into the default DMA domain instead) */
 	bool chan;		/* stage 7 */
+	unsigned int ipi_acks;	/* stage 7: acknowledges written this run, capped at ANE_H15_IPI_ACK_MAX */
+	u32 ipi_last;		/* stage 7: last IPI pending value seen, for the change log */
 	struct ane_h15_hs_buf hs_pool, hs_ipc, hs_heap, hs_cmd;
 	/* The ANE node carries several power-domains (sys, mpm, cpu, td,
 	 * base). The kernel's automatic attach handles only a single
@@ -1198,16 +1200,24 @@ static int ane_h15_rtk_poll_once(struct ane_h15 *ane, struct ane_h15_rtk *k)
  *
  * Register offsets: the T6030 case (ane-type 0xc0, "AppleT6030ANEHAL", h15g) of AppleH16ANEInterface's SoC config,
  * kernelcache 26A434 mac18g: SCRATCH0..7 = engine + 0x1840050 .. + 0x184006c, doorbell = engine + 0x1844000 (the constant
- * its doorBellRing() writes (1 << bit) to), config size 0x380000 (the h15g case stores it). Decoded, never read or
- * written on an H15 part. The block layout and the table layout are the M6/T6021 ones (the same kext code). The M6
- * numbers are different (SCRATCH at engine + 0x18a0024, doorbell 0x18a4000): do not mix them up.
+ * its doorBellRing() writes (1 << bit) to), config size 0x380000 (the h15g case stores it). The same decode shows the
+ * interrupt pair: pending at engine + 0x184c000, acknowledge at engine + 0x1850000. The kext's handler reads the pending
+ * word (0xffff when it polls every channel instead), writes the value back to the acknowledge register, then dispatches
+ * per channel on the bits it read. The M6 module services the same pair at engine + 0x18ac000 / + 0x18b0000; without the
+ * write the firmware can wait for an acknowledge that never comes. Decoded, never read or written on an H15 part. The
+ * block layout and the table layout are the M6/T6021 ones (the same kext code). The M6 numbers are different (SCRATCH at
+ * engine + 0x18a0024, doorbell 0x18a4000): do not mix them up.
  *
  * Writes of this stage beyond stage 6: SCRATCH0, 1, 7 and 3 only (anything else refused), DMA memory it allocated,
- * and the doorbell only for a command (chan_cmds=1). Nothing is written before the whole table checked out.
+ * the doorbell only for a command (chan_cmds=1), and the acknowledge register only with the value just read from the
+ * pending word, at most ANE_H15_IPI_ACK_MAX per run. Nothing is written before the whole table checked out.
  */
 #define ANE_H15_SCRATCH_OFF	0x1840050u
 #define ANE_H15_SCRATCH_N	8
 #define ANE_H15_DOORBELL_OFF	0x1844000u
+#define ANE_H15_IPI_PENDING_OFF	0x184c000u
+#define ANE_H15_IPI_ACK_OFF	0x1850000u
+#define ANE_H15_IPI_ACK_MAX	64u
 #define ANE_H15_HS_WAKE		0xf7fbdff9u
 #define ANE_H15_HS_READY	0x08042006u
 #define ANE_H15_HS_REQ_LIMIT	0x21
@@ -1246,6 +1256,28 @@ static int ane_h15_scr_rd(struct ane_h15 *ane, unsigned int i, u32 *v)
 static u32 ane_h15_scr_peek(struct ane_h15 *ane, unsigned int i)
 {
 	return readl_relaxed(ane->engine + ANE_H15_SCRATCH_OFF + 4 * i);
+}
+
+/* Stage 7 only: one poll of the firmware's IPI pending word, as the macOS kext's interrupt path does: read engine +
+ * 0x184c000, and when a bit is set write the same value back to engine + 0x1850000. The pending register is never
+ * written; a zero pending writes nothing; the acknowledges are capped per run. The window check uses the larger of
+ * the two offsets. */
+static void ane_h15_ipi_poll(struct ane_h15 *ane)
+{
+	u32 pend;
+
+	if ((u64)ANE_H15_IPI_ACK_OFF + 4 > ane->soc->engine_size)
+		return;
+	pend = readl_relaxed(ane->engine + ANE_H15_IPI_PENDING_OFF);
+	if (pend != ane->ipi_last) {
+		dev_info(ane->dev, "ane_h15 read IPI_PENDING=%#x pa=%#llx\n", pend, ane->soc->engine_pa + ANE_H15_IPI_PENDING_OFF);
+		ane->ipi_last = pend;
+	}
+	if (pend && ane->ipi_acks < ANE_H15_IPI_ACK_MAX) {
+		ane->ipi_acks++;
+		dev_crit(ane->dev, "ane_h15 write IPI_ACK=%#x pa=%#llx\n", pend, ane->soc->engine_pa + ANE_H15_IPI_ACK_OFF);
+		writel(pend, ane->engine + ANE_H15_IPI_ACK_OFF);
+	}
 }
 
 /* Stage 5, run_scratch=1: the eight SCRATCH words on one line, read only. */
@@ -1391,6 +1423,7 @@ static int ane_h15_cmd(struct ane_h15 *ane, struct ane_h15_ring *io, u16 op, u32
 		 ane->soc->engine_pa + ANE_H15_DOORBELL_OFF, op, io->cursor, (u64)dma);
 	writel(BIT(io->bit), ane->engine + ANE_H15_DOORBELL_OFF);
 	for (waited = 0; waited < hs_wait_ms; waited++) {
+		ane_h15_ipi_poll(ane);
 		hdr = READ_ONCE(slot[0]);
 		if (hdr & 1) {
 			dma_rmb();
@@ -1471,6 +1504,7 @@ static int ane_h15_chan_step(struct ane_h15 *ane, const struct ane_h15_hs_buf *t
 	for (waited = 0; waited < hs_wait_ms; waited++) {
 		usleep_range(1000, 1100);
 		s3 = ane_h15_scr_peek(ane, 3);
+		ane_h15_ipi_poll(ane);
 		if (!s3)
 			break;
 	}
@@ -1563,6 +1597,8 @@ static int ane_h15_chan_run(struct ane_h15 *ane, struct ane_h15_rtk *k)
 		ret = ane_h15_scr_wr(ane, 7, ANE_H15_HS_WAKE);
 	if (ret)
 		return ret;
+	ane->ipi_acks = 0;
+	ane->ipi_last = 0;
 	for (waited = 0; waited < hs_wait_ms; waited++) {
 		usleep_range(1000, 1100);
 		cur[0] = ane_h15_scr_peek(ane, 0);
@@ -1573,6 +1609,7 @@ static int ane_h15_chan_run(struct ane_h15 *ane, struct ane_h15_rtk *k)
 			memcpy(last, cur, sizeof(last));
 		}
 		ane_h15_rtk_poll_once(ane, k);			/* log whatever the firmware sends now */
+		ane_h15_ipi_poll(ane);
 		table = ((u64)cur[1] << 32) | cur[0];
 		if (table != pub && cur[2] == ANE_H15_HS_READY) {
 			answered = true;
