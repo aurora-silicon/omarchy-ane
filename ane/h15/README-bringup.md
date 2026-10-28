@@ -97,7 +97,11 @@ template is `ane/h16/`.
   must be 16 KiB aligned, at most 64 MiB, disjoint, and outside system RAM,
   or the stage refuses before touching hardware. `map_fw=1` needs `iommus` in
   the ANE node: `ane/h15/t6030-ane-dart-experimental.dts` (the three DART instances
-  enabled and listed with stream 0, the aperture window left disabled). The mapping is undone after a clean stop and
+  enabled and listed with stream 0, the aperture window left disabled). The T6031
+  counterpart is `ane/h15/t6031-ane-dart-experimental.dts`, same shape. It has not
+  been booted. Stage 4 on a J516C found windows 0, 1 and 2 reading as DARTs with no stream
+  enabled (`dart-no-stream-enabled`), so the file's precondition held on that machine.
+  The mapping is undone after a clean stop and
   kept when the core does not stop. Then it sets CPU_CONTROL bit 4 (the macOS
   `_runCPU(true)` read-OR-write), watches CPU_STATUS and `MBOX_I2A_CTRL` every
   10 ms for `run_wait_ms`, pops at most four I2A messages (one 64-bit read per receive register) and logs
@@ -221,7 +225,18 @@ installed by the package. They ship the four ANE DART nodes as
 property. Stage 0 and stage 1 need no DART, and enabled DART nodes
 hung a T6030 at boot through equivalent nodes. `omarchy-ane-probe`
 reports the ANE node as `not-exposed` until the DART work lands.
-That is expected. The first M3 owner:
+That is expected.
+
+Two DART variants sit beside the base overlays for stage 5
+`map_fw=1`: `ane/h15/t6030-ane-dart-experimental.dts` and
+`ane/h15/t6031-ane-dart-experimental.dts`. Each enables the three
+ANE DART translation instances, lists the `ane` node as a client
+of all three (stream 0 on each) and leaves the DAPF aperture
+window disabled. The T6031 file has not been booted. Stage 4 on a
+J516C found windows 0, 1 and 2 reading as DARTs with no stream enabled,
+so the file's precondition held on that machine.
+
+The first M3 owner:
 
 1. Compile against the aurora tree with the system dtc 1.7.2+:
    `dtc -@ -I dts -O dtb -o ane-h15-t8122.dtbo t8122-ane-experimental.dts`
@@ -395,7 +410,9 @@ the DART. Decoded from the macOS kext, never run on an M3. The `RESULT` line end
   preload at the ADT remap IOVAs is the same mechanical path
   the T6021 W-series proved, but on M3 it has not run.
 - `map_fw=1`: no H15 run. The DART overlay has not been booted; an enabled DART node hung a
-  T6030 at boot before (PR 173) and this one relies on `power-domains` to prevent that. Stream 0 is
+  T6030 at boot before (PR 173) and this one relies on `power-domains` to prevent that. The T6031
+  variant adds one more unknown: stage 4 on a J516C read windows 0, 1 and 2 as DARTs with no
+  stream enabled, but the overlay itself has never been through a boot. Stream 0 is
   inferred. Whether iBoot's firmware phys addresses repeat between boots is not known, which is why
   `fw_seg` must come from the same boot's ADT. Whether the T6030 firmware lays TEXT and DATA out
   like the M6 (DATA IOVA = vm-base + TEXT size) is inferred; `h15-segments.py` refuses a dump where it
