@@ -182,8 +182,12 @@ out that clock-level overlay; other installed overlays are not removed.
 Removing the modules package runs depmod again, so the next boot returns to
 the kernel's own `ane.ko`.
 
-The level request also needs the PMP firmware running; nothing in this
-repository starts it. `perf_state` in the device's sysfs directory reports
+The level request also needs the PMP firmware running. The PMP module itself
+is not in this repository. `tools/ane-pmp-load.sh` loads it from a path you
+give and waits for the ready line, so an ANE run can start the PMP when it
+needs it. The module cannot be unloaded: after it loads, the PMP stays on until
+the next reboot. If you also run GPU work on the machine, keep the module out of
+boot and load it from the script that runs the ANE work. `perf_state` in the device's sysfs directory reports
 what happened, including the reason when the driver stayed at level 0; after
 three failed handshakes the driver stops retrying until it is reloaded.
 Sequence and measurements:
