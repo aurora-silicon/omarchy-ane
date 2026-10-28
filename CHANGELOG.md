@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `ane_t6021`: a module parameter `pwgate_open` (default off) lets the T8112 probe open a closed ANE power gate. When the gate word reads exactly 0x30000000 it writes 0 once and waits up to 100 ms for bits 29:28 to clear, as the macOS kext does. Any other word refuses without a write. The decision is a small header shared with a host test, `tools/test_ane_pwgate.c`, which CI runs. It has not run on base M2 silicon.
+
 ## 0.5.4 (2026-10-28)
 
 This release adds a script that loads the PMP firmware when ANE work starts, so the PMP can stay out of boot. On the 16-inch M1 Max, loading the PMP at every boot made GPU decode about 10 percent slower (the boot without it decodes 11.5 percent faster). Six fresh boots in the order without, with, with, without, without, with gave Qwen3.8-2B 4-bit decode with mlx-lm at 92.7 against 83.1, 92.8 against 83.2 and 92.4 against 83.1 tokens per second, a median pair gain of 11.54 percent for the boot without the PMP, against a bar of 5 percent. The ANE clock level still needs the PMP; ANE work can load it first with `tools/ane-pmp-load.sh`. The release also names the 8-bit Qwen decode package as the one to run on the 13-inch M1 and the 14-inch M2 Max (fp16 stays the opt-out; the repo has no switch for the package), and fixes a refused firmware command on the experimental M6 (T8152) path.

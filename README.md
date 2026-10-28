@@ -42,6 +42,14 @@ The T8112 and T6022 note: after adding the key, run
 `sudo omarchy-ane-firmware-fetch` before `omarchy-ane-dt apply`. The M2 Pro
 and M2 Max fetch firmware automatically at install.
 
+On the base M2 (T8112) the driver stops at a closed power gate and says so in
+the log (`PWGATE closed (word 0x30000000 ...)`). The module parameter
+`pwgate_open=1` lets it write the gate word once, only when the word reads
+exactly 0x30000000, then wait up to 100 ms for the gate to open. Any other
+word refuses without a write. The default is off. The write follows what the
+macOS kext does and has not run on base M2 silicon yet, so a hang or reset
+is possible. A reboot undoes it.
+
 To opt in, append the key as one line to
 `/etc/omarchy-mac-boot/dtb-overlays.opt-in`, then:
 

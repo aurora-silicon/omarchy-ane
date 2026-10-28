@@ -97,6 +97,7 @@
 #include <crypto/sha2.h>
 
 #include "ane_t6021.h"
+#include "ane_pwgate.h"
 #include "ane_t6021_boot.h"
 #include "ane_t6021_legtab.h"
 #include "ane_t6021_mring.h"
@@ -113,6 +114,11 @@
 /* CPU_STATUS bits (m1n1 ASCRegs shape) */
 #define ANE_ASC_CPU_STATUS_RUNNING	BIT(0)
 #define ANE_ASC_CPU_STATUS_STOPPED	BIT(1)
+
+static bool pwgate_open;
+module_param(pwgate_open, bool, 0444);
+MODULE_PARM_DESC(pwgate_open,
+		 "T8112 only: when PWGATE reads exactly 0x30000000, write 0 to it once and wait up to 100 ms for bits 29:28 to clear, as the macOS kext does; otherwise refuse (default 0: never write)");
 
 /* Boot-time module parameters — defaults are the proven add-path
  * parameter list (boot 3ab812a3 / load-run.sh), except fw_alias_reserved,
@@ -2478,15 +2484,28 @@ static int ane_rtclient_probe_inner(struct platform_device *pdev,
 		return -EPROBE_DEFER;
 	}
 	/* T8112: the kext (type 0x70) opens PWGATE (bits 29:28 = 0) before
-	 * the ps words. This driver only reads it: an engine read behind a
-	 * closed gate is untested, so it refuses first. */
+	 * the ps words. An engine read behind a closed gate is untested, so
+	 * the driver refuses first. With pwgate_open=1 and the word reading
+	 * exactly 0x30000000 it writes 0 once and waits for the bits to
+	 * clear (ane_pwgate_plan()); anything else refuses without a write. */
 	if (ane->soc->pwgate_off) {
 		void __iomem *set = devm_of_iomap(dev, dev->of_node, 2, NULL);
 		u32 gate = IS_ERR(set) ? U32_MAX :
 			   readl(set + ane->soc->pwgate_off);
+		enum ane_pwgate_plan plan = ane_pwgate_plan(gate, pwgate_open);
 
 		dev_dbg(dev, "PWGATE = 0x%x\n", gate);
-		if (gate & GENMASK(29, 28)) {
+		if (plan == ANE_PWGATE_WRITE) {
+			dev_info(dev, "pwgate_open: PWGATE word 0x%x, writing 0 once\n", gate);
+			writel(0, set + ane->soc->pwgate_off);
+			if (readl_poll_timeout(set + ane->soc->pwgate_off, gate,
+					       !(gate & ANE_PWGATE_CLOSED_MASK), 100,
+					       ANE_PWGATE_WAIT_US))
+				plan = ANE_PWGATE_REFUSE;
+			else
+				dev_info(dev, "PWGATE open (word 0x%x)\n", gate);
+		}
+		if (plan == ANE_PWGATE_REFUSE) {
 			pm_runtime_put_sync_suspend(dev);
 			pm_runtime_disable(dev);
 			return dev_err_probe(dev, -ENODEV,
