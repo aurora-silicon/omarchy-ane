@@ -41,7 +41,9 @@
  *              CPU_STATUS and pops at most four mailbox messages (raw words,
  *              no reply), then stops the core again. Refused on any SoC row
  *              without a measured rvbar_expect (today only t6030), and without a live DART
- *              stream from the same scan stage 4 does (run_unmapped=1 overrides). See the
+ *              stream from the same scan stage 4 does (run_unmapped=1 overrides). kext_boot=1 (off by
+ *              default) starts the core in the macOS kext's cold-boot order instead of the read-modify-write
+ *              and reports s7_ready on the RESULT line. See the
  *              comment above ane_h15_stage_run().
  *
  *   6 rtkit  : confirm_run=1 and confirm_rtkit=1 required. Stage 5 plus an RTKit management session on the ASC
@@ -175,6 +177,16 @@ static bool run_scratch;
 module_param(run_scratch, bool, 0444);
 MODULE_PARM_DESC(run_scratch,
 		 "Stage=run (5) only: read the eight SCRATCH words, read only, once before RUN and once after the wait, and log them. Off by default. The offsets come from the macOS kext's T6030 case and have not been read on an M3.");
+
+static bool kext_boot;
+module_param(kext_boot, bool, 0444);
+MODULE_PARM_DESC(kext_boot,
+		 "Stage=run (5) only: start the core in the macOS kext's cold-boot order instead of the read-modify-write: write 0 to SCRATCH0..7, then SCRATCH6=1, SCRATCH7=0 (read back), then CPU_CONTROL 0 and 0x10, then poll SCRATCH7 for the ready word 0x08042006. Never RVBAR, the mailbox or the DART; SCRATCH5 only ever receives 0. Off by default. Decoded from the macOS kext, never run on an M3.");
+
+static unsigned int kb_wait_ms = 1000;
+module_param(kb_wait_ms, uint, 0444);
+MODULE_PARM_DESC(kb_wait_ms,
+		 "Stage=run kext_boot=1: how long to poll SCRATCH7 for the ready word, 10 to 5000 ms. Default 1000.");
 
 static char *fw_path;
 module_param(fw_path, charp, 0444);
@@ -926,14 +938,20 @@ static int ane_h15_map_firmware(struct ane_h15 *ane)
  *   3. preflight, read only: CPU_STATUS (STOPPED set, RUNNING clear), CPU_CONTROL (RUN clear), RVBAR (exactly
  *      rvbar_expect) and both mailbox CTRL words (EMPTY, bit 17, set: nothing stale). Anything else refuses;
  *   4. CPU_CONTROL |= RUN (bit 4), the macOS AppleASCWrapV8::_runCPU(true) sequence (read, OR 0x10, write);
+ *      with kext_boot=1 instead the whole macOS cold-boot order runs first: 0 to SCRATCH0..7, SCRATCH6=1,
+ *      SCRATCH7=0 (read back), CPU_CONTROL 0 then 0x10, then a 1 ms poll of SCRATCH7 for the ready word
+ *      0x08042006 (ane_h15_kext_boot below);
  *   5. for run_wait_ms every 10 ms: CPU_STATUS and I2A_CTRL; if I2A is not EMPTY it pops the message
  *      (I2A_RECV0 at wrapper+0x8830, I2A_RECV1 at +0x8838, the Linux apple-mailbox v4 layout the other T6030 ASCs
  *      use) and logs the raw words, at most 4 messages. It sends NOTHING and never replies to a HELLO;
  *   6. stops the core the macOS way (_runCPU(false)): clear bit 4, write; re-read, clear bit 5, write; waits for
  *      STOPPED. If the core does not stop the power domains stay on, the windows stay mapped and remove()
  *      refuses: reboot.
- * It writes only CPU_CONTROL, only bits 4 and 5, never RVBAR, never the mailbox, never the DART. The ANE DART
- * nodes are disabled in the overlay and nothing here programs the DART: a core that cannot fetch through it
+ * It writes only CPU_CONTROL (bits 4 and 5), never RVBAR, never the mailbox, never the DART; with
+ * kext_boot=1 it also writes the eight SCRATCH words, each only as 0 except SCRATCH6=1 (the kext's
+ * helper zeroes all eight before it sets the wake bit, and its SCRATCH5 config value is unknown, so
+ * SCRATCH5 receives 0 only). The kext order is decoded from the kernelcache, never run on an M3. The ANE DART
+ * nodes are disabled in the overlay and nothing here programs the DART: a core that cannot fetch its firmware
  * may simply sit started. That is a result, not a failure of this stage.
  */
 #define ANE_H15_ST_RUNNING	BIT(0)
@@ -1248,6 +1266,20 @@ static int ane_h15_scr_wr(struct ane_h15 *ane, unsigned int i, u32 v)
 	u32 off = ANE_H15_SCRATCH_OFF + 4 * i;
 
 	if ((i != 0 && i != 1 && i != 3 && i != 7) || (u64)off + 4 > ane->soc->engine_size)
+		return -EPERM;
+	dev_crit(ane->dev, "ane_h15 write SCRATCH%u=%#x pa=%#llx\n", i, v, ane->soc->engine_pa + off);
+	writel(v, ane->engine + off);
+	return 0;
+}
+
+/* kext_boot=1 writes only: any SCRATCH word as 0 (the kext zeroes all eight first), and the
+ * wake word 1 in SCRATCH6. SCRATCH5 never receives anything but 0: the kext's config word
+ * value there is unknown. */
+static int ane_h15_scr_wr_kboot(struct ane_h15 *ane, unsigned int i, u32 v)
+{
+	u32 off = ANE_H15_SCRATCH_OFF + 4 * i;
+
+	if (i >= ANE_H15_SCRATCH_N || (v && i != 6) || (u64)off + 4 > ane->soc->engine_size)
 		return -EPERM;
 	dev_crit(ane->dev, "ane_h15 write SCRATCH%u=%#x pa=%#llx\n", i, v, ane->soc->engine_pa + off);
 	writel(v, ane->engine + off);
@@ -1597,6 +1629,56 @@ static void ane_h15_rtk_session(struct ane_h15 *ane, struct ane_h15_rtk *k)
 		 k->iop_idle, waited);
 }
 
+/* Stage 5, kext_boot=1: the macOS kext's cold-boot order, decoded from the kernelcache and
+ * never run on an M3. Every write address is logged before the write, so a hang names the
+ * last address. Order: 0 to SCRATCH0..7 (the kext's helper clears all eight first), SCRATCH6=1,
+ * SCRATCH7=0 with a read back, CPU_CONTROL 0 then 0x10 (RUN, plain writes, not the
+ * read-modify-write), then poll SCRATCH7 every 1 ms for the ready word 0x08042006 the kext
+ * waits for (it logs "No wake signal" on timeout). Never RVBAR, never the mailbox, never the
+ * DART; SCRATCH5 receives 0 only. The stale-ready-word hypothesis: a SCRATCH7 that still holds
+ * 0x08042006 from iBoot may send the firmware down the warm-boot path, where it idles at
+ * CPU_STATUS 0x300028. Zeroing it first is what this option tests. */
+static int ane_h15_kext_boot(struct ane_h15 *ane, u32 ctrl, bool *s7_ready)
+{
+	unsigned int i, waited;
+	u32 v;
+	int ret;
+
+	for (i = 0; i < ANE_H15_SCRATCH_N; i++) {
+		ret = ane_h15_scr_wr_kboot(ane, i, 0);
+		if (ret)
+			return ret;
+	}
+	ret = ane_h15_scr_wr_kboot(ane, 6, 1);
+	if (ret)
+		return ret;
+	ret = ane_h15_scr_wr_kboot(ane, 7, 0);
+	if (ret)
+		return ret;
+	if (ane_h15_scr_rd(ane, 7, &v))
+		return -EPERM;
+	dev_info(ane->dev, "ane_h15 kext_boot SCRATCH7 reads %#x after the cold-boot write\n", v);
+	/* Plain writes of 0 then RUN, not the read-modify-write. write_ctrl still checks that
+	 * only bits 4 and 5 differ: a CPU_CONTROL with any other bit set refuses before the write. */
+	ret = ane_h15_write_ctrl(ane, ctrl, 0, "kext boot: CPU_CONTROL to 0");
+	if (ret)
+		return ret;
+	ret = ane_h15_write_ctrl(ane, 0, ANE_H15_CPU_RUN, "kext boot: RUN");
+	if (ret)
+		return ret;
+	for (waited = 0; waited < kb_wait_ms; waited++) {
+		usleep_range(1000, 1000);
+		if (ane_h15_scr_peek(ane, 7) == ANE_H15_HS_READY) {
+			*s7_ready = true;
+			dev_info(ane->dev, "ane_h15 kext_boot SCRATCH7 ready word %#x after %ums\n",
+				 ANE_H15_HS_READY, waited + 1);
+			return 0;
+		}
+	}
+	dev_err(ane->dev, "ane_h15 kext_boot SCRATCH7 ready word not seen within %ums\n", kb_wait_ms);
+	return 0;
+}
+
 static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 {
 	const struct ane_h15_soc *s = ane->soc;
@@ -1604,6 +1686,9 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 	u64 m0, m1;
 	unsigned int waited, i, msgs = 0, started_seen = 0, posted = 0, live = 0, locked = 0;
 	bool stopped = false;
+	bool kboot = stg == 5 && kext_boot;
+	bool s7_ready = false;
+	char kres[80];
 	struct ane_h15_rtk rtk = { 0 };
 	int ret;
 
@@ -1613,6 +1698,10 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 	}
 	if (run_wait_ms < 10 || run_wait_ms > 2000) {
 		ane_h15_result(ane, stg, "REFUSED", "run_wait_ms 10 to 2000");
+		return -EINVAL;
+	}
+	if (stg == 5 && kext_boot && (kb_wait_ms < 10 || kb_wait_ms > 5000)) {
+		ane_h15_result(ane, stg, "REFUSED", "kb_wait_ms 10 to 5000");
 		return -EINVAL;
 	}
 	if (stg >= 6 && !confirm_rtkit) {
@@ -1718,18 +1807,21 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 		return -EBUSY;
 	}
 
-	if (stg == 5 && run_scratch)
+	if (stg == 5 && (run_scratch || kboot))
 		ane_h15_scr_dump(ane, "before RUN");
 
 	/* Start the core. From here a reboot may be needed. */
 	ane->fw_started = true;
 	ane->fw_touched = true;
-	ret = ane_h15_write_ctrl(ane, ctrl, ctrl | ANE_H15_CPU_RUN, "RUN");
+	if (kboot)
+		ret = ane_h15_kext_boot(ane, ctrl, &s7_ready);
+	else
+		ret = ane_h15_write_ctrl(ane, ctrl, ctrl | ANE_H15_CPU_RUN, "RUN");
 	if (ret) {
 		ane->fw_started = false;
 		ane->fw_touched = false;
 		ane_h15_unmap_firmware(ane);
-		ane_h15_result(ane, stg, "FAIL", "write-refused");
+		ane_h15_result(ane, stg, "FAIL", kboot ? "kext-boot-write-refused" : "write-refused");
 		return ret;
 	}
 	if (stg >= 6) {
@@ -1763,7 +1855,7 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 			msgs++;
 		}
 	}
-	if (stg == 5 && run_scratch)
+	if (stg == 5 && (run_scratch || kboot))
 		ane_h15_scr_dump(ane, "after the wait");
 	/* Stop the core the macOS way: clear RUN, then bit 5, each from a fresh read. */
 	if (ane_h15_read_ctrl(ane, &ctrl) == 0 &&
@@ -1785,7 +1877,13 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 	if (!stopped) {
 		dev_emerg(ane->dev,
 			  "ane_h15 the core did not report STOPPED after RUN was cleared: power domains stay on, do NOT unload, reboot required\n");
-		ane_h15_result(ane, stg, "FAIL", "core-not-stopped");
+		if (kboot) {
+			snprintf(kres, sizeof(kres), "kext_boot=1 s7_ready=%s core-not-stopped",
+				 s7_ready ? "yes" : "no");
+			ane_h15_result(ane, stg, "FAIL", kres);
+		} else {
+			ane_h15_result(ane, stg, "FAIL", "core-not-stopped");
+		}
 		/* Pin the module: ane_h15_remove() is void and cannot refuse an rmmod, and unloading would free the code that
 		 * owns the power claim, the windows and (map_fw) the DART domain under a core that may still be running. The
 		 * reference is never dropped: reboot to park the ANE. */
@@ -1815,6 +1913,12 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 			return rtk.hs_ret;
 		}
 		ane_h15_result(ane, stg, "PASS", stg == 7 ? "rtkit-channels-and-shutdown" : "rtkit-session-and-shutdown");
+		return 0;
+	}
+	if (kboot) {
+		snprintf(kres, sizeof(kres), "kext_boot=1 s7_ready=%s %s", s7_ready ? "yes" : "no",
+			 started_seen ? "core-started-and-stopped" : "core-never-left-stopped");
+		ane_h15_result(ane, stg, "PASS", kres);
 		return 0;
 	}
 	ane_h15_result(ane, stg, "PASS", started_seen ? "core-started-and-stopped" : "core-never-left-stopped");
@@ -1870,6 +1974,10 @@ static int ane_h15_probe(struct platform_device *pdev)
 	if (ret) {
 		dev_err(&pdev->dev, "unknown stage \"%s\"\n", stage);
 		return ret;
+	}
+	if (kext_boot && stage_idx != 5) {
+		dev_err(&pdev->dev, "kext_boot=1 is stage=run (5) only: refusing\n");
+		return -EINVAL;
 	}
 
 	ane = devm_kzalloc(&pdev->dev, sizeof(*ane), GFP_KERNEL);
