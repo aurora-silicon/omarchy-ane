@@ -46,9 +46,11 @@ On the base M2 (T8112) the driver stops at a closed power gate and says so in
 the log (`PWGATE closed (word 0x30000000 ...)`). The module parameter
 `pwgate_open=1` lets it write the gate word once, only when the word reads
 exactly 0x30000000, then wait up to 100 ms for the gate to open. Any other
-word refuses without a write. The default is off. The write follows what the
-macOS kext does and has not run on base M2 silicon yet, so a hang or reset
-is possible. A reboot undoes it.
+word refuses without a write. The default is off. It is the same write the
+macOS kext does, in a different order: the kext opens the gate before it writes
+the power-state words, and Linux gets here after the power domain is already on.
+Nobody has run it on base M2 silicon yet, so a hang or reset is possible. A
+reboot undoes it.
 
 To opt in, append the key as one line to
 `/etc/omarchy-mac-boot/dtb-overlays.opt-in`, then:
