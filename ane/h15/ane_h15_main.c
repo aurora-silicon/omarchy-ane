@@ -1632,7 +1632,9 @@ static void ane_h15_rtk_session(struct ane_h15 *ane, struct ane_h15_rtk *k)
 /* Stage 5, kext_boot=1: the macOS kext's cold-boot order, decoded from the kernelcache and
  * never run on an M3. Every write address is logged before the write, so a hang names the
  * last address. Order: 0 to SCRATCH0..7 (the kext's helper clears all eight first), SCRATCH6=1,
- * SCRATCH7=0 with a read back, CPU_CONTROL 0 then 0x10 (RUN, plain writes, not the
+ * SCRATCH7=0 with a read back that must read 0 (anything else stops the run before CPU_CONTROL:
+ * the register ignored the write and the stale word would be mistaken for the firmware's ready
+ * signal in the poll), CPU_CONTROL 0 then 0x10 (RUN, plain writes, not the
  * read-modify-write), then poll SCRATCH7 every 1 ms for the ready word 0x08042006 the kext
  * waits for (it logs "No wake signal" on timeout). Never RVBAR, never the mailbox, never the
  * DART; SCRATCH5 receives 0 only. The stale-ready-word hypothesis: a SCRATCH7 that still holds
@@ -1658,6 +1660,13 @@ static int ane_h15_kext_boot(struct ane_h15 *ane, u32 ctrl, bool *s7_ready)
 	if (ane_h15_scr_rd(ane, 7, &v))
 		return -EPERM;
 	dev_info(ane->dev, "ane_h15 kext_boot SCRATCH7 reads %#x after the cold-boot write\n", v);
+	/* The clear must take: a non-zero readback means the register ignored the write and the
+	 * stale word would be mistaken for the firmware's ready signal in the poll. Stop here,
+	 * before the first CPU_CONTROL write; run_common reports clear-failed. */
+	if (v) {
+		dev_err(ane->dev, "ane_h15 kext_boot SCRATCH7 still reads %#x after the clear, not writing CPU_CONTROL\n", v);
+		return -EIO;
+	}
 	/* Plain writes of 0 then RUN, not the read-modify-write. write_ctrl still checks that
 	 * only bits 4 and 5 differ: a CPU_CONTROL with any other bit set refuses before the write. */
 	ret = ane_h15_write_ctrl(ane, ctrl, 0, "kext boot: CPU_CONTROL to 0");
@@ -1821,7 +1830,8 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 		ane->fw_started = false;
 		ane->fw_touched = false;
 		ane_h15_unmap_firmware(ane);
-		ane_h15_result(ane, stg, "FAIL", kboot ? "kext-boot-write-refused" : "write-refused");
+		ane_h15_result(ane, stg, "FAIL", kboot ? (ret == -EIO ? "kext_boot=1 s7_ready=no clear-failed" :
+							   "kext-boot-write-refused") : "write-refused");
 		return ret;
 	}
 	if (stg >= 6) {

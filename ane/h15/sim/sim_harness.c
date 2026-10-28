@@ -1196,6 +1196,7 @@ static const struct ane_h15_soc *dm_soc;
 static bool dm_stuck, dm_nostart;
 static int dm_msgs_left;
 static bool dm_s7_ready;	/* kext_boot model: the firmware publishes the ready word in SCRATCH7 once started */
+static bool dm_s7_stuck;	/* kext_boot model: the SCRATCH7 register ignores the clear and always reads the stale word */
 
 static u32 eng_get(const struct ane_h15_soc *s, u32 off)
 {
@@ -1224,6 +1225,8 @@ static u32 dm_read(u64 pa, u32 v)
 {
 	const struct ane_h15_soc *s = dm_soc;
 
+	if (dm_s7_stuck && pa == s->engine_pa + 0x1840050u + 4 * 7)
+		return 0x08042006u;	/* the register ignored the clear */
 	if (pa == s->engine_pa + s->mbox + 0x838) {	/* popping a message */
 		if (dm_msgs_left > 0)
 			dm_msgs_left--;
@@ -1265,6 +1268,7 @@ static void run_setup(const struct ane_h15_soc *s, const char *compat, u32 ctrl)
 	dm_soc = s;
 	dm_stuck = dm_nostart = false;
 	dm_s7_ready = false;
+	dm_s7_stuck = false;
 	dm_msgs_left = 0;
 	sim_write_hook = dm_write;
 	sim_read_hook = dm_read;
@@ -1550,6 +1554,48 @@ static void pos_run_kext(void)
 	    !strcmp(verdict, "REFUSED") && strstr(reason, "kb_wait_ms") &&
 	    run_writes(s, w, 16, &first) == 0 && sim_bus_faults == 0,
 	    "KB5 kb_wait_ms=9 refuses with no write");
+	ane_h15_remove(&pdev);
+
+	/* KB6: the SCRATCH7 clear does not take (the register ignores the write and keeps
+	 * reading the stale ready word). The run must stop before the first CPU_CONTROL
+	 * write: the core never started, nothing is pinned and the result names the cause.
+	 * The firmware never starts and never publishes READY (dm_nostart, dm_s7_ready off),
+	 * so a s7_ready=yes here could only come from the stale word. */
+	run_setup(s, "apple,t6030-ane", 0x0);
+	kext_boot = true;
+	kb_wait_ms = 50;
+	dm_nostart = true;
+	dm_s7_stuck = true;
+	eng_set(s, off + 4 * 7, 0x08042006);
+	ret = probe_now();
+	chk(ret != 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) && rstage == 5 &&
+	    !strcmp(verdict, "FAIL") && !strcmp(reason, "kext_boot=1 s7_ready=no clear-failed"),
+	    "KB6 stale S7 survives the clear: FAIL, reason kext_boot=1 s7_ready=no clear-failed");
+	n = run_writes(s, w, 16, &first);
+	chk(n == 10 && events_in(s->engine_pa + s->cpu_control, 4, 1) == 0,
+	    "KB6 the ten SCRATCH writes happen and no CPU_CONTROL write at all");
+	chk(log_count("SCRATCH7 reads 0x8042006 after the cold-boot write") == 1,
+	    "KB6 the non-zero readback value is logged");
+	chk(sim_pm_get == sim_pm_put && sim_n_iomap == sim_n_iounmap && sim_module_gets == 0 &&
+	    log_count("do NOT unload") == 0 && log_count("clear RUN") == 0,
+	    "KB6 power claim released, windows unmapped, module not pinned, stop path not entered");
+	ane_h15_remove(&pdev);
+
+	/* KB7: control with the same setup, the clear takes. The run goes on, the poll
+	 * times out and the result stays PASS with s7_ready=no and the core never left
+	 * STOPPED (the model never starts it). */
+	run_setup(s, "apple,t6030-ane", 0x0);
+	kext_boot = true;
+	kb_wait_ms = 20;
+	dm_nostart = true;
+	eng_set(s, off + 4 * 7, 0x08042006);
+	ret = probe_now();
+	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) && rstage == 5 &&
+	    !strcmp(verdict, "PASS") && !strcmp(reason, "kext_boot=1 s7_ready=no core-never-left-stopped"),
+	    "KB7 same setup, clear takes: PASS, reason kext_boot=1 s7_ready=no core-never-left-stopped");
+	n = run_writes(s, w, 16, &first);
+	chk(n == 13 && eng_events_at(s, off + 4 * 7) == 2 + 1 + 20 + 2,
+	    "KB7 the boot sequence and the poll run as before the clear check");
 	ane_h15_remove(&pdev);
 
 	printf("  %-58s %s\n", "pos_run_kext summary", fails == before ? "all KB checks PASS" : "FAILURES above");
