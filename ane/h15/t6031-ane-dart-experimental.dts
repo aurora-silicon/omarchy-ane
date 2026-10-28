@@ -9,8 +9,8 @@
  * aperture (bank 0 + 0x4000), not a DART (its version word differs): it stays disabled. The ane node lists
  * power-domains and so do the DART nodes, so the kernel powers the ANE before the DART driver
  * first touches it. An enabled DART node without that hung a T6030 at boot (PR 173); the
- * one-instance T6030 version of this file booted on a J516S without a hang. THIS T6031 file
- * has not been booted. If the machine hangs before display: power-cycle and boot without the
+ * T6030 versions of this file, with one and with three instances, booted on a J516S without a hang. THIS
+ * T6031 file has not been booted. If the machine hangs before display: power-cycle and boot without the
  * overlay. Stream 0 is the one stream the ADT names for the ANE. All three DART nodes use the
  * one interrupt of the ADT (984), which the DART driver shares. The registers, interrupts and
  * pmgr words are the ones t6031-ane-experimental.dts already carries; stages 0 to 2 of ane_h15
