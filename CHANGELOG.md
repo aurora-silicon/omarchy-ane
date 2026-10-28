@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-- `tools/ane-pmp-load.sh` starts the PMP firmware on demand for the ANE clock level on the 16-inch M1 Max, and the README says the module cannot be unloaded.
+## 0.5.4 (2026-10-28)
+
+This release adds a script that loads the PMP firmware only when ANE work starts. On the 16-inch M1 Max, loading the PMP at every boot made GPU decode about 11.5 percent slower. Six fresh boots in the order without, with, with, without, without, with gave Qwen3.8-2B 4-bit decode with mlx-lm at 92.7 against 83.1, 92.8 against 83.2 and 92.4 against 83.1 tokens per second, a median pair gain of 11.54 percent against a bar of 5 percent. The ANE clock level still needs the PMP, so ANE work loads it first. The release also makes the 8-bit Qwen decode package the default on the 13-inch M1 and the 14-inch M2 Max, with fp16 as the opt-out, and carries more experimental M6 (T8152) program-stage work.
+
+- `tools/ane-pmp-load.sh` starts the PMP firmware on demand for the ANE clock level on the 16-inch M1 Max, and the README says the module cannot be unloaded. It waits for the PMP device to bind or for the ready line, and exits 4 if the module is missing, fails to load or is not ready after 90 seconds. Its test covers five cases with stub `insmod`, `dmesg` and `sleep`.
 - docs: the 14-inch M2 Max 8-bit package is about 9.5 percent faster than fp16 at 2,048 positions. Two sessions on one boot read 9.76 and 9.45 percent, both under the 10 percent bar, with no GPU job running. The page now says so. The earlier 10.6 percent was one session at 192 positions. The runs are in `receipts/2026-10-27-m2-l2048-speed`.
 - docs: the 14-inch M2 Max has a 2,048 position quality result for the 8-bit default package. On 12 prompts the KL ratio is 1.13 against the limit of 2. Each prompt has one window of 24 positions. The page lists the limits. The sample is thin. The int8 weights are calibrated at 192 positions. There is no 1,024 position check.
 
