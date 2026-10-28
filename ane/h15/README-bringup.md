@@ -120,7 +120,9 @@ template is `ane/h16/`.
   warm-boot path, where it idles at `0x300028`; zeroing all eight words first is what the run decides on.
   The option writes the eight SCRATCH words and CPU_CONTROL only (SCRATCH5 receives 0 only, the kext's config
   value there is unknown), never RVBAR, the mailbox or the DART. Every write address is logged before the write,
-  so a hang names the last address. The RESULT line carries `kext_boot=1 s7_ready=<yes|no>`; the verdict rules
+  so a hang names the last address. The read back after the SCRATCH7 clear must read 0: a non-zero value stops
+  the run before RUN with `FAIL kext_boot=1 s7_ready=no clear-failed` and means the register ignored the write.
+  The RESULT line carries `kext_boot=1 s7_ready=<yes|no>`; the verdict rules
   are unchanged. The option is refused on every stage other than 5, before any bus access.
 
 - `stage=6` or `stage=rtkit`: stage 5 (all of its gates, `map_fw`, `fw_seg`) plus an RTKit management
