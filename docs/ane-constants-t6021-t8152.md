@@ -25,6 +25,9 @@ Evidence tags in the last column:
 | constant | T6021 | T8152 | H15 (T6030) | basis |
 |---|---|---|---|---|
 | `ANE_PS_ON` | `0xf` | PSD state `0` [ANE_H18_PSD_P0_RUN]: slots 30 and 31 at `0x303a10000`, no pmgr ps words | `0xf` [ANE_H15_PS_ON] | ADT power-gates; board; H15: I |
+| `ANE_PWGATE_CLOSED_MASK` | `0x30000000` | ? | ? | kext (T8112, type 0x70, receipts/2026-10-01-t8112-ane); used only by the T8112 probe, T6021 has no gate offset; T8152, H15: ? |
+| `ANE_PWGATE_CLOSED_WORD` | `0x30000000` | ? | ? | kext (T8112, type 0x70, receipts/2026-10-01-t8112-ane); used only by the T8112 probe, T6021 has no gate offset; T8152, H15: ? |
+| `ANE_PWGATE_WAIT_US` | `100000` | ? | ? | driver choice, 100 ms bound on the wait for the gate bits; T8152, H15: ? |
 | `ANE_ASC_CPU_CONTROL` | `0x1400044` | `0x1600044` | `0x1400044` | kext (ane-type 0x310, `initializeANESoCConfig`), board read of PA `0x419600044` = 0; H15: I |
 | `ANE_ASC_CPU_STATUS` | `0x1400048` | `0x1600048` | `0x1400048` | kext, board read = `0xa`; H15: ADT reg[0] + 0x48, role I |
 | `ANE_ASC_RVBAR` | `0x1050000` | `0x1050000` | `0x1050000` [ANE_H15_RVBAR_WIN_OFF] | ADT reg[1] `0x419050000`; board IORVBAR `0x10000000001` |
