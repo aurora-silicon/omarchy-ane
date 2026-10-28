@@ -256,12 +256,36 @@ try:
 finally:
     os.environ['PATH'] = _old_path
     shutil.rmtree(_bin)
+
+# 9. M3 chips resolve the H15 fixture and stop with exit 2 before any driver or job work.
+H15_DIR = repo / 'fixtures/h15-hwx/add'
+assert smoke.H15_ADD == 'h15-hwx/add/model.hwx'
+for line in (H15_DIR / 'SHA256SUMS').read_text().splitlines():
+    digest, name = line.split(None, 1)
+    assert hashlib.sha256((H15_DIR / name.strip()).read_bytes()).hexdigest() == digest, name
+assert (H15_DIR / 'ports.json').is_file() and (H15_DIR / 'README.md').is_file()
+for chip in ('t6030', 't6031', 't6034', 't8122'):
+    root = machine(chip, chip, bound=False)
+    assert (root / smoke.FIXTURES / smoke.FIXTURE[chip]).is_file(), f'{chip}: fixture not installed'
+    rc, out, err = smoke_run(root)
+    assert rc == 2 and out['available'] is False and out['chip'] == chip and out['die'] == 0, (chip, rc, out)
+    assert out['reason'] == 'no driver for this chip can run a job yet', (chip, out)
+    assert err == f'omarchy-ane-smoke: unavailable: no driver for this chip can run a job yet\n', (chip, err)
+    assert not (root / 'count').exists(), f'{chip}: no call may run'
+    shutil.rmtree(root)
 print('test_ane_smoke: ok')
 
 
 def test_h13_golden_mapping():
     assert smoke.GOLDEN['t6001'] == smoke.H13_GOLDEN
     assert smoke.GOLDEN['t6021'] == smoke.H14_GOLDEN
+
+
+def test_h15_golden_mapping():
+    # The shared 512-lane generator, packing and valid-plane check make the H15
+    # add golden the exact bytes the H14 golden pins.
+    for chip in smoke.M3:
+        assert smoke.GOLDEN[chip] == smoke.H14_GOLDEN, chip
 
 def test_h13_runner_indices_are_positions_not_anec_channels():
     assert H13_INPUT_CHANNELS == (5, 6) and H13_MANIFEST['output_channel'] == 4

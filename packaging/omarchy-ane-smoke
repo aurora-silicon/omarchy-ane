@@ -7,7 +7,8 @@ Each result hashes only the valid fp16 planes, in plane order as little-endian
 16-bit values. H14 has 512 planes in a 32 KiB output; H13 has 64 planes in a
 16 KiB tile. For H13 the complete output tile is compared with the model, including
 zero padding. H13 inputs use channels 5 and 6 and output channel 4. H14 keeps
-its valid-plane golden check.
+its valid-plane golden check. M3 family chips resolve the H15 fixture, but no
+driver for those chips can run a job yet, so the smoke stops with exit 2 there.
 
 Exit 0: every call is bit-exact. Exit 1: a call failed or mismatched. Exit 2:
 no fixture, driver, firmware, or packaged file is available.
@@ -33,10 +34,14 @@ H14_LANES, H13_LANES, PLANE = 512, 64, 64
 H14_SURFACE, H13_SURFACE = H14_LANES * PLANE, 16384
 H14_ADD = "h14-anec/add/program-0.anec"
 H13_ADD = "h13-anec/add/program-0.anec"
+H15_ADD = "h15-hwx/add/model.hwx"
+M3 = {"t6030", "t6031", "t6034", "t8122"}
 FIXTURE = {"t6020": H14_ADD, "t6021": H14_ADD, "t6022": H14_ADD, "t8112": H14_ADD,
-           "t8103": H13_ADD, "t6000": H13_ADD, "t6001": H13_ADD, "t6002": H13_ADD}
+           "t8103": H13_ADD, "t6000": H13_ADD, "t6001": H13_ADD, "t6002": H13_ADD,
+           **{c: H15_ADD for c in M3}}
 H13 = {"t8103", "t6000", "t6001", "t6002"}
-MODULE = {**{c: "ane" for c in H13}, **{c: "ane_t6021" for c in ("t6020", "t6021", "t6022", "t8112")}}
+MODULE = {**{c: "ane" for c in H13}, **{c: "ane_t6021" for c in ("t6020", "t6021", "t6022", "t8112")},
+          **{c: "ane_h15" for c in M3}}
 H14_GOLDEN = "94041b7cc10a66dfd76ecfd469728ad9d66f68b508f4a9744ce41208d6a4de0b"
 H13_GOLDEN = "5ad7eccd2977a88a375f123fe42c6780855953a1e9df4ac442cae383bc240dd6"
 GOLDEN = {chip: H13_GOLDEN if chip in H13 else H14_GOLDEN for chip in FIXTURE}
@@ -148,6 +153,8 @@ def prepare(root, chip):
     anec = next((d / rel for d in (root / FIXTURES, HERE.parent / "fixtures") if (d / rel).is_file()), None)
     if anec is None:
         raise Unavailable(f"{root / FIXTURES / rel} is missing. Reinstall omarchy-ane-dkms.")
+    if chip in M3:
+        raise Unavailable("no driver for this chip can run a job yet")
     runner = tool("omarchy-ane-run", "tools/ane-run")
     if runner is None:
         raise Unavailable("omarchy-ane-run is missing. Reinstall omarchy-ane-dkms.")
