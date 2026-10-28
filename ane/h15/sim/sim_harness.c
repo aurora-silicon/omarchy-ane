@@ -2080,7 +2080,12 @@ static void fw_host_msg(u64 m0, u64 m1)
 #define SCR_READY 0x08042006u
 #define SCR_WAKE 0xf7fbdff9u
 #define DOORBELL_OFF 0x1844000u
+#define IPI_PENDING_OFF 0x184c000u
+#define IPI_ACK_OFF 0x1850000u
 static bool fw_chan;
+static u32 fw_ipi_pend;		/* the pending word the model answers with */
+static u32 ipi_raise;		/* what the model raises at publish and on every doorbell */
+static bool fw_ipi_hold;	/* the acknowledge never clears pending (the cap control) */
 static struct {
 	bool s7_zero, s0_big, s3_big, no_table, s3_stuck, no_answer, bad_ack, bad_ring, overlap_ring;
 } hso;
@@ -2150,6 +2155,7 @@ static void fw_publish(const struct ane_h15_soc *s)
 	scr_set(s, 0, (u32)fw_ipc_iova);
 	scr_set(s, 1, (u32)(fw_ipc_iova >> 32));
 	scr_set(s, 7, SCR_READY);
+	fw_ipi_pend |= ipi_raise;
 }
 
 static void fw_s3_ready(const struct ane_h15_soc *s)
@@ -2191,6 +2197,7 @@ static void fw_doorbell(u32 v)
 		return;
 	fw_cmds++;
 	fw_io_cursor++;
+	fw_ipi_pend |= ipi_raise;
 	if (hso.no_answer)
 		return;
 	memcpy(&id, cmd + 4, 2);
@@ -2221,6 +2228,8 @@ static void rt_write(u64 pa, u32 v)
 	}
 	if (fw_chan && pa == s->engine_pa + DOORBELL_OFF)
 		fw_doorbell(v);
+	if (fw_chan && pa == s->engine_pa + IPI_ACK_OFF && !fw_ipi_hold)
+		fw_ipi_pend &= ~v;	/* write-1-to-clear, as the kext's acknowledge */
 	if (run && fw_chan) {
 		scr_set(s, 0, hso.s0_big ? 0x21 : 8);
 		scr_set(s, 1, 0xc440);
@@ -2251,6 +2260,8 @@ static u32 rt_read(u64 pa, u32 v)
 {
 	const struct ane_h15_soc *s = dm_soc;
 
+	if (pa == s->engine_pa + IPI_PENDING_OFF)
+		return fw_ipi_pend;
 	if (pa == s->engine_pa + s->mbox + 0x838 && fq_n) {	/* pop on the read of RECV1 */
 		int i;
 
@@ -2460,6 +2471,8 @@ static void ch_setup(void)
 	fw_h2t_ok = false;
 	fw_cmds = fw_io_cursor = 0;
 	fw_ipc_iova = fw_ipc_size = 0;
+	fw_ipi_pend = ipi_raise = 0;
+	fw_ipi_hold = false;
 	sim_write_hook = rt_write;
 	sim_write64_hook = rt_write64;
 	sim_read_hook = rt_read;
@@ -2558,6 +2571,103 @@ static void pos_chan(void)
 	stage = "rtkit";
 	probe_now();
 	chk(scr_writes(s) == 0 && sim_n_dma == 0, "C3 stage 6 writes no SCRATCH word and allocates no surface");
+	ane_h15_remove(&pdev);
+}
+
+/* ---- stage 7 IPI pair: pending engine + 0x184c000 (read), acknowledge engine + 0x1850000 (write the value back) ---- */
+static int ipi_ack_writes(const struct ane_h15_soc *s)
+{
+	return events_in(s->engine_pa + IPI_ACK_OFF, 4, 1);
+}
+
+static int ipi_pend_reads(const struct ane_h15_soc *s)
+{
+	return events_in(s->engine_pa + IPI_PENDING_OFF, 4, 0);
+}
+
+/* every acknowledge write so far carried exactly this value */
+static bool ipi_ack_all(const struct ane_h15_soc *s, u32 v)
+{
+	int i;
+
+	for (i = 0; i < sim_n_events && i < SIM_MAX_EVENTS; i++)
+		if (sim_events[i].write && sim_events[i].pa == s->engine_pa + IPI_ACK_OFF && sim_events[i].val != v)
+			return false;
+	return true;
+}
+
+static void ipi_chan(void)
+{
+	const struct ane_h15_soc *s = &ane_t6030_soc;
+	unsigned int rstage;
+	char verdict[32], reason[128];
+	int ret;
+
+	/* I1: the pending word stays 0, so nothing is ever written to the acknowledge */
+	ch_setup();
+	ret = probe_now();
+	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    rstage == 7 && !strcmp(verdict, "PASS"), "I1 stage 7 with a silent pending: PASS unchanged");
+	chk(ipi_pend_reads(s) > 0, "I1 the stage 7 wait loops read the pending word");
+	chk(ipi_ack_writes(s) == 0, "I1 pending 0: no acknowledge write");
+	ane_h15_remove(&pdev);
+
+	/* I2: the firmware raises 0x5 with the table: exactly one write of 0x5 back, after its log line */
+	ch_setup();
+	ipi_raise = 0x5;
+	ret = probe_now();
+	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    rstage == 7 && !strcmp(verdict, "PASS"), "I2 pending 0x5: stage 7 still PASS");
+	chk(ipi_ack_writes(s) == 1 && ipi_ack_all(s, 0x5), "I2 exactly one acknowledge write and its value is 0x5");
+	chk(log_count("ane_h15 write IPI_ACK=0x5 pa=") == 1, "I2 the write was logged before it happened");
+	chk(log_count("ane_h15 read IPI_PENDING=0x5 pa=") >= 1, "I2 the pending change was logged");
+	ane_h15_remove(&pdev);
+
+	/* I2b: the same with an even value, 0x6: one write of 0x6 back, after its log line */
+	ch_setup();
+	ipi_raise = 0x6;
+	ret = probe_now();
+	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    rstage == 7 && !strcmp(verdict, "PASS"), "I2b pending 0x6: stage 7 still PASS");
+	chk(ipi_ack_writes(s) == 1 && ipi_ack_all(s, 0x6), "I2b exactly one acknowledge write and its value is 0x6");
+	chk(log_count("ane_h15 write IPI_ACK=0x6 pa=") == 1, "I2b the write was logged before it happened");
+	chk(log_count("ane_h15 read IPI_PENDING=0x6 pa=") >= 1, "I2b the pending change was logged");
+	ane_h15_remove(&pdev);
+
+	/* I3: chan_cmds=1 with the model raising 0x5 at publish and on every doorbell: one plus two acknowledges */
+	ch_setup();
+	chan_cmds = true;
+	ipi_raise = 0x5;
+	ret = probe_now();
+	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    rstage == 7 && !strcmp(verdict, "PASS"), "I3 chan_cmds=1 with a raising pending: PASS");
+	chk(ipi_ack_writes(s) == 3 && ipi_ack_all(s, 0x5), "I3 publish plus the two doorbells: three 0x5 acknowledges");
+	ane_h15_remove(&pdev);
+
+	/* I4: the pending word is held (the acknowledge never clears it) through a stuck SCRATCH3 wait:
+	 * the writes stop at the per run cap of 64 */
+	ch_setup();
+	hso.s3_stuck = true;
+	fw_ipi_hold = true;
+	ipi_raise = 0x1;
+	hs_wait_ms = 200;
+	ret = probe_now();
+	chk(ret != 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    rstage == 7 && !strcmp(verdict, "FAIL") && strstr(reason, "handshake-not-done"),
+	    "I4 stuck SCRATCH3 still fails the run");
+	chk(ipi_ack_writes(s) == 64, "I4 the acknowledges stop at 64 per run");
+	chk(log_count("ane_h15 write IPI_ACK=") == 64, "I4 every acknowledge write carries its log line, no line past the cap");
+	ane_h15_remove(&pdev);
+
+	/* I5: stage 6 and earlier never read the pending word and never write the acknowledge */
+	ch_setup();
+	stage = "rtkit";
+	ipi_raise = 0x5;
+	fw_ipi_pend = 0x5;	/* raised before the session; the model answers it whenever it is read */
+	ret = probe_now();
+	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    rstage == 6 && !strcmp(verdict, "PASS"), "I5 stage 6 with a raised pending: PASS unchanged");
+	chk(ipi_pend_reads(s) == 0 && ipi_ack_writes(s) == 0, "I5 stage 6: no pending read, no acknowledge write");
 	ane_h15_remove(&pdev);
 }
 
@@ -2673,6 +2783,7 @@ int main(int argc, char **argv)
 		pos_map();
 		pos_rtkit();
 		pos_chan();
+		ipi_chan();
 		printf("%s\n", fails ? "SIM-TEST: FAILED"
 				     : "SIM-TEST: all positive controls PASS");
 	} else if (!strcmp(mode, "neg-ps-stuck")) {

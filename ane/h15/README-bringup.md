@@ -150,8 +150,15 @@ template is `ane/h16/`.
   firmware's table address, checks all eight table entries (each ring must lie inside the surface that holds the table, not
   overlap the table or each other), makes the host the owner of every host-to-firmware slot, writes READY to SCRATCH3 and
   waits for the firmware to clear it. `chan_cmds=1` then sends PRINT_ENABLE and CONFIG_GET on the IO ring (doorbell
-  BIT(bit) at engine + 0x1844000, the only doorbell write) and logs the answers. The RTKit session of stage 6 runs around
-  it and the shutdown still follows. Surfaces are freed only after the core stopped. Verdicts: `PASS
+  BIT(bit) at engine + 0x1844000, the only doorbell write) and logs the answers. While the stage 7 wait loops run (the
+  table wait, the SCRATCH3 wait, the ring answers) the module also reads the interrupt pending word at engine +
+  0x184c000. When it reads a non-zero value the module writes that value once to the acknowledge register at engine +
+  0x1850000. The write is logged before it happens, with the value and the address. A change of the pending value is
+  logged too. At most 64 acknowledges happen per run. A zero pending writes nothing. The pending register itself is
+  never written. The pair is the one the macOS kext's interrupt handler services: read pending, write the value back,
+  dispatch per channel. The M6 module services the same pair at engine + 0x18ac000 and + 0x18b0000. Stages 0 to 6 never
+  read the pending word and never write the acknowledge. The RTKit session of stage 6 runs around it and the shutdown
+  still follows. Surfaces are freed only after the core stopped. Verdicts: `PASS
   rtkit-channels-and-shutdown`, or `FAIL handshake-not-ready`, `handshake-no-table-address`, `handshake-not-done`
   (the log names the step) on top of stage 6's. **Nothing here has run on an H15 part**; the register offsets are decoded
   from the macOS kext, not measured. Run it only after stage 6 on the same machine reached AP power ON.
