@@ -401,7 +401,10 @@ the DART. Decoded from the macOS kext, never run on an M3. The `RESULT` line end
 
 ## Not verified (honest limits)
 
-- No M3 silicon has run any of this. The register map is
+- Stages 0, 1, 2, 4 and 5 have run on a 16-inch M3 Pro (T6030), and stage 3 ran there and refused with
+  `unfilled-facts`. Stages 0, 1, 2 and 4 have run on a 16-inch M3 Max (T6031). The T6030 results are on
+  PR 175 and issue 176, the T6031 results on issue 176. Stage 5 on the T6030 ended in `core-not-stopped`
+  with no mailbox message, with one and with three DART instances. The register map is
   ADT-derived (the macOS 27.0 IPSW ADT summary, not disassembled
   kernelcache or iBoot). The role of every word in the engine
   aperture is INFERENCE on H15.
@@ -410,17 +413,18 @@ the DART. Decoded from the macOS kext, never run on an M3. The `RESULT` line end
   version as "unknown"); the module's stage=3 plan to map the
   preload at the ADT remap IOVAs is the same mechanical path
   the T6021 W-series proved, but on M3 it has not run.
-- `map_fw=1`: no H15 run. The DART overlay has not been booted; an enabled DART node hung a
-  T6030 at boot before (PR 173) and this one relies on `power-domains` to prevent that. The T6031
+- `map_fw=1` ran on a J516S (T6030) with one and with three DART instances. Both ended in
+  `core-not-stopped` with no mailbox message. An enabled DART node hung a T6030 at boot before
+  (PR 173) and the overlays rely on `power-domains` to prevent that. The T6031
   variant adds one more unknown: stage 4 on a J516C read windows 0, 1 and 2 as DARTs with no
   stream enabled, but the overlay itself has never been through a boot. Stream 0 is
-  inferred. Whether iBoot's firmware phys addresses repeat between boots is not known, which is why
-  `fw_seg` must come from the same boot's ADT. Whether the T6030 firmware lays TEXT and DATA out
+  inferred. The firmware phys addresses repeated across two boots on a J516C (two samples, not a rule), so
+  `fw_seg` still comes from the same boot's ADT. Whether the T6030 firmware lays TEXT and DATA out
   like the M6 (DATA IOVA = vm-base + TEXT size) is inferred; `h15-segments.py` refuses a dump where it
   does not hold. Instance 0 of the four DART windows may not be enough for the firmware fetch (an
   open question on the M6).
-- Stage 5 reads CPU_CONTROL and writes it (bits 4 and 5 only). Nobody has run
-  that on an H15 part. With `kext_boot=1` it also writes the eight SCRATCH
+- Stage 5 reads CPU_CONTROL and writes it (bits 4 and 5 only). It has run on a T6030
+  and left the core idle with no message. With `kext_boot=1` it also writes the eight SCRATCH
   words, each only as 0 except SCRATCH6=1, before the same RUN write; that
   order is decoded from the macOS kext and has never run on an M3. The M6
   (T8152) result it is modelled on: the same RUN
