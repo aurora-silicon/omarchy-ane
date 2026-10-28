@@ -1606,7 +1606,6 @@ static int neg_run(void)
 	const struct ane_h15_soc *s = &ane_t6030_soc;
 	static const struct { const struct ane_h15_soc *soc; const char *compat; } others[] = {
 		{ &ane_t8122_soc, "apple,t8122-ane" },
-		{ &ane_t6031_soc, "apple,t6031-ane" },
 		{ &ane_t6034_soc, "apple,t6034-ane" },
 	};
 	static const struct { const char *tag; u32 off; u32 val; } bad[] = {
@@ -1638,13 +1637,24 @@ static int neg_run(void)
 		chk(sim_n_events == 0, "N2 run_wait_ms: zero bus events of any kind");
 	}
 	/* N3 SoC rows with no measured RVBAR */
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < (int)ARRAY_SIZE(others); i++) {
 		run_setup(others[i].soc, others[i].compat, 0);
 		ret = probe_now();
 		snprintf(name, sizeof(name), "N3 %s no measured RVBAR", others[i].soc->name);
 		run_refused_clean(others[i].soc, ret, "REFUSED", "no measured RVBAR", name);
 		chk(sim_n_events == 0, "N3 no measured RVBAR: zero bus events of any kind");
 	}
+	/* N3b t6031 has a measured RVBAR (issue 176, stage 2 on a J516C), so the gate passes and the stage runs */
+	run_setup(&ane_t6031_soc, "apple,t6031-ane", 0);
+	ret = probe_now();
+	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    rstage == 5 && !strcmp(verdict, "PASS") && !strcmp(reason, "core-started-and-stopped"),
+	    "N3b t6031: measured RVBAR, stage 5 runs to core-started-and-stopped");
+	chk(log_count("ane_h15 write CPU_CONTROL=") == 2 && sim_bus_faults == 0,
+	    "N3b t6031: exactly the RUN and clear-RUN writes, no fault");
+	ane_h15_remove(&pdev);
+	chk(sim_pm_get == 1 && sim_pm_put == 1 && sim_n_iomap == 2 && sim_n_iounmap == 2,
+	    "N3b t6031: power claim released, both windows unmapped");
 	/* N4..N10 preflight mismatches: read-only, FAIL, nothing written */
 	for (i = 0; i < (int)ARRAY_SIZE(bad); i++) {
 		run_setup(s, "apple,t6030-ane", 0);

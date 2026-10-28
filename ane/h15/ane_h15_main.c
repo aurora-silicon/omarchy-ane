@@ -40,7 +40,7 @@
  *              stage 2 run measured on this SoC, mailbox words EMPTY), watches
  *              CPU_STATUS and pops at most four mailbox messages (raw words,
  *              no reply), then stops the core again. Refused on any SoC row
- *              without a measured rvbar_expect (today only t6030), and without a live DART
+ *              without a measured rvbar_expect (today t6030 and t6031), and without a live DART
  *              stream from the same scan stage 4 does (run_unmapped=1 overrides). kext_boot=1 (off by
  *              default) starts the core in the macOS kext's cold-boot order instead of the read-modify-write
  *              and reports s7_ready on the RESULT line. See the
