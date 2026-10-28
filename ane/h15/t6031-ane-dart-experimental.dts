@@ -1,0 +1,126 @@
+// SPDX-License-Identifier: GPL-2.0-only OR MIT
+/*
+ * ane/h15 OPT-IN EXPERIMENTAL overlay for T6031 (M3 Max) board device
+ * trees, DART variant: the same overlay as t6031-ane-experimental.dts with the three ANE DART
+ * translation instances ENABLED (windows 0, 1 and 2) and the ane node a client of all three
+ * (iommus, stream 0 on each). Only for ane_h15 stage=5 map_fw=1, and only after stage 4 found
+ * window 0 reading as a DART. Stage 4 on a J516C did: windows 0, 1 and 2 read as DARTs (version
+ * word 0x2a2a0200) with no stream enabled (issue 176). The window at 0x3c9804000 is the DAPF
+ * aperture (bank 0 + 0x4000), not a DART (its version word differs): it stays disabled. The ane node lists
+ * power-domains and so do the DART nodes, so the kernel powers the ANE before the DART driver
+ * first touches it. An enabled DART node without that hung a T6030 at boot (PR 173); the
+ * one-instance T6030 version of this file booted on a J516S without a hang. THIS T6031 file
+ * has not been booted. If the machine hangs before display: power-cycle and boot without the
+ * overlay. Stream 0 is the one stream the ADT names for the ANE. All three DART nodes use the
+ * one interrupt of the ADT (984), which the DART driver shares. The registers, interrupts and
+ * pmgr words are the ones t6031-ane-experimental.dts already carries; stages 0 to 2 of ane_h15
+ * ran on a J516C with that overlay installed (issue 176) and matched its facts. Mirrors
+ * ane/h15/t6030-ane-dart-experimental.dts; the engine and pmgr bases are the measured ones:
+ * engine 0x3c8000000+0x2000000, pmgr 0x292280000+0x10000.
+ */
+/dts-v1/;
+/plugin/;
+
+/ {
+	omarchy,opt-in = "ane-h15-experimental";
+
+	fragment@0 {
+		target-path = "/soc/interrupt-controller@292400000";
+		aic: __overlay__ {
+		};
+	};
+
+	fragment@1 {
+		target-path = "/soc/power-management@292280000/power-controller@520";
+		ps_ane_sys: __overlay__ {
+		};
+	};
+
+	fragment@2 {
+		target-path = "/soc/power-management@292280000/power-controller@5a0";
+		ps_ane_mpm: __overlay__ {
+		};
+	};
+
+	fragment@3 {
+		target-path = "/soc/power-management@292280000/power-controller@5a8";
+		ps_ane_cpu: __overlay__ {
+		};
+	};
+
+	fragment@4 {
+		target-path = "/soc/power-management@292280000/power-controller@5b8";
+		ps_ane_td: __overlay__ {
+		};
+	};
+
+	fragment@5 {
+		target-path = "/soc/power-management@292280000/power-controller@5c0";
+		ps_ane_base: __overlay__ {
+		};
+	};
+
+	fragment@6 {
+		target-path = "/soc";
+
+		__overlay__ {
+			/* Instances 0, 1 and 2 of the ANE DART are enabled, the aperture window (instance 3) stays
+			 * disabled. The DART driver probes an enabled node at boot, reading DART registers. On a
+			 * T6030, equivalent enabled nodes hung the machine before display or network, because the
+			 * ANE hardware behind them was not powered. These nodes list power-domains to prevent that.
+			 * That was not measured on a T6031: keep a way to boot without this overlay. */
+			ane_dart0: iommu@3c9800000 {
+				compatible = "apple,t6031-dart", "apple,t8110-dart";
+				reg = <0x3 0xc9800000 0x0 0x4000>;
+				#iommu-cells = <1>;
+				interrupt-parent = <&aic>;
+				interrupts = <0 0 984 4>;
+				power-domains = <&ps_ane_sys>;
+				status = "okay";
+			};
+			ane_dart1: iommu@3c9810000 {
+				compatible = "apple,t6031-dart", "apple,t8110-dart";
+				reg = <0x3 0xc9810000 0x0 0x4000>;
+				#iommu-cells = <1>;
+				interrupt-parent = <&aic>;
+				interrupts = <0 0 984 4>;
+				power-domains = <&ps_ane_sys>;
+				status = "okay";
+			};
+			ane_dart2: iommu@3c9820000 {
+				compatible = "apple,t6031-dart", "apple,t8110-dart";
+				reg = <0x3 0xc9820000 0x0 0x4000>;
+				#iommu-cells = <1>;
+				interrupt-parent = <&aic>;
+				interrupts = <0 0 984 4>;
+				power-domains = <&ps_ane_sys>;
+				status = "okay";
+			};
+			ane_dart3: iommu@3c9804000 {
+				compatible = "apple,t6031-dart", "apple,t8110-dart";
+				reg = <0x3 0xc9804000 0x0 0x4000>;
+				#iommu-cells = <1>;
+				interrupt-parent = <&aic>;
+				interrupts = <0 0 984 4>;
+				power-domains = <&ps_ane_sys>;
+				status = "disabled";
+			};
+
+			ane: ane@3c8000000 {
+				compatible = "apple,t6031-ane";
+				reg-names = "engine", "pmgr";
+				reg = <0x3 0xc8000000 0x0 0x2000000>,
+				      <0x2 0x92280000 0x0 0x10000>;
+				interrupt-parent = <&aic>;
+				interrupts = <0 0 965 4>, <0 0 964 4>, <0 0 967 4>, <0 0 966 4>, <0 0 983 4>;
+				/* Every enabled instance, stream 0: omarchy-ane-dt refuses a node that names a disabled provider. */
+				iommus = <&ane_dart0 0>, <&ane_dart1 0>, <&ane_dart2 0>;
+				power-domains = <&ps_ane_sys>, <&ps_ane_mpm>,
+						<&ps_ane_cpu>, <&ps_ane_td>,
+						<&ps_ane_base>;
+				apple,ane-type = <0xe0>;
+				status = "okay";
+			};
+		};
+	};
+};
