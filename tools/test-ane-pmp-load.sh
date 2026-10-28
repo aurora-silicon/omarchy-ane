@@ -5,6 +5,7 @@
 #  3. a failing insmod exits 4;
 #  4. the ready line in the kernel log alone is enough;
 #  5. no bound device and no ready line exits 4.
+# shellcheck disable=SC2016
 set -eu
 HERE=$(dirname "$0")
 D=$(mktemp -d)
@@ -12,7 +13,6 @@ trap 'rm -rf "$D"' EXIT
 mkdir -p "$D/bin" "$D/drv/apple_pmp/28e700000.pmp-on" "$D/empty"
 : > "$D/x.ko"
 # pmp_overlay is not in /proc/modules on the test host, so the script would insmod. Stub the calls.
-# shellcheck disable=SC2016
 printf '#!/bin/sh\necho x >> "%s/insmod.calls"\nexit "${INSMOD_RC:-0}"\n' "$D" > "$D/bin/insmod"
 printf '#!/bin/sh\n[ -n "${DMESG_LINE:-}" ] && echo "$DMESG_LINE"\nexit 0\n' > "$D/bin/dmesg"
 printf '#!/bin/sh\nexit 0\n' > "$D/bin/sleep"
