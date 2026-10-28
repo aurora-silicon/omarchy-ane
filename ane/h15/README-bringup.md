@@ -110,6 +110,18 @@ template is `ane/h16/`.
   and one after the wait, `ane_h15 scratch before RUN: S0=... S7=...` and `ane_h15 scratch after the wait: ...`. It writes nothing. The offsets are the macOS kext's T6030 case
   and have not been read on an M3. On the M2 (T6021) the macOS kext waits for `0x08042006` in SCRATCH7 after it starts the firmware (`ane/t6021/ane_t6021.h`); whether this firmware writes it is what the dump is for.
   Clearing RUN does not stop a core that has started (see the stage 5 results below), so a run with a started core still ends in `core-not-stopped` and needs a reboot.
+  `kext_boot=1` (stage 5 only, off by default) replaces the read-modify-write with the order the macOS kext
+  boots the firmware in, decoded from the kernelcache and never run on an M3: write 0 to all eight SCRATCH words
+  (the kext clears SCRATCH0 to SCRATCH7 first), then SCRATCH6=1, then SCRATCH7=0 and read it back, then
+  CPU_CONTROL 0 and CPU_CONTROL 0x10 (RUN) as plain writes, then poll SCRATCH7 every 1 ms for the ready word
+  `0x08042006` for `kb_wait_ms` ms (10 to 5000, default 1000). The kext logs "No wake signal" when its wait
+  times out; this module logs the first-seen time or `not seen`. The hypothesis under test (inferred from the
+  decode, not measured): a SCRATCH7 that still holds the ready word from iBoot sends the firmware down the
+  warm-boot path, where it idles at `0x300028`; zeroing all eight words first is what the run decides on.
+  The option writes the eight SCRATCH words and CPU_CONTROL only (SCRATCH5 receives 0 only, the kext's config
+  value there is unknown), never RVBAR, the mailbox or the DART. Every write address is logged before the write,
+  so a hang names the last address. The RESULT line carries `kext_boot=1 s7_ready=<yes|no>`; the verdict rules
+  are unchanged. The option is refused on every stage other than 5, before any bus access.
 
 - `stage=6` or `stage=rtkit`: stage 5 (all of its gates, `map_fw`, `fw_seg`) plus an RTKit management
   session over the ASC mailbox, behind `confirm_run=1` AND `confirm_rtkit=1`. It is the first stage that
@@ -352,6 +364,16 @@ Without them (only if stage 4 found a live stream):
     insmod ane/h15/ane_h15.ko optin=t6030 stage=5 confirm_run=1
     dmesg | grep ane_h15
 
+A second run to try only after a plain stage 5 run (`run_scratch=1` first, so the log
+keeps the SCRATCH words before anything clears them): the same stage with `kext_boot=1`
+adds `kb_wait_ms=...` if 1000 ms is not enough. This order writes the eight SCRATCH words
+(each 0, then SCRATCH6=1 and SCRATCH7=0) and CPU_CONTROL only; never RVBAR, the mailbox or
+the DART. Decoded from the macOS kext, never run on an M3. The `RESULT` line ends with
+`kext_boot=1 s7_ready=<yes|no>`: send that line back either way.
+
+    insmod ane/h15/ane_h15.ko optin=t6030 stage=5 confirm_run=1 kext_boot=1
+    dmesg | grep ane_h15
+
 ## Not verified (honest limits)
 
 - No M3 silicon has run any of this. The register map is
@@ -371,7 +393,10 @@ Without them (only if stage 4 found a live stream):
   does not hold. Instance 0 of the four DART windows may not be enough for the firmware fetch (an
   open question on the M6).
 - Stage 5 reads CPU_CONTROL and writes it (bits 4 and 5 only). Nobody has run
-  that on an H15 part. The M6 (T8152) result it is modelled on: the same RUN
+  that on an H15 part. With `kext_boot=1` it also writes the eight SCRATCH
+  words, each only as 0 except SCRATCH6=1, before the same RUN write; that
+  order is decoded from the macOS kext and has never run on an M3. The M6
+  (T8152) result it is modelled on: the same RUN
   write cleared the STOPPED bit and left the core with no message, with the
   DART unprogrammed. A started H15 core may do the same. A "core-started-and-
   stopped" result with no message is a valid, useful result.
