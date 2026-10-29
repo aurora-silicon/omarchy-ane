@@ -2,22 +2,20 @@
 /*
  * ane_h13_perf.c — H13 (T8103/T6001) ANE firmware perf-mode client.
  *
- * Sends CSNE_CMD_CH_PROPERTY_WRITE(prop 0x10aa, value 1) — the
- * "setting FW perf mode" message AppleH11ANEInterface issues at
- * power-on — over an RTKit session on the ANE ASC mailbox.
+ * Sends CSNE_CMD_CH_PROPERTY_WRITE(prop 0x10aa, value 1), the
+ * "setting FW perf mode" message macOS issues at power-on, over an
+ * RTKit session on the ANE ASC mailbox.
  *
- * Message evidence (H13 kext 9.512.0-t6000-gen-25G83, static): cmd id
- * 0x1f built at __TEXT_EXEC 0xfffffe0009322e14, payload pool
- * __TEXT.__const 0xfffffe000748fdc8 {channel 0, property 0x10aa},
- * value 1 at +0x10, error-string xref 0xfffffe0009322ec8; 20-byte
- * buffer {u32 0; u16 id; u16 flags; u32 channel; u32 property;
- * u32 value}; one send site in the binary (init path).
+ * Message evidence (macOS behaviour): cmd id 0x1f,
+ * payload pool {channel 0, property 0x10aa}, value 1 at +0x10;
+ * 20-byte buffer {u32 0; u16 id; u16 flags; u32 channel; u32 property;
+ * u32 value}; macOS sends it once, from the init path.
  *
  * Measured on T6001/m1max-host (2026-09-24, receipts
  * 2026-09-24-ane-perf-mode-h13):
  *   - aperture-relative CPU_STATUS +0x1400048 reads 0x2a
- *     (STOPPED|IDLE) on the working Linux stack — eos parked is the
- *     M1-normal state (AneStaticStart diff: the M1 path is power,
+ *     (STOPPED|IDLE) on the working Linux stack: eos parked is the
+ *     M1-normal state (macOS diff: the M1 path is power,
  *     tunables, DART, TM enable; no coprocessor start).
  *   - some ASCWRAP-class reads hard-reset the SoC; unproven registers
  *     are read ONE per load behind probe_reg.
@@ -501,13 +499,13 @@ static int __init ane_h13_perf_init(void)
 		/* Measured M2 sequence: outbox enable, then
 		 * CPU_CONTROL write32 0 -> 0x10. RVBAR never written
 		 * when bit0 is latched.
-		 * STRUCK per AneStaticStart prerun-diff CORRECTION
-		 * (c33c0d3): the kext 0x2e0 write is a pmgr ps word
-		 * (phys 0x28e080000, genpd-covered) — reissuing it
-		 * wedged the M2; my earlier engine+0x2e0 variant is
-		 * removed. Corrected first missing NON-ps write is
+		 * STRUCK per the prerun-diff CORRECTION (c33c0d3): the
+		 * macOS 0x2e0 write is a pmgr ps word (phys 0x28e080000,
+		 * genpd-covered): reissuing it hung the M2 in an earlier
+		 * test, so my earlier engine+0x2e0 variant is removed.
+		 * Corrected first missing NON-ps write is
 		 * PWGATE+0x159c = 0 (third-window; T6001 base
-		 * unresolved — do not write without it). */
+		 * unresolved, so do not write without it). */
 		rvbar = readq_relaxed(g->engine + ASC_IO_RVBAR);
 		dev_info(&g->pdev->dev, "boot: RVBAR=%016llx (bit0 latched=%d, never written)\n",
 			 rvbar, (int)(rvbar & 1));

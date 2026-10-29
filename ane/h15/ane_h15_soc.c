@@ -101,9 +101,9 @@ static const struct ane_h15_word ane_h15_words_6031[] = {
 	  ANE15_TIER_FORBIDDEN, false, "T6021 forbidden range" },
 };
 
-/* Pinned 27.0 IPSW ANE payloads. S3 source: SHA-256 of the 1605632-
- * byte Mach-O payload after IM4P ASN.1 unwrap; payload bytes not
- * retained. BuildManifest (S2) reports 1605657; the 25-byte gap is
+/* Pinned 27.0 ANE firmware payloads. S3 source: SHA-256 of the 1605632-
+ * byte payload; payload bytes not
+ * retained. S2 reports 1605657; the 25-byte gap is
  * the same on every H15 row and is not explained locally. The module
  * checks against the S3 size+hash pair. */
 static const struct ane_h15_fw ane_fw_t8122 = {
@@ -190,9 +190,9 @@ const struct ane_h15_soc ane_t6031_soc = {
 	.pmgr_pa     = 0x292280000ull,
 	.pmgr_size   = 0x10000,
 	/* PWGATE: ADT ane0 reg entry 5 of the macOS 27.0 device tree for
-	 * the J516C (0x292290000, 0x4000, next to the pmgr window). The
-	 * kext function EnableCPUClocksAndPower clears its 0x199c word and
-	 * polls it before it releases the core. Never run on an M3; the
+	 * the J516C (0x292290000, 0x4000, next to the pmgr window).
+	 * macOS behaviour: the 0x199c word is cleared and
+	 * polled before the core is released. Never run on an M3; the
 	 * step is opt-in per run (pwgate_t6031). */
 	.pwgate_pa   = 0x292290000ull,
 	.pwgate_size = 0x4000,
@@ -228,7 +228,7 @@ const struct ane_h15_soc ane_t6034_soc = {
  * "stage=boot stays REFUSED on H15".
  */
 const struct ane_h15_fact ane_h15_facts[] = {
-	{ "H1", "H15 stub-OS firmware identity (which IPSW image iBoot preloads)",
+	{ "H1", "H15 stub-OS firmware identity (which firmware image iBoot preloads)",
 	  "omarchy-ane-probe os-fw-version + omarchy-ane-firmware-fetch pin row",
 	  false },
 	{ "H2", "mailbox base + IRQ roles",
@@ -237,10 +237,10 @@ const struct ane_h15_fact ane_h15_facts[] = {
 	  "owner IODeviceTree capture (ane + dart-ane) beside the b0 receipts",
 	  false },
 	{ "H4", "RVBAR entry compose value",
-	  "ascwrap kext RE in the H15 kernelcache, then S3 live observation",
+	  "macOS behaviour on the H15, then S3 live observation",
 	  false },
 	{ "H5", "SCRATCH wake word + protocol role (never reuse T6021 0xf7fbdff9)",
-	  "same kext RE as H4, then live observation", false },
+	  "same macOS behaviour as H4, then live observation", false },
 };
 
 const unsigned int ane_h15_n_facts = ARRAY_SIZE(ane_h15_facts);

@@ -1,6 +1,6 @@
 /* ANERegDump.kext: a read-only snapshot of the T6021 ANE working state,
- * plus the iBoot handoff tables the macOS 27.0 kernel entry copied into
- * its globals. No device register is ever written.
+ * plus the iBoot handoff tables macOS 27.0 copies into its globals.
+ * No device register is ever written.
  *
  * Engine-window reads (wrapper, mailbox, RVBAR, scratch) happen only
  * after all eight ANE pmgr islands read ACTUAL = 0xf. A read with an
@@ -18,8 +18,8 @@
 
 extern "C" {
 #include "ane_regdump_filter.h"
-/* Exported by com.apple.kpi.mach (xnu config/Mach.exports), not declared
- * in the SDK headers. vm_kernel_slide itself is not exported. */
+/* Exported by the kernel's Mach export list, not declared in the SDK
+ * headers. The slide value itself is not exported. */
 void vm_kernel_unslide_or_perm_external(vm_offset_t addr,
     vm_offset_t *up_addr);
 }
@@ -55,9 +55,8 @@ enum {
 	ANE_F_VIRT = 4       /* kernel virtual source */
 };
 
-/* Pointers the 27.0 entry actually dereferences. Everything else in the
- * window is a count or an address-range scalar and must not be followed.
- * From the entry decode, kernelcache 26A428 sha256 8304156f. */
+/* Pointers the 27.0 macOS handoff actually dereferences. Everything else in
+ * the window is a count or an address-range scalar and must not be followed. */
 static const uint32_t ane_handoff_ptr[] = {
 	0x6d0, 0x6d8, 0x708, 0x710, 0x718, 0x730,
 	0x748, 0x758, 0x768, 0x7a0, 0x7c8
@@ -320,10 +319,11 @@ static void setname(ANERegDump::map *m, const char *s)
 	strlcpy(m->name, s, ANE_NAME_MAX);
 }
 
-/* KASLR slide = runtime minus static address of any kernel text symbol.
- * IOLog is in the kernel image. The helper permutes instead of unsliding
+/* KASLR slide = runtime minus static address of a kernel text symbol.
+ * A known kernel text symbol is used as the reference. The helper
+ * permutes instead of unsliding
  * for addresses outside the slid range; a result that is not 16 KB
- * aligned or not inside the static kernelcache range is that case, and
+ * aligned or not inside the static kernel image range is that case, and
  * the handoff capture is skipped rather than read at a wrong address. */
 static bool kernel_slide(uint64_t *slide)
 {
@@ -439,7 +439,7 @@ uint32_t ANERegDump::addAdt(struct map *m, uint32_t n,
 		held[(*nheld)++] = chosen;
 	return n;
 }
-/* Globals at the static address plus the KASLR slide, then each decoded
+/* Globals at the static address plus the KASLR slide, then each
  * pointer followed for at most 64 KB. */
 uint32_t ANERegDump::addHandoff(struct map *m, uint32_t n, uint64_t slide)
 {

@@ -38,7 +38,7 @@ static const struct ane_h16_fw ane_fw_aether = {
 	.tunables_vm = 0xd7c80,
 };
 
-/* T8132 (M4). ADT j604ap; kext ane-type 0x100 row; iBoot j604 coproc
+/* T8132 (M4). ADT j604ap; ane-type 0x100 row; iBoot j604 coproc
  * id 4. ps words inside pmgr 0x380700000+0x18000. */
 const struct ane_h16_soc ane_t8132_soc = {
 	.name = "t8132",
@@ -57,8 +57,8 @@ const struct ane_h16_soc ane_t8132_soc = {
 };
 
 /* T6040 (M4 Pro). Same die as T6041 (identical ADT ane0/dart-ane0 on
- * j614s/j616s/j773s vs j614c/j616c except phandles; the kext has one
- * row for both, ane-type 0x110, and one HAL, AppleT6041ANEHAL). ps
+ * j614s/j616s/j773s vs j614c/j616c except phandles; one ane-type
+ * row serves both, ane-type 0x110, and one HAL). ps
  * words inside pmgr 0x502280000+0x18000. */
 const struct ane_h16_soc ane_t6040_soc = {
 	.name = "t6040",
