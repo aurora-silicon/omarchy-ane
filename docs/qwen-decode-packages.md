@@ -27,6 +27,8 @@ The int8 package replaces the weights of 15 of the 17 large programs with int8 p
 
 ## Results
 
+Every 13-inch M1 and 14-inch M2 Max step time in this document was measured with the ANE clock set by the boot. The driver has no clock control on those two chips yet, so their clock level is not known. On the 16-inch M1 Max a Qwen decode step is about 1.7 times faster at the higher clock level (0.2009 s to 0.1158 s).
+
 Step time, p50 over the prompts, measured in one session on one boot with the arms interleaved:
 
 | Chip | Pair | First | Second | Change |
