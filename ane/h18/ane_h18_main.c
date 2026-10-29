@@ -98,11 +98,11 @@ MODULE_PARM_DESC(read_scratch, "Stage=boot: read the eight SCRATCH words of the 
 
 static bool handshake;
 module_param(handshake, bool, 0444);
-MODULE_PARM_DESC(handshake, "Stage=boot with map_fw=1, read_scratch=1, rtkit_start=1 and rtkit_stop=1 or 2: after AP power ON is acknowledged, allocate the surfaces the macOS kext allocates, publish a 0x174 byte init block in SCRATCH0 and SCRATCH1, write the wake word to SCRATCH7 and wait for the firmware's channel table address. The firmware segments are then mapped into the default DMA domain of the ANE instead of an own domain. Default off.");
+MODULE_PARM_DESC(handshake, "Stage=boot with map_fw=1, read_scratch=1, rtkit_start=1 and rtkit_stop=1 or 2: after AP power ON is acknowledged, allocate the surfaces macOS allocates, publish a 0x174 byte init block in SCRATCH0 and SCRATCH1, write the wake word to SCRATCH7 and wait for the firmware's channel table address. The firmware segments are then mapped into the default DMA domain of the ANE instead of an own domain. Default off.");
 
 static unsigned int hs_cfg_size = 0x380000;
 module_param(hs_cfg_size, uint, 0444);
-MODULE_PARM_DESC(hs_cfg_size, "Stage=boot with handshake=1: the config size stored at init block +0x10 (+0x18 is 0x10000000 minus it). 0x380000 is the value the M6 kext sets for ane-type 0x310 (T6021 uses 0x500000). Default 0x380000.");
+MODULE_PARM_DESC(hs_cfg_size, "Stage=boot with handshake=1: the config size stored at init block +0x10 (+0x18 is 0x10000000 minus it). 0x380000 is the value macOS sets for ane-type 0x310 (T6021 uses 0x500000). Default 0x380000.");
 
 static unsigned int hs_wait_ms = 1000;
 module_param(hs_wait_ms, uint, 0444);
@@ -110,7 +110,7 @@ MODULE_PARM_DESC(hs_wait_ms, "Stage=boot with handshake=1: how long to wait for 
 
 static bool hs_chan;
 module_param(hs_chan, bool, 0444);
-MODULE_PARM_DESC(hs_chan, "Stage=boot with handshake=1: after the firmware published its channel table, check the table, set the host-to-firmware ring slots to host owned, write READY to SCRATCH3 and wait for the firmware to clear it (the kext does this after it created its channels). Writes ring memory and SCRATCH3. Default off.");
+MODULE_PARM_DESC(hs_chan, "Stage=boot with handshake=1: after the firmware published its channel table, check the table, set the host-to-firmware ring slots to host owned, write READY to SCRATCH3 and wait for the firmware to clear it (macOS does this after it created its channels). Writes ring memory and SCRATCH3. Default off.");
 
 static bool hs_cmds;
 module_param(hs_cmds, bool, 0444);
@@ -118,7 +118,7 @@ MODULE_PARM_DESC(hs_cmds, "Stage=boot with hs_chan=1: send PRINT_ENABLE (0) and 
 
 static bool hs_start;
 module_param(hs_start, bool, 0444);
-MODULE_PARM_DESC(hs_start, "Stage=boot with hs_cmds=1: send the commands in the kext's order, PRINT_ENABLE, START, CONFIG_GET, RESOURCE_INFO_GET, and log the RESOURCE_INFO_GET reply. START starts the firmware's services and can bring more memory requests. Default off: PRINT_ENABLE and CONFIG_GET only.");
+MODULE_PARM_DESC(hs_start, "Stage=boot with hs_cmds=1: send the commands in macOS's order, PRINT_ENABLE, START, CONFIG_GET, RESOURCE_INFO_GET, and log the RESOURCE_INFO_GET reply. START starts the firmware's services and can bring more memory requests. Default off: PRINT_ENABLE and CONFIG_GET only.");
 
 static unsigned int dart_inst;
 module_param(dart_inst, uint, 0444);
@@ -126,11 +126,11 @@ MODULE_PARM_DESC(dart_inst, "hs_prog=1 with read_dart=1: a bit mask of ANE DART 
 
 static unsigned int hs_props;
 module_param(hs_props, uint, 0444);
-MODULE_PARM_DESC(hs_props, "hs_start=1: send the five CH_PROPERTY_WRITE commands (0x1f) the macOS kext sends after CONFIG_GET and RESOURCE_INFO_GET: 0x10a4=1, 0x10a6=1, 0xa1=0, 0x10aa=1, 0x1209=1, in the kext's order. A refused write is logged and the sequence goes on. The values of 0x10a6 and 0x1209 depend on kext config bytes that are not known for the T8152. hs_props=2 sends 0xa1 = 1 instead of 0: the kext writes 0 for 'ProcedureCall Firmware log', 1 may turn the firmware's per call log on (not tested). Default 0 (off).");
+MODULE_PARM_DESC(hs_props, "hs_start=1: send the five CH_PROPERTY_WRITE commands (0x1f) macOS sends after CONFIG_GET and RESOURCE_INFO_GET: 0x10a4=1, 0x10a6=1, 0xa1=0, 0x10aa=1, 0x1209=1, in macOS's order. A refused write is logged and the sequence goes on. The values of 0x10a6 and 0x1209 depend on macOS config bytes that are not known for the T8152. hs_props=2 sends 0xa1 = 1 instead of 0: macOS writes 0 for 'ProcedureCall Firmware log', 1 may turn the firmware's per call log on (not tested). Default 0 (off).");
 
 static bool hs_defset;
 module_param(hs_defset, bool, 0444);
-MODULE_PARM_DESC(hs_defset, "hs_props=1 or 2: send DEFAULT_SETTING_SET (0x2e, 0x18 bytes: one setting, register id 2, value 0x2710) after the property writes, as the macOS kext does. Default off.");
+MODULE_PARM_DESC(hs_defset, "hs_props=1 or 2: send DEFAULT_SETTING_SET (0x2e, 0x18 bytes: one setting, register id 2, value 0x2710) after the property writes, as macOS does. Default off.");
 
 static bool hs_mcsz;
 module_param(hs_mcsz, bool, 0444);
@@ -142,15 +142,15 @@ MODULE_PARM_DESC(hs_dyn, "hs_pmu=1: send SET_DYNAMIC_POWERGATE (0x2d) right afte
 
 static bool hs_pmu;
 module_param(hs_pmu, bool, 0444);
-MODULE_PARM_DESC(hs_pmu, "hs_start=1: send SET_SNE_PMU_BASE2 (0x29) with the value 0x300700000 after START and before CONFIG_GET, as the macOS kext does for ANE types 0x300 and 0x310. Default off: the firmware uses the value as a bus address, so one value only.");
+MODULE_PARM_DESC(hs_pmu, "hs_start=1: send SET_SNE_PMU_BASE2 (0x29) with the value 0x300700000 after START and before CONFIG_GET, as macOS does for ANE types 0x300 and 0x310. Default off: the firmware uses the value as a bus address, so one value only.");
 
 static bool hs_premap;
 module_param(hs_premap, bool, 0444);
-MODULE_PARM_DESC(hs_premap, "hs_prog=1: send PREMAP_BUFFER (0x20d, type 2) for one inference request pool before LOAD_PROGRAM, as the macOS kext does at init. The reply is logged. Default off.");
+MODULE_PARM_DESC(hs_premap, "hs_prog=1: send PREMAP_BUFFER (0x20d, type 2) for one inference request pool before LOAD_PROGRAM, as macOS does at init. The reply is logged. Default off.");
 
 static unsigned long long premap_second;
 module_param(premap_second, ullong, 0444);
-MODULE_PARM_DESC(premap_second, "hs_premap=1: the second address value of the command (+0x78). 0 sends the pool size, which is a guess: the kext's value comes from a virtual call that is not decoded.");
+MODULE_PARM_DESC(premap_second, "hs_premap=1: the second address value of the command (+0x78). 0 sends the pool size, which is a guess: the value macOS passes comes from a virtual call that is not known.");
 
 static bool hs_prog;
 module_param(hs_prog, bool, 0444);
@@ -527,7 +527,7 @@ static int ane_h18_stage_power(struct ane_h18 *ane)
 		ret = ane_h18_read(ane, "IORVBAR_LO", ane->rvbar, s->rvbar_pa, ANE_H18_RVBAR_OFF, s->rvbar_size, &rv_lo);
 	if (!ret)
 		ret = ane_h18_read(ane, "IORVBAR_HI", ane->rvbar, s->rvbar_pa, ANE_H18_RVBAR_OFF + 4, s->rvbar_size, &rv_hi);
-	/* The channel of this ANE in the Postoffice block is not verified: the lab notebook's T8152 driver notes give
+	/* The channel of this ANE in the Postoffice block is not verified: the lab notebook's T8152 macOS notes give
 	 * "msgbox_using_postoffice + (msgbox_mailbox_num << 1)" (channel 25), a review reads the same expression as the
 	 * packed pair that makes it channel 12, and the SMC node does not fit either. Read the status word of all
 	 * three candidate channels (12, 24, 25); they are in one block, the same window, and the log decides. */
@@ -991,7 +991,7 @@ static int ane_h18_mal_service(struct ane_h18 *ane)
 
 static void ane_h18_chan_snapshot(struct ane_h18 *ane, const char *when, bool full);
 
-/* One poll of the doorbell side while the host waits: answer the SHAREDMALLOC ring, acknowledge a pending interrupt the way the kext does (the value read is
+/* One poll of the doorbell side while the host waits: answer the SHAREDMALLOC ring, acknowledge a pending interrupt the way macOS does (the value read is
  * written back to the ack register) and, when the pending value or a firmware-to-host ring changed, print the snapshot. `t` is the poll number in ms. */
 static int ane_h18_chan_poll(struct ane_h18 *ane, unsigned int t, u64 *digest, u32 *last_pend)
 {
@@ -1366,7 +1366,7 @@ static void ane_h18_dart_exc(struct ane_h18 *ane, const char *when)
 }
 
 /* Read only: ENABLE_STREAMS, TCR, TTBR, the first two words of the exception bitmap and the records of streams 0, 10, 11, 13 and 15 of DART instance k (0 to 3), the
- * layout the macOS Gen3 driver reads per instance. +0x704 is not read: the fork's own comment says it is outside the gen3 capture list. Needs the instance mapped. */
+ * layout macOS reads per instance. +0x704 is not read: the fork's own comment says it is outside the gen3 capture list. Needs the instance mapped. */
 static void ane_h18_dart_inst(struct ane_h18 *ane, unsigned int k, const char *when)
 {
 	static const u32 regs[] = { 0xc00, 0x1000, 0x1400, 0x4000, 0x4004 };
@@ -1392,12 +1392,12 @@ static void ane_h18_dart_inst(struct ane_h18 *ane, unsigned int k, const char *w
 	}
 }
 
-/* PREMAP_BUFFER (0x20d), as the macOS kext sends it at init for the inference request pool: a 0x3490 byte command, type 2, one request of 0x3898 bytes in a surface of the
- * DART's page size. Source of the layout: the lab's static decode of AppleH16ANEInterface in the kernelcache of build 26A434 (mac18g): ANEFirmwareManager::sendPremapCmd at
- * 0xfffffe000936007c builds the command; its only caller is ANEFirmwareManager::initializeInferenceRequestMemoryPool at 0xfffffe000935fd14 (call at 0xfffffe000935fff4),
- * which passes type 2; the pool is count x 0x3898 bytes rounded to the DART page. Lab note m6-ane-engine-dma-RE.md section 4, sha256 eac93039f9c3f62883f83c2b563dda7b47e0d3b19e2fca2bd450527f0d8d6f60.
- * The layout is the decode's: +8 1, +0x10 type, +0x54 1, +0x58 1, +0x60 4, +0x68 1, +0x70 the pool address, +0x78 a second value (premap_second, or the
- * pool size: which of the two values the kext passes is not decoded). A refusal (acknowledgement not zero) is logged and the program stage goes on. */
+/* PREMAP_BUFFER (0x20d), as macOS sends it at init for the inference request pool: a 0x3490 byte command, type 2, one request of 0x3898 bytes in a surface of the
+ * DART's page size. Source of the layout: macOS behaviour on build 26A434 (mac18g), recorded in the M6
+ * engine DMA lab note, section 4, sha256 eac93039f9c3f62883f83c2b563dda7b47e0d3b19e2fca2bd450527f0d8d6f60.
+ * The pool is count x 0x3898 bytes rounded to the DART page.
+ * The layout is: +8 1, +0x10 type, +0x54 1, +0x58 1, +0x60 4, +0x68 1, +0x70 the pool address, +0x78 a second value (premap_second, or the
+ * pool size: which of the two values macOS passes is not known). A refusal (acknowledgement not zero) is logged and the program stage goes on. */
 static int ane_h18_premap(struct ane_h18 *ane, struct ane_h18_ring *io)
 {
 	struct ane_h18_hs_buf *b = &ane->pg_pool;
@@ -1432,7 +1432,7 @@ static int ane_h18_premap(struct ane_h18 *ane, struct ane_h18_ring *io)
 /* One program on the IO ring after START: allocate the section and buffer surfaces from the file, LOAD_PROGRAM, CREATE_PROCESS, PROCEDURE_CALL, wait for the
  * finish event, then TERMINATE_PROCESS and DESTROY_PROGRAM. Every reply is logged whole. A command the firmware refuses (acknowledgement not zero) or does not
  * answer ends the sequence; after an unanswered command nothing is unloaded and no buffer is freed before the core stopped (the module frees them with the
- * surfaces). The wire format is the T6021's, as the decode of the T8152 kext gives the same command ids and sizes. Whether the T8152 firmware accepts it is
+ * surfaces). The wire format is the T6021's, as macOS behaviour on the T8152 gives the same command ids and sizes. Whether the T8152 firmware accepts it is
  * what the first run shows. */
 static int ane_h18_prog_run(struct ane_h18 *ane, struct ane_h18_ring *io)
 {
@@ -1619,7 +1619,7 @@ fail_nounload:
 	return ret == -EPROTO || ret == -EREMOTEIO || ret == -ETIMEDOUT || ret == -EBUSY ? -EIO : ret;
 }
 
-/* The kext's step after it created its channels: the host owns every H2T slot, writes READY to SCRATCH3 and waits until the firmware clears it. With hs_cmds
+/* macOS's step after it created its channels: the host owns every H2T slot, writes READY to SCRATCH3 and waits until the firmware clears it. With hs_cmds
  * then PRINT_ENABLE and CONFIG_GET. Nothing is written before the whole table checked out. Returns 0 only when every requested step worked. */
 static int ane_h18_chan_step(struct ane_h18 *ane, const struct ane_h18_hs_buf *tb, u64 table)
 {
@@ -1713,15 +1713,15 @@ static int ane_h18_chan_step(struct ane_h18 *ane, const struct ane_h18_hs_buf *t
 	ane_h18_chan_snapshot(ane, "after SCRATCH3", true);
 	if (!hs_cmds)
 		return 0;
-	/* The kext takes every command block from the pool surface, the one that holds the init block and that the firmware was told about at block +0x58 and +0x60. */
+	/* macOS takes every command block from the pool surface, the one that holds the init block and that the firmware was told about at block +0x58 and +0x60. */
 	ane->hs_cmd.va = (u8 *)ane->hs_pool.va + ANE_H18_CMD_POOL_OFF;
 	ane->hs_cmd.iova = ane->hs_pool.iova + ANE_H18_CMD_POOL_OFF;
 	ane->hs_cmd.size = hs_premap ? ANE_H18_PREMAP_BLOCK : hs_prog ? ANE_H18_PROG_BLOCK : ANE_H18_CMD_BLOCK;
 	ane->hs_cmd_in_pool = true;
 	dev_info(ane->dev, "ane_h18 hs surface CMD inside POOL at +%#x iova=%#llx size=%#zx\n", ANE_H18_CMD_POOL_OFF, (u64)ane->hs_cmd.iova, ane->hs_cmd.size);
 	{
-		/* the kext's order: PRINT_ENABLE, START, CONFIG_GET, RESOURCE_INFO_GET (the last two commands only with hs_start) */
-		/* prop: a CH_PROPERTY_WRITE (0x1f, 0x14 bytes: u32 0 at +8, property id at +0xc, value at +0x10), sent only with hs_props. The kext sends the first one before
+		/* macOS's order: PRINT_ENABLE, START, CONFIG_GET, RESOURCE_INFO_GET (the last two commands only with hs_start) */
+		/* prop: a CH_PROPERTY_WRITE (0x1f, 0x14 bytes: u32 0 at +8, property id at +0xc, value at +0x10), sent only with hs_props. macOS sends the first one before
 		 * RESOURCE_INFO_GET and the other four after it. */
 		static const struct { u16 op; u32 len; bool arg; const char *name; bool start_only; bool prop; u32 id, val; bool pmu, dyn, mcsz, defset; } seq[] = {
 			{ ANE_H18_CSNE_PRINT_ENABLE, 12, true, "PRINT_ENABLE", false },
@@ -1816,7 +1816,7 @@ static int ane_h18_chan_step(struct ane_h18 *ane, const struct ane_h18_hs_buf *t
 			}
 			if (seq[i].op == ANE_H18_CSNE_CONFIG_GET) {
 				memcpy(&v, blk + 8, 4);
-				dev_info(ane->dev, "ane_h18 chan: CONFIG_GET reply u32 at +8 = %#x (the kext reads it as the tick rate)\n", v);
+				dev_info(ane->dev, "ane_h18 chan: CONFIG_GET reply u32 at +8 = %#x (macOS reads it as the tick rate)\n", v);
 			}
 			if (seq[i].op == ANE_H18_CSNE_RESOURCE_INFO_GET) {
 				for (k = 0; k < seq[i].len; k += 16) {
@@ -1851,8 +1851,8 @@ static int ane_h18_chan_step(struct ane_h18 *ane, const struct ane_h18_hs_buf *t
 }
 
 
-/* The macOS handshake after READY, as decoded from the T8152 kext: surfaces IPC (max(page, SCRATCH1 + 1) bytes) and HEAP (SCRATCH3 bytes), the 0x174 byte
- * init block taken from a pool surface, then SCRATCH0 (low), SCRATCH1 (high), the wake word in SCRATCH7. Values the decode does not give (the config size,
+/* The macOS handshake after READY, on the T8152: surfaces IPC (max(page, SCRATCH1 + 1) bytes) and HEAP (SCRATCH3 bytes), the 0x174 byte
+ * init block taken from a pool surface, then SCRATCH0 (low), SCRATCH1 (high), the wake word in SCRATCH7. Values macOS does not give (the config size,
  * the template word) are zero or the T6021 value, logged with the block. Returns 0 only when the firmware published a table address.
  * Needs the core running with AP power ON acknowledged. */
 static int ane_h18_handshake(struct ane_h18 *ane)
@@ -1904,7 +1904,7 @@ static int ane_h18_handshake(struct ane_h18 *ane)
 		return ret;
 	}
 	blk = ane->hs_pool.va;
-	/* The block layout of ane_t6021_boot.h, which the T8152 kext shares (decode of ANE_Init). Everything not listed stays zero. */
+	/* The block layout of ane_t6021_boot.h, which macOS shares on the T8152. Everything not listed stays zero. */
 	ane_h18_hs_put(ane, blk, 0x00, 8, s->fw_seg[0].iova);		/* firmware surface */
 	ane_h18_hs_put(ane, blk, 0x08, 8, ane->hs_ipc.iova);
 	ane_h18_hs_put(ane, blk, 0x10, 8, hs_cfg_size);

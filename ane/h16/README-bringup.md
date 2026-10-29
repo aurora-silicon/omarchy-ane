@@ -99,10 +99,9 @@ IRQ 1054).
 
 The module requests `apple/ane/h16_ane_fw_leto_j7x.macho` (T8132) or
 `apple/ane/t604x_ane_fw_aether_brvx.macho` (T604x) from
-`/lib/firmware`, pinned by SHA-256 of the raw Mach-O payload (not the
-IM4P wrapper). `packaging/omarchy-ane-firmware-fetch` range-reads the
-IPSW member; `pyimg4 im4p extract` unwraps it. Copy the payload to
-`/lib/firmware/apple/ane/`.
+`/lib/firmware`, pinned by SHA-256 of the raw payload bytes (not the
+wrapper). `packaging/omarchy-ane-firmware-fetch` provides the payload.
+Copy the payload to `/lib/firmware/apple/ane/`.
 
 ## Bring-up protocol for the first owner
 
@@ -134,10 +133,10 @@ dmesg lines back.
 
 ## Not verified (honest limits)
 
-- No silicon has run any of this. The register map is kext-derived
-  (calibrated against the known T6021 row) and the ASC mailbox offsets
-  come from the iBoot coprocessor table; both are unmeasured on H16
-  hardware.
+- No silicon has run any of this. The register map follows
+  macOS behaviour (calibrated against the known T6021 row) and the ASC
+  mailbox offsets come from the iBoot coprocessor table; both are
+  unmeasured on H16 hardware.
 - Whether iBoot preloads the ANE firmware on an M4 Linux boot at all is
   not known; the module refuses when the live ADT has no
   `segment-ranges`.

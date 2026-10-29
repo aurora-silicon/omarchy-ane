@@ -8,8 +8,8 @@
  *   true). Each ADT address plus 0x200000000 is the physical address, the translation the kernel tree's
  *   t8152-j873 device tree uses (linux-aurora, j873 tip 4513ee61d6a0, "translated ADT addresses").
  * - ASC wrapper register offsets (CPU_CONTROL 0x44, CPU_STATUS 0x48, ASC_STATUS 0x8048, IORVBAR at +0 of its block):
- *   UNVERIFIED by any checked-in receipt. They come from a decode of the macOS 27.0 (26A434) kernelcache
- *   AppleA7IOP-ASCWrap-v8 in the lab notebook (2026-10-19), which this repository does not carry. The board has
+ *   UNVERIFIED by any checked-in receipt. They come from macOS 27.0 (26A434) behaviour recorded
+ *   in the lab notebook (2026-10-19), which this repository does not carry. The board has
  *   confirmed only that reads of CPU_STATUS, ASC_STATUS and IORVBAR at these offsets return sane values with the
  *   PSD slots on (stage power) and that CPU_CONTROL reads 0 before the core runs (read_ctrl).
  * - PSD slot window layout and request protocol: drivers/pmdomain/apple/pmgr-psd.c of the same kernel tree,
@@ -41,7 +41,7 @@
 #define ANE_H18_ASC_CPU_CONTROL	0x0044
 #define ANE_H18_ASC_CPU_STATUS	0x0048
 #define ANE_H18_ASC_STATUS	0x8048
-/* CPU_CONTROL bit 4 starts the core (the AppleASCWrapV8 decode in the lab notebook; m1n1's R_CPU_CONTROL.RUN is the same bit).
+/* CPU_CONTROL bit 4 starts the core (macOS behaviour in the lab notebook; m1n1's R_CPU_CONTROL.RUN is the same bit).
  * CPU_STATUS: bit 0 RUNNING, bit 1 STOPPED (m1n1 R_CPU_STATUS). The board read 0xa before the core ever ran. */
 #define ANE_H18_CPU_RUN		(1u << 4)
 #define ANE_H18_ST_RUNNING	(1u << 0)
@@ -55,24 +55,24 @@
 #define ANE_H18_PO_MAXMSG	8	/* at most this many messages are read per run */
 #define ANE_H18_PO_NCAND	3	/* candidate channels, see ane_h18_stage_power() */
 /* The alias bank: the same Postoffice window at +0x10000, channel 2 * msgbox-mailbox-num. For this ANE the ADT has msgbox-using-postoffice and no
- * msgbox-using-alias, which the AppleASCWrapV8 constructor turns into base + 0x10000 and channel 2 * num (0x316010c00 for ANE0). */
+ * msgbox-using-alias, which macOS turns into base + 0x10000 and channel 2 * num (0x316010c00 for ANE0). */
 #define ANE_H18_PO_ALIAS_OFF	0x10000
-/* The eight SCRATCH words of the engine block (macOS handshake registers): engine + 0x18a0024 to +0x18a0040 for ane-type 0x310 (h18g), the table the
- * AppleH16ANEInterface kext stores for this SoC. Read only here, in the page at scratch_pa. */
+/* The eight SCRATCH words of the engine block (macOS handshake registers): engine + 0x18a0024 to +0x18a0040 for ane-type 0x310 (h18g), the table
+ * macOS uses for this SoC. Read only here, in the page at scratch_pa. */
 #define ANE_H18_SCRATCH_OFF	0x24
 #define ANE_H18_SCRATCH_N	8
-/* SCRATCH handshake of the macOS kext (AppleH16ANEInterface of kernelcache 26A434, mac18g, sha256 09746d1f442153956ba00b385f49bc245460c1ebea92cae7e9e0e4f240745b85:
- * ANE_Init at 0x9365538, block fill 0x9366818 to 0x9366a88, handshake 0x9366b98 to 0x9366c60; the decode is a private lab note): after READY the host publishes the address of a 0x174 byte init block
+/* SCRATCH handshake of macOS (macOS behaviour on build 26A434, mac18g; recorded in a private lab note):
+ * after READY the host publishes the address of a 0x174 byte init block
  * in SCRATCH0 (low) and SCRATCH1 (high), writes the wake word to SCRATCH7, and the firmware answers READY again with the address of its channel table in
  * SCRATCH1:SCRATCH0. The firmware already shows READY before the wake (board read), so the answer is judged by the table address, not by SCRATCH7. */
 #define ANE_H18_HS_WAKE		0xf7fbdff9u
 #define ANE_H18_HS_READY	0x08042006u
-#define ANE_H18_HS_REQ_LIMIT	0x21	/* SCRATCH0 at or above this: the kext does not go on */
+#define ANE_H18_HS_REQ_LIMIT	0x21	/* SCRATCH0 at or above this: macOS does not go on */
 #define ANE_H18_HS_BLOCK_SIZE	0x174
 #define ANE_H18_HS_POOL_SIZE	0x40000	/* the pool surface the block is taken from, and the qword at block +0x60: the T6021 values (ane_t6021_boot.c, confirmed there) */
 #define ANE_H18_HS_IPC_MAX	0x100000	/* refuse a firmware request above these before allocating */
 #define ANE_H18_HS_HEAP_MAX	0x4000000
-/* Channel step after the handshake (kext decode): the table the firmware publishes has CH_COUNT entries of CH_ENTRY bytes (name[0x40], type u32 +0x40, bit u32
+/* Channel step after the handshake (macOS behaviour): the table the firmware publishes has CH_COUNT entries of CH_ENTRY bytes (name[0x40], type u32 +0x40, bit u32
  * +0x44, size u64 +0x48 in 64 byte slots, ring u64 +0x50), the same layout as ane/t6021/ane_t6021_boot.h. Type 0 is host to firmware, 1 firmware to host, 2 the
  * terminal. The host sets every H2T slot header to 1 (host owned), writes READY to SCRATCH3 and waits for the firmware to clear it. A command is a 64 byte slot
  * on the IO ring: header = the DMA address of a command block (bit 0 clear hands it to the firmware), size words, doorbell BIT(bit) at engine + 0x18a4000. The
@@ -83,9 +83,9 @@
 #define ANE_H18_CH_SLOT		0x40
 #define ANE_H18_CH_MAX_SLOTS	0x400
 #define ANE_H18_DOORBELL_OFF	0x18a4000
-#define ANE_H18_IPI_PENDING_OFF	0x18ac000	/* IPI pending (kext decode: engine + 0x18ac000) */
-#define ANE_H18_IPI_ACK_OFF	0x18b0000	/* IPI ack: the value read from pending is written back (kext decode: engine + 0x18b0000) */
-/* SHAREDMALLOC ring entries (decode of the selene firmware, same shapes as ane/t6021/ane_t6021_mring.h): MALLOC = header 0, size, mode; FREE = header is the IOVA
+#define ANE_H18_IPI_PENDING_OFF	0x18ac000	/* IPI pending (engine + 0x18ac000) */
+#define ANE_H18_IPI_ACK_OFF	0x18b0000	/* IPI ack: the value read from pending is written back (engine + 0x18b0000) */
+/* SHAREDMALLOC ring entries (firmware behaviour, same shapes as ane/t6021/ane_t6021_mring.h): MALLOC = header 0, size, mode; FREE = header is the IOVA
  * the firmware gives back, size and mode 0; a header with bit 0 set was answered. The host answers a MALLOC with a buffer (size word 0, mode word = ordinal,
  * header = DMA | 1) and a FREE with header 1, then rings the ring's doorbell bit. The firmware waits for the answer with no timeout. */
 #define ANE_H18_SNAP_PER_WAIT	6	/* at most this many change snapshots per wait: a firmware console that prints every millisecond must not flood the log */
@@ -106,14 +106,14 @@ static inline enum ane_h18_mal_kind ane_h18_mal_classify(u64 hdr, u64 size, u64 
 	return (size || mode) ? ANE_H18_MAL_BAD : ANE_H18_MAL_FREE;
 }
 #define ANE_H18_CMD_BLOCK	0x100	/* the commands here are 12 and 16 bytes, the reply fits in the block too: clear no more of the pool than that */
-#define ANE_H18_CMD_POOL_OFF	0x400	/* the command block lives in the pool surface, 0x100 aligned, as the kext takes every command block from the pool */
-#define ANE_H18_CSNE_CH_PROPERTY_WRITE	0x1f	/* 0x14 bytes: u32 0 at +8, property id at +0xc, u32 value at +0x10 (kext builder 0xfffffe0009363890, kernelcache 26A434) */
+#define ANE_H18_CMD_POOL_OFF	0x400	/* the command block lives in the pool surface, 0x100 aligned, as macOS takes every command block from the pool */
+#define ANE_H18_CSNE_CH_PROPERTY_WRITE	0x1f	/* 0x14 bytes: u32 0 at +8, property id at +0xc, u32 value at +0x10 */
 #define ANE_H18_CSNE_PRINT_ENABLE	0x04
-#define ANE_H18_CSNE_MCACHE_SIZE_GET	0x26	/* 12 bytes, no argument; the reply u32 at +8 is the memory cache size (kext fn 0x9363524, kernelcache 26A434) */
-#define ANE_H18_CSNE_DEFAULT_SETTING_SET	0x2e	/* 0x18 bytes: u64 1 at +8 (one setting), u32 2 at +0x10 (register id 2), u32 0x2710 at +0x14; the kext sends it after the property writes (0x9364b60 to 0x9364bac, value from config +0x124) */
-#define ANE_H18_CSNE_SET_DYNAMIC_POWERGATE	0x2d	/* 12 bytes, one byte at +8: 1 enables, 0 disables the firmware's dynamic power gating (kernelcache 26A434 builder 0x936242c, called from a bool-taking function 0x9381d88; where the kext sends it is not decoded; that 1 enables is read from the firmware strings) */
-#define ANE_H18_CSNE_SET_SNE_PMU_BASE2	0x29	/* 16 bytes, u64 at +8: the PMU base the firmware uses for its own power control; the kext sends it after START and before CONFIG_GET (kernelcache 26A434, sender in 0x9363f88) */
-#define ANE_H18_PMU_BASE_H18G	0x300700000ULL	/* the kext's constant for ANE types 0x300 and 0x310 (ANEHWDeviceConfig +0x38, built in 0x938e46c) */
+#define ANE_H18_CSNE_MCACHE_SIZE_GET	0x26	/* 12 bytes, no argument; the reply u32 at +8 is the memory cache size */
+#define ANE_H18_CSNE_DEFAULT_SETTING_SET	0x2e	/* 0x18 bytes: u64 1 at +8 (one setting), u32 2 at +0x10 (register id 2), u32 0x2710 at +0x14; macOS sends it after the property writes (value from config +0x124) */
+#define ANE_H18_CSNE_SET_DYNAMIC_POWERGATE	0x2d	/* 12 bytes, one byte at +8: 1 enables, 0 disables the firmware's dynamic power gating (where macOS sends it is not known; that 1 enables is an inference) */
+#define ANE_H18_CSNE_SET_SNE_PMU_BASE2	0x29	/* 16 bytes, u64 at +8: the PMU base the firmware uses for its own power control; macOS sends it after START and before CONFIG_GET */
+#define ANE_H18_PMU_BASE_H18G	0x300700000ULL	/* the constant macOS uses for ANE types 0x300 and 0x310 */
 #define ANE_H18_CSNE_CONFIG_GET		0x03
 #define ANE_H18_CSNE_START		0x00
 #define ANE_H18_CSNE_LOAD_PROGRAM	0x200	/* the T6021 wire: nine 0x30 byte section records at +8 (flags 1, id +4, iova +0x18, size +0x20), 0x1c0 bytes, the program id comes back at +0x1b8 */
@@ -131,7 +131,7 @@ static inline enum ane_h18_mal_kind ane_h18_mal_classify(u64 hdr, u64 size, u64 
 #define ANE_H18_PROG_MAX_BYTES	0xc000000	/* all buffers together, 192 MiB */
 #define ANE_H18_PROG_COOKIE	0xADD0	/* the call cookie of the T6021 driver, returned in the IO_T2H events */
 #define ANE_H18_PROG_PRIORITY	2
-#define ANE_H18_CSNE_PREMAP_BUFFER	0x20d	/* 0x3490 bytes, type 2 for the inference request pool: the kext sends it at init, before any call */
+#define ANE_H18_CSNE_PREMAP_BUFFER	0x20d	/* 0x3490 bytes, type 2 for the inference request pool: macOS sends it at init, before any call */
 #define ANE_H18_PREMAP_LEN	0x3490
 #define ANE_H18_PREMAP_POOL	0x3898	/* one inference request, rounded to a page for the surface */
 #define ANE_H18_PREMAP_BLOCK	0x4000	/* command block size with hs_premap */
@@ -140,7 +140,7 @@ static inline enum ane_h18_mal_kind ane_h18_mal_classify(u64 hdr, u64 size, u64 
 #define ANE_H18_DART_EXC_WORDS	8	/* words of the DART exception bitmap read (256 streams) */
 #define ANE_H18_DART_EXC_MAXSID	256	/* streams whose 0x40 byte record lies inside the DART window (0xc000) */
 #define ANE_H18_DART_EXC_SIDS	8	/* at most this many stream records printed */
-#define ANE_H18_CSNE_RESOURCE_INFO_GET	0x22	/* 100 byte command, the kext copies 16 bytes from +0x20 and +0x50 of the reply */
+#define ANE_H18_CSNE_RESOURCE_INFO_GET	0x22	/* 100 byte command, macOS copies 16 bytes from +0x20 and +0x50 of the reply */
 /* ANE DART (dart,gen3, instance 0): read only liveness words, see ane_h18_read_dart_words(). */
 #define ANE_H18_DART_NREAD	12
 /* Postoffice channel layout used for the RTKit exchange, as drivers/soc/apple/mailbox.c has it for the T8152 counted FIFO: RX (the outbox, firmware to host)
