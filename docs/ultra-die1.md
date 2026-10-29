@@ -64,7 +64,7 @@ T6020/T6021/T6022 die 0: 0x28e08c000 - 0x8000 = 0x28e084000; T8112 does not
 follow it and keeps its compiled `pmu_pa` + `ps_off`). The die-1 firmware pin
 is a second image entry with its own hashes and iBoot patch replay
 (`ane/t6021/ane_fw_validate.h`), keyed by the node's `apple,firmware-index`
-property (MEASURED: the 13.5 BuildManifest names `Ap,ANE1` separately). If the
+property (MEASURED: the 13.5 firmware list names `Ap,ANE1` separately). If the
 ane1 image is byte-identical to ane0 (missing fact, static check), the pin is
 an alias and no new bytes enter the tree.
 

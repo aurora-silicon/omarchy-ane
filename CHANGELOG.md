@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- docs: `receipts/2026-10-01-t8112-ane`, `t8112-optin`, `2026-10-03-ane-h15` and `ane-h16`, and a few header comments no longer give restore-image download addresses, say how members were read, or name the firmware list file. The `data/ane-soc/*.json` records lose their `kext` driver sections (kept in the private archive) and the `kernelcache_*` fields, and their source kinds are renamed to `hw-adt`, `hw-behaviour`, `hw-chip-map` and `hw-firmware`, which name the hardware fact and not where it came from. `tools/check_no_macos_read_methods.py` now also flags restore-image download addresses, restore-image file names, the firmware list file name and the phrase for reading members by range; the baseline is 1 file, 1 line (our own vmlinux disassembly). `omarchy-ane-firmware-fetch` keeps its two download addresses in code, by decision, and the check allows exactly that file; its header is cut to a usage line.
 - tools: `tools/check_no_macos_read_methods.py` and the `public-text` workflow stop new public text that shows how we read macOS: kernel addresses, code offsets, extraction or decode commands, restore-image locators, Apple symbol names and decode wording. It is a ratchet with a baseline of the 9 files (58 lines) that still carry such text. The baseline must equal the tree, so a cleaned file cannot regain matches until someone lowers its entry. The patterns are literal and miss plain words such as kext or kernelcache. The test builds a throwaway repository and covers 51 cases.
 - `ane_h15`: the stage 5 options `kext_boot` and `kb_wait_ms` are renamed `scratch_boot` and `sb_wait_ms`; the RESULT text and the log lines follow (`scratch_boot=1 s7_ready=...`). The old parameter names are still accepted at module load, hidden from the parameter list, until the commands already posted to volunteers have run. Behaviour is unchanged. The sim passes with the new names.
 - docs: `ane/h15/README-bringup.md` now says that the `pwgate_t6031` register facts are macOS behaviour that we have not measured on an M3, and that the full notes stay private. It also says what they do not show: why the step applies to a T6031 only, and that naming the fifth ADT window PWGATE is an inference. This replaces the draft receipt of PR 275.
@@ -735,7 +736,7 @@ changes.
   offset is RVBAR on T6021. Both values are now null, with the expected
   wrapper + 0x8000 address in the reason. Also corrected: the mailbox
   compatible in all four M3 files (the T6030 one contradicted its own
-  source), the j575d board (BuildManifest chip id 0x6032) and its three
+  source), the j575d board (firmware-list chip id 0x6032) and its three
   missing die-1 windows, the T8122 iommu-parent reason, and the driver
   family. See `receipts/2026-10-03-ane-h15`.
 - `omarchy-ane-check` lists `sudo omarchy-ane-firmware-fetch` in the

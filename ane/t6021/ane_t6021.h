@@ -719,7 +719,7 @@ struct ane_asc_tunables;
  *  pmu_pa: the page of the seven ANE ps words; the firmware's power
  *    service writes them through its DART at IOVA == PA. ps_off: the
  *    first of the seven in that page.
- *  fw_pin: the die's firmware image name in the 13.5 BuildManifest
+ *  fw_pin: the die's firmware image name in the 13.5 firmware list
  *    (Ap,ANE1 for T6022 die 1), data only until a die-1 run: the loader
  *    still stages soc->fw->name (docs/ultra-die1.md §2). NULL = no
  *    per-die pin recorded.

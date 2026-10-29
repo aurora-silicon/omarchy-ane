@@ -50,7 +50,7 @@ receipt). Every live value equals the 13.5 decode.
 | clock-gates / power-gates | 0x000001cf | 0x100001cf | bit 28 = die flag |
 | `pre-loaded` | 1 | 1 | iBoot preloads die-1 firmware too |
 | segment-ranges | present (2 entries) | present (2 entries) | values not decoded here |
-| firmware (13.5 BuildManifest) | `t600x_ane0_fw_eos_jc3x` | `t600x_ane2_fw_eos_jc3x` | one image per instance (ANE0..ANE3) |
+| firmware (13.5 firmware list) | `t600x_ane0_fw_eos_jc3x` | `t600x_ane2_fw_eos_jc3x` | one image per instance (ANE0..ANE3) |
 
 DARTs:
 
@@ -102,7 +102,7 @@ macOS shape: two independent ANE devices plus one load balancer above them.
 | interrupt | 884 | 4980 | 4096 + 884, same die line |
 | ane-type | 160 | 160 | same |
 | die-id | 0 | 1 | ADT decode |
-| firmware (13.5 BuildManifest) | `t602x_ane0_fw_selene_rc4x` | `t602x_ane1_fw_selene_rc4x` | one image per die |
+| firmware (13.5 firmware list) | `t602x_ane0_fw_selene_rc4x` | `t602x_ane1_fw_selene_rc4x` | one image per die |
 | dart-ane | 0x285800000/810000/820000/804000, IRQ 885, `dart,t8110` | 0x2285800000/810000/820000/804000, IRQ 4981, `dart,t8110` | +0x20_0000_0000; 4096 + 885 |
 | pmgr ps states | ANE_SYS 0x260 (parent AFNC0_LW0), ANE_CPU 0x2e0, ANE_SYS_MPM 0x4000, ANE_TD 0x4008, ANE_BASE 0x4010, ANE_SET1..4 0x4018..0x4030 | same names, same offsets | die-1 page 0x228e08xxxx |
 

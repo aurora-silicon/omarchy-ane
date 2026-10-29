@@ -1,7 +1,7 @@
 # 2026-10-01 — T8112 (M2) ANE as an UNTESTED opt-in on ane_t6021; per-SoC iBoot data
 
 Static work on an x86_64 host. No Mac was used: no boot, no module load, no
-MMIO. All values come from Apple files read by HTTP range, linux-asahi 7.1.13
+MMIO. All values come from Apple data files, linux-asahi 7.1.13
 device trees, m1n1 sources and community rows of the mlx-omarchy dataset.
 
 ## Result
@@ -37,13 +37,8 @@ device trees, m1n1 sources and community rows of the mlx-omarchy dataset.
 
 ## Sources
 
-macOS 26.6.2 (25G83) IPSW,
-`https://updates.cdn-apple.com/2026SummerFCS/fullrestores/140-75212/A2A24B94-1FC1-45A3-93F7-C51B02AF1F4D/UniversalMac_26.6.2_25G83_Restore.ipsw`,
-members `Firmware/all_flash/iBoot.<board>.RELEASE.im4p`. These are
-iBootStage2 images with an LZFSE body and no KBAG: no decryption is
-necessary (the method of receipts/2026-09-20-iboot-j414c). The 13.5 (22G74)
-iBoot2 images (iBoot-8422.141.2, the version that the 13.5 stub runs) have a
-KBAG and are encrypted, so they were not used.
+macOS 26.6.2 (25G83), the per-board iBoot data for each board in the table below. The 13.5 (22G74) iBoot data is
+encrypted, so it was not used.
 
 | Board | SoC | im4p sha256 | payload sha256 |
 | --- | --- | --- | --- |

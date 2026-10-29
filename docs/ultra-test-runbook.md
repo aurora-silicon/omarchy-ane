@@ -111,7 +111,7 @@ Verdict:
 
 Die 0 uses key `ane-t6022`; die 1 would use `ane-t6022-die1`, which ships
 **data-only** today: nothing installs or applies it, by design. The die-1
-firmware image (`t602x_ane1_fw_selene_rc4x`, BuildManifest `Ap,ANE1`) has no
+firmware image (`t602x_ane1_fw_selene_rc4x`, firmware list `Ap,ANE1`) has no
 recorded SHA-256 (docs/ultra-die1.md §9, fact 2), `omarchy-ane-firmware-fetch`
 refuses with `no pin for T6022 die 1` when it sees a die-1 node, and the
 driver validates whatever it stages against the die-0 pin — a non-identical

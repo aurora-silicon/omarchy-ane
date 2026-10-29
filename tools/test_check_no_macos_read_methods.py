@@ -18,7 +18,9 @@ BANNED = {
     "tool or command": ["run ipsw extract on the image\n", "ipsw kernel dump the file\n", "ipsw macho info it\n", "ipsw dl the build\n", "ipsw download the build\n", "use pyimg4 on it\n", "run img4tool -e x\n",
                         "otool -tV the binary\n", "open it in ghidra\n", "radare2 shows it\n", "objdump -d the file\n", "disarm64 the bytes\n", "jtool2 lists them\n"],
     "restore-image locator": ["member kernelcache.release.mac14j in the image\n", "at hdr_off=0x62be4d7db in it\n", "section __PRELINK_INFO holds it\n",
-                              "segment __TEXT_EXEC has it\n", "read BuildManifest.plist first\n"],
+                              "segment __TEXT_EXEC has it\n", "read BuildManifest.plist first\n",
+                              "https://updates.cdn-apple.com/2023SummerFCS/x/UniversalMac_13.5_Restore.ipsw\n", "the file UniversalMac_Restore.ipsw is big\n",
+                              "the BuildManifest names the image\n", "members read by HTTP range\n"],
     "Apple symbol": ["com.apple.driver.Foo is loaded\n", "AppleH16ANEInterface::start is called first\n", "AppleH11ANEInterface starts it\n", "AppleASCWrapV8 owns it\n",
                      "AppleA7IOP handles it\n", "AppleT6020PMGR::apply sets it\n", "AppleANELoadBalancer picks one\n", "ApplePMGR::send does it\n",
                      "AppleDART programs it\n", "AppleH16CamIn carries IPC\n"],
@@ -64,6 +66,20 @@ for kind, samples in BANNED.items():
         with open(os.path.join(repo, "new.md"), "w") as f:
             f.write("Observed macOS behaviour: it writes 0 to the gate word first.\n")
         commit(repo)
+# the firmware fetch tool carries its download addresses by decision; no other file may
+os.makedirs(os.path.join(repo, "packaging"), exist_ok=True)
+url = '"13.5": "https://updates.cdn-apple.com/2023SummerFCS/x/UniversalMac_13.5_Restore.ipsw"\n'
+with open(os.path.join(repo, "packaging", "omarchy-ane-firmware-fetch"), "w") as f:
+    f.write(url)
+commit(repo)
+expect("the fetch tool may hold its download addresses", run(repo), 0, "ok")
+with open(os.path.join(repo, "packaging", "omarchy-ane-other-tool"), "w") as f:
+    f.write(url)
+commit(repo)
+expect("another packaging file may not", run(repo), 1, "omarchy-ane-other-tool")
+with open(os.path.join(repo, "packaging", "omarchy-ane-other-tool"), "w") as f:
+    f.write("clean\n")
+commit(repo)
 # baseline: an existing offender may keep its count, not gain
 with open(os.path.join(repo, "old.md"), "w") as f:
     f.write(BANNED["kernel address"][0] + "ordinary line\n")
@@ -102,4 +118,4 @@ if failures:
     print("FAIL")
     print("\n".join(failures))
     sys.exit(1)
-print("ok: check_no_macos_read_methods behaves on", sum(len(v) for v in BANNED.values()) + 12, "cases")
+print("ok: check_no_macos_read_methods behaves on", sum(len(v) for v in BANNED.values()) + 15, "cases")

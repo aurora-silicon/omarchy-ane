@@ -27,7 +27,7 @@ ADT DARTs are `dart,t6000` on all three SoCs), so T6000 and T6002 need only
 the opt-in overlays. `ane_t6021` gets no T6020 or T6022 entry (see "No data").
 
 Every SoC has an ANE: each board of each SoC in the two IPSWs has an `ane*`
-node in `/arm-io` and an ANE firmware in its BuildManifest.
+node in `/arm-io` and an ANE firmware in its firmware list.
 The generation comes from Apple's firmware file names
 ([firmware-13.5.txt](firmware-13.5.txt), [firmware-27.0.txt](firmware-27.0.txt)):
 `h13` T8103, `t600x` T6000/1/2, `h14` T8112, `t602x` T6020/1/2, `h15` T8122,
@@ -85,7 +85,7 @@ die-1 node would use die-0 registers.
   other values, a per-SoC data struct. Then the overlay state goes to opt-in.
 - T6022 die 1, T6002 die 1: a driver that takes its registers from the node.
 - `ane1` of T6001/T6002 (0x508000000, IRQ 797) and `ane3`: in the ADT and
-  in the BuildManifest (`Ap,ANE1`), not described; no driver data.
+  in the firmware list (`Ap,ANE1`), not described; no driver data.
 - M3 and later: a driver for each firmware generation and a compiler
   backend. The 27.0 ADT nodes are in [adt-27.0.txt](adt-27.0.txt).
 
@@ -93,7 +93,7 @@ die-1 node would use die-0 registers.
 
 - The `.txt` files here were written from the device trees with the m1n1 ADT parser
   (`proxyclient/m1n1/adt.py` at AsahiLinux/m1n1 a878095). A second fetch gave
-  byte-identical ADTs and BuildManifests (25 files of 13.5, 61 of 27.0).
+  byte-identical ADTs and firmware lists (25 files of 13.5, 61 of 27.0).
 - `tools/asahi-dtbs` builds the linux-asahi board DTBs from tag
   asahi-7.1.13-3 (94fb2334) with the kernel's own dtc. All 19 that the
   overlays select, and all 41 Apple M-series DTBs, equal
