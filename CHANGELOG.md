@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- docs: `ane/h15/README-bringup.md` gets two stop rules. On a 16-inch M3 Max (T6031) a CPU read of the firmware DATA at page 232 made the machine reboot on two boots, so hash and dump scripts stop at page 231. A read-only probe for a volunteer's machine first reads only the ranges the driver itself uses, and a crash stops the run for a fix. The PWGATE run instructions on issue 176 were changed to match. The module itself never reads those pages.
+- docs: `ane/h15/README-bringup.md` gets two stop rules. On a 16-inch M3 Max (T6031) the machine went down during a CPU read of the firmware DATA on two boots (on the second, which logged each page, at page 232), so hash and dump scripts stop at page 231. A read-only probe for a volunteer's machine first reads only the ranges the driver itself uses, and a crash stops the run for a fix. The PWGATE run instructions on issue 176 were changed to match. The module itself never reads those pages.
 ## 0.5.6 (2026-10-29)
 
 This release changes little for users of the M1 and M2 families. The M3 bring-up module renames two parameters, and the base M2 (T8112) opt-in module gets one safety fix. One overlay fix lets the M2 Ultra (T6022) boot. Nothing in it makes the ANE run on an M3, and default settings behave as in 0.5.5.
