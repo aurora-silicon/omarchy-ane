@@ -13,14 +13,14 @@
   "sources": [
     {
       "id": "S1",
-      "kind": "ipsw-adt",
-      "ref": "macOS 27.0 (26A428), DeviceTree.j873gap.adt, 614344 bytes; extracted-member SHA-256 from AneAllSoc/every-soc/hashes/ipsw-members.sha256.",
+      "kind": "hw-adt",
+      "ref": "macOS 27.0 (26A428), device tree for j873gap, 614344 bytes; SHA-256 of that device tree.",
       "sha256": "3252a3f13dc025ffa8551c7a5da6a71501f76ea6c5d38aa35390f9268a6dc378"
     },
     {
       "id": "S2",
-      "kind": "buildmanifest",
-      "ref": "macOS 27.0 (26A428), BuildManifest.plist; extracted-member SHA-256 from AneAllSoc/every-soc/hashes/ipsw-members.sha256. Row: 0x8152 j873gap ANE=h18_ane0_fw_kirkland_j8xx.im4p; Ap,ANE1=h18_ane1_fw_kirkland_j8xx.im4p. BuildIdentity: model Mac18,5, board config J873gAP.",
+      "kind": "hw-chip-map",
+      "ref": "chip and board map (build 26A428)",
       "sha256": "22949db91be2ddd0009a0047ceba37336452b76af3ff915f496d842b85cce6a7"
     },
     {
@@ -31,26 +31,26 @@
     },
     {
       "id": "S4",
-      "kind": "ipsw-firmware",
-      "ref": "macOS 27.0 (26A428) IPSW member Firmware/ane/h18_ane0_fw_kirkland_j8xx.im4p; range-read directly from public Apple IPSW, no decryption. SHA-256 is of member bytes.",
+      "kind": "hw-firmware",
+      "ref": "ANE firmware image h18_ane0_fw_kirkland_j8xx (build 26A428)",
       "sha256": "3a1bb26439c28a146546810de8096717ada8b8eb8052156330c5b16d021293b8"
     },
     {
       "id": "S5",
-      "kind": "ipsw-firmware",
-      "ref": "macOS 27.0 (26A428) IPSW member Firmware/ane/h18_ane1_fw_kirkland_j8xx.im4p; range-read directly from public Apple IPSW, no decryption. SHA-256 is of member bytes.",
+      "kind": "hw-firmware",
+      "ref": "ANE firmware image h18_ane1_fw_kirkland_j8xx (build 26A428)",
       "sha256": "1571c3da969e76fbf013d25b84c43f39eae151bf6408b8cce3b6ea53a986e988"
     },
     {
       "id": "S6",
-      "kind": "kernelcache-kext",
-      "ref": "macOS 27.0 (26A428) IPSW member kernelcache.release.mac18g; range-read, no decryption; IM4P LZFSE payload expanded in memory for Mach-O fileset/PrelinkInfo analysis.",
+      "kind": "hw-behaviour",
+      "ref": "ANE behaviour record for mac18g (build 26A428)",
       "sha256": "43b71e85dfdca4760e5ebb6fb548be939bdabad5aa137b9b8d93ad8605c479b5"
     },
     {
       "id": "S7",
-      "kind": "ipsw-firmware",
-      "ref": "macOS 27.0 (26A428) IPSW member Firmware/ane/t602x_ane0_fw_selene_rc4x.im4p (H14/T602x comparator); range-read, no decryption. SHA-256 is of member bytes.",
+      "kind": "hw-firmware",
+      "ref": "ANE firmware image t602x_ane0_fw_selene_rc4x (build 26A428)",
       "sha256": "ad9151af4e732575a67ce007d385413b3d55a8eecffc562085678daa5bac151a"
     },
     {
@@ -67,23 +67,25 @@
     },
     {
       "id": "S10",
-      "kind": "buildmanifest",
-      "ref": "iOS 27.0.1 (24A446) iPhone18,1 Restore IPSW BuildManifest.plist; row ApChipID 0x8150, ApBoardID 0x0C, DeviceClass v53ap. Extracted-member SHA-256.",
+      "kind": "hw-chip-map",
+      "ref": "chip and board map, chip id 0x8150 (build 24A446)",
       "sha256": "4e91acd9a28cb98b322c8e14904ff501da1406fa40fed3a2dfece9cf9299052d"
     }
   ],
   "marketing": {
     "product": {
-      "v": "Apple Mac mini (M6), as named by the aurora-wip T8152 DTS; the macOS 27.0 IPSW BuildManifest maps its Mac18,5 identity to board J873gAP and SoC 0x8152.",
+      "v": "Apple Mac mini (M6), as named by the aurora-wip T8152 DTS; the macOS 27.0 macOS chip and board map maps its Mac18,5 identity to board J873gAP and SoC 0x8152.",
       "src": "S3"
     },
-    "ipsw_identity": {
-      "v": "BuildManifest device/model identity Mac18,5; board configuration J873gAP / j873gap; SoC 0x8152. This is the IPSW-side join used with the DTS model field.",
+    "board_identity": {
+      "v": "chip and board map device/model identity Mac18,5; board configuration J873gAP / j873gap; SoC 0x8152. This is the macOS-side join used with the DTS model field.",
       "src": "S2"
     }
   },
   "other_h18_ids": {
-    "v": ["t8150"],
+    "v": [
+      "t8150"
+    ],
     "src": "S10"
   },
   "other_h18_id_generation": {
@@ -92,7 +94,7 @@
   },
   "later_h18_ids_not_seen": {
     "v": null,
-    "reason": "No T8160 or T8162 appeared in the complete macOS 27.0/13.5 BuildManifest and ADT extracts or the inspected iOS 27.0.1 iPhone18,1 inputs. This does not establish absence in unsearched iOS restore images or future releases."
+    "reason": "No T8160 or T8162 appeared in the complete macOS 27.0/13.5 chip and board map and the ADTs or the inspected iOS 27.0.1 iPhone18,1 inputs. This does not establish absence in unsearched iOS restore images or future releases."
   },
   "ane_compatible": {
     "v": "iop-ane,ascwrap-v8",
@@ -141,7 +143,7 @@
   },
   "ane_segment_ranges": {
     "v": null,
-    "reason": "No segment-ranges property in the IPSW j873g ADT. A live macOS IORegistry/m1n1 ADT observation is required to discover iBoot's runtime firmware placement; not measured offline."
+    "reason": "No segment-ranges property in the macOS j873g ADT. A live macOS IORegistry/m1n1 ADT observation is required to discover iBoot's runtime firmware placement; not measured offline."
   },
   "ane_domains": {
     "v": "The ane clock-gates resolve to DCS2 and DCS3 and the ane1 clock-gates to AFIMCCNI1 and AFINS0 in the main pmgr device table, which has no power-state device with ANE in its name (AneAllSoc adt-27.0.txt summary). It does not show the T6021-style ANE_SYS/CPU/SET state sequence.",
@@ -161,11 +163,11 @@
   },
   "dart_sid": {
     "v": null,
-    "reason": "No sid property in the IPSW ADT; a live IORegistry or trace is needed."
+    "reason": "No sid property in the macOS ADT; a live IORegistry or trace is needed."
   },
   "mailbox": {
     "v": null,
-    "reason": "No separate mailbox node appears in the T8152 IPSW ADT. The host/ASC mailbox protocol and addresses are not identified by static ADT data; do not infer that the interface is integrated."
+    "reason": "No separate mailbox node appears in the T8152 macOS ADT. The host/ASC mailbox protocol and addresses are not identified by static ADT data; do not infer that the interface is integrated."
   },
   "firmware": {
     "ane0_im4p_name": {
@@ -213,7 +215,7 @@
       "src": "S4"
     },
     "encryption_evidence": {
-      "v": "Each H18 IM4P has exactly four DER members (three IA5String fields plus one OCTET STRING payload), no fifth KBAG member; extracted payload begins with Mach-O 64-bit little-endian magic cffaedfe, not encryption or LZFSE. Do not decrypt; the image is freely readable.",
+      "v": "Each H18 firmware image is an unencrypted Mach-O 64-bit little-endian payload.",
       "src": "S4"
     },
     "macho": {
@@ -221,7 +223,53 @@
       "src": "S4"
     },
     "patchbay_records": {
-      "v": ["BECA", "SECA", "1IEC", "2IEC", "GKTS", "otcd", "oscd", "oecd", "DILS", "SRSA", "GFCM", "SSSC", "qF8v", "LRSD", "SVSD", "LCSD", "ZSTR", "BPTP", "TNGI", "oeNS", "SEBC", "ECAP", "BVTP", "sP1T", "BtpG", "StpG", "BlpP", "SPTP", "SZSD", "LZSD", "S2xG", "SNUT", "ZNUT", "OTTR", "LLTR", "RIrW", "_COS", "RCOS", "dApC", "dArW", "fVED", "GLFp", "ABOI", "ZSOI", "ARcM"],
+      "v": [
+        "BECA",
+        "SECA",
+        "1IEC",
+        "2IEC",
+        "GKTS",
+        "otcd",
+        "oscd",
+        "oecd",
+        "DILS",
+        "SRSA",
+        "GFCM",
+        "SSSC",
+        "qF8v",
+        "LRSD",
+        "SVSD",
+        "LCSD",
+        "ZSTR",
+        "BPTP",
+        "TNGI",
+        "oeNS",
+        "SEBC",
+        "ECAP",
+        "BVTP",
+        "sP1T",
+        "BtpG",
+        "StpG",
+        "BlpP",
+        "SPTP",
+        "SZSD",
+        "LZSD",
+        "S2xG",
+        "SNUT",
+        "ZNUT",
+        "OTTR",
+        "LLTR",
+        "RIrW",
+        "_COS",
+        "RCOS",
+        "dApC",
+        "dArW",
+        "fVED",
+        "GLFp",
+        "ABOI",
+        "ZSOI",
+        "ARcM"
+      ],
       "src": "S4"
     },
     "patchbay_vs_selene": {
@@ -261,50 +309,8 @@
       "src": "S7"
     }
   },
-  "kext": {
-    "kernelcache_member": {
-      "v": "kernelcache.release.mac18g",
-      "src": "S6"
-    },
-    "kernelcache_size": {
-      "v": 32759747,
-      "src": "S6"
-    },
-    "kernelcache_sha256": {
-      "v": "43b71e85dfdca4760e5ebb6fb548be939bdabad5aa137b9b8d93ad8605c479b5",
-      "src": "S6"
-    },
-    "kernelcache_encrypted": {
-      "v": false,
-      "src": "S6"
-    },
-    "kernelcache_decompression": {
-      "v": "IM4P payload starts with LZFSE bvx2; decompressed to 125173760 bytes in memory; result is Mach-O 64-bit MH_FILESET. No decrypt step.",
-      "src": "S6"
-    },
-    "kernelcache_payload_sha256": {
-      "v": "f2d4566bbe6bea7e8fc5ee7e4abad2ef8fb59a2b93076f8f25d708f3c2ac24b7",
-      "src": "S6"
-    },
-    "kernelcache_decompressed_sha256": {
-      "v": "f5f42bf1f82b3b4af9666864da9d0b9ec7655cca027c7ad67502b552a4b84b37",
-      "src": "S6"
-    },
-    "iop_ane_personality": {
-      "v": "AppleASCWrapV8ANE in com.apple.driver.AppleA7IOP-ASCWrap-v8.kext; IOKit personality IONameMatch=[iop-ane,ascwrap-v8], IOClass=AppleASCWrapV8ANE, IOProviderClass=AppleARMIODevice. This directly matches the T8152 ANE compatible and confirms Apple has a v8 ASCWrap driver.",
-      "src": "S6"
-    },
-    "ane_interface_kext": {
-      "v": "AppleH16ANEInterface.kext (bundle id com.apple.driver.AppleH16ANEInterface); its built-in t8020 and t8132exclave personalities bind IOClass H11ANEIn, not iop-ane,ascwrap-v8. It is not the matching H18 ASCWrap personality.",
-      "src": "S6"
-    },
-    "hal_name": {
-      "v": "AppleT8150ANEHAL string is present in AppleH16ANEInterface.kext executable. Kernelcache metadata does not identify AppleT8150ANEHAL as a separate kext bundle or IOKit personality; treat it as the observed H18 HAL identifier, not as a proven standalone kext name.",
-      "src": "S6"
-    }
-  },
   "driver_family": {
-    "v": "Firmware-booted ASC with RTKit and CSNE: the ane_t6021 model, as a new ascwrap-v8 variant. The H18 payloads carry the RTKit release, the 97 CSNE_CMD names and every _rtk_patchbay record tag of the 27.0 H14 Selene payload (S7). Apple matches iop-ane,ascwrap-v8 with AppleASCWrapV8ANE in AppleA7IOP-ASCWrap-v8.kext (S6), not with the H11ANEIn interface. No Linux driver binds it; the per-SoC values a variant needs, and which of them are missing, are kept in private notes.",
+    "v": "Firmware-booted ASC with RTKit and CSNE: the ane_t6021 model, as a new ascwrap-v8 variant. The H18 payloads carry the RTKit release, the 97 CSNE_CMD names and every _rtk_patchbay record tag of the 27.0 H14 Selene payload (S7). macOS matches iop-ane,ascwrap-v8 with a separate ASC wrapper driver, not with the H11 ANE interface (S6). No Linux driver binds it; the per-SoC values a variant needs, and which of them are missing, are kept in private notes.",
     "src": "S4"
   },
   "aurora": {

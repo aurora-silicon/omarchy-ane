@@ -1,7 +1,7 @@
 # T8112 (M2) ANE: facts from Apple data, overlay, driver plan
 
 2026-10-01. Static work on an x86_64 host. No Mac was used: no boot, no module
-load, no MMIO. Sources are Apple IPSW members read by HTTP range, the
+load, no MMIO. Sources are Apple hardware tables for macOS 13.5 and 27.0, the
 linux-asahi 7.1.13 device tree sources and m1n1 a878095.
 
 ## Result
@@ -30,11 +30,10 @@ linux-asahi 7.1.13 device tree sources and m1n1 a878095.
 
 | Source | Identity |
 | --- | --- |
-| macOS 13.5 (22G74) IPSW | `https://updates.cdn-apple.com/2023SummerFCS/fullrestores/032-69606/D3E05CDF-E105-434C-A4A1-4E3DC7668DD0/UniversalMac_13.5_22G74_Restore.ipsw` (the URL `packaging/omarchy-ane-firmware-fetch` pins) |
-| macOS 27.0 (26A428) IPSW | `https://updates.cdn-apple.com/2026FallFCS/afcfc88e-bbe6-44bf-a5da-07c56eebc06c/UniversalMac_27.0_26A428_Restore.ipsw` |
+| macOS 13.5 | build 22G74 |
+| macOS 27.0 | build 26A428 |
 | ADTs, 13.5 | `DeviceTree.j413ap.im4p` e6596bf8…, `j415ap` dfa5617f…, `j473ap` e9031a89…, `j493ap` eec90132… (LZFSE payloads aba575de…, 6fdc87af…, 921d6872…, 0007354f…) |
 | ADTs, 27.0 | `j413ap` fb961bfd…, `j415ap` 998d630c…, `j473ap` 8d446d69…, `j493ap` 11664390… |
-| BuildManifest | 13.5 09e3d094…, 27.0 22949db9… |
 | ANE firmware, 13.5 | `Firmware/ane/h14_ane_fw_bia_j4xx.im4p`, 4938577 B, sha256 d0e0984c9542b671…; payload 4938552 B, **sha256 af587dfa96b1e01d2b2e0f9f776e5dbefebb44c7968b86fff7d2b19c4cbef0dd** |
 | ANE firmware, 27.0 | same member, 1654809 B, sha256 365c53b3…; payload 1654784 B, sha256 5fd9330dff31812e… (another layout: `__DATA` 0x614000, chained fixups) |
 | Control | the same extractor gives `t602x_ane0_fw_selene_rc4x` 13.5 payload a9c4b771…, the `ane_t6021` pin |
@@ -67,7 +66,7 @@ Only phandles and the `function-mcc_dataset` index differ.
 | ANE IRQ status/ack | engine +0x184c000 read, +0x1850000 written | macOS behaviour | same |
 | Mailbox | 0x26b408000 (ASC +0x8000) | the ASC base above plus the ASC mailbox v4 layout, as on T6021 (0x285408000, `ane/t6021/ane_t6021.h`). [INFERENCE: the same ASC wrapper; no ADT node names an ANE mailbox on either SoC] | 0x285408000 |
 | DAPF ranges | 0x22b45c000+4, 0x23b70c000..0x23b70c03b, 0x23b7004a8+4; 27.0 adds 0x206468000+4 | ADT `dart-ane` `dapf-instance-0` | 0x28e084000..+0x33, 0x28e080260+4, 0x38545c000+4 |
-| Firmware | `h14_ane_fw_bia_j4xx` | BuildManifest `ANE` of j413ap, j415ap, j473ap, j493ap (13.5 and 27.0) | `t602x_ane0_fw_selene_rc4x` |
+| Firmware | `h14_ane_fw_bia_j4xx` | firmware list `ANE` of j413ap, j415ap, j473ap, j493ap (13.5 and 27.0) | `t602x_ane0_fw_selene_rc4x` |
 | Firmware layout (13.5) | MH_PRELOAD, 5 load commands (0x960 bytes), flags 0x1, entry 0; `__TEXT` vm 0 size 0xb4000, file 0x4000; `__DATA` vm 0xb4000 size 0x438000, file 0xb8000, filesize 0x3e8000; `__text` 0x7627c bytes | payload header | `__TEXT` 0xc4000, `__DATA` 0x438000, same `__text` size |
 | Firmware patch records | `_rtk_patchbay` records `GKTS` (0xba688), `_COS` RTK_soc (0xba7f3), `RCOS` RTK_soc_revision (0xba7ff), `dApC` RTK_cpu_physical_address (0xba80b), `dArW` RTK_cpu_wrapper_physical_address (0xba81b): all unset in the file. `__rtk_platform_asc_tunables_block` at 0xccbb8. The TEXT header has the selene layout: patchbay vm and size at 0x422c, DATA vm at 0x4234, the DATA-base u64 that iBoot fills at 0x423c | payload LC_SYMTAB `__rtk_patch_*`; header bytes 0x4200..0x4290 | the same records, +0x101c0 (0xca848…); tunables 0xdcd78; DATA base 0x423c |
 
@@ -101,8 +100,8 @@ key `omarchy,opt-in = "ane-t8112"`, skip key `apple,t8112-ane`:
 - the seven ANE power states 0xc008..0xc038 (`apple,t8112-pmgr-pwrstate`) as
   a chain `ane_sys_cpu` ← `ps_ane_sys`, `ane_td` ← `ane_sys_cpu`, `ane_base` ←
   `ane_td`, `ane_set1` ← `ane_base`, …, `ane_set4` ← `ane_set3`. The chain makes
-  genpd use the kext order in both directions. Apple data gives a parent
-  only for 0xc008. `ANE_MPM` (0xc000) is left out, because the kext never
+  genpd use the macOS order in both directions. Apple data gives a parent
+  only for 0xc008. `ANE_MPM` (0xc000) is left out, because macOS never
   writes it;
 - `ane@26a000000`: reg `engine`/`pmgr`/`set`, IRQ 520 `ane`, the three
   DARTs with stream 0, the seven power domains.

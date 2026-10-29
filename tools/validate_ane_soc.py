@@ -13,7 +13,7 @@ RESERVED = {"blob", "raw", "payload", "bytes"}
 MAX_FILE_BYTES = 256 * 1024
 MAX_LEAF_STR = 4096
 MAX_ARRAY_ITEMS = 256
-KINDS = {"ipsw-adt", "kernelcache-kext", "buildmanifest", "aurora-dts", "community-row", "ipsw-firmware", "compiler-oracle"}
+KINDS = {"hw-adt", "hw-behaviour", "hw-chip-map", "aurora-dts", "community-row", "hw-firmware", "compiler-oracle"}
 
 
 class Violation(Exception):

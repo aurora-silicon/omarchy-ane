@@ -4,7 +4,7 @@
  * ANE for T6022 (M2 Ultra) board device trees: the die-0 ANE only. Die 0 has
  * the T6021 values
  * (t602x-ane.dtsi, same in the macOS 13.5 ADTs of j180d and j475d), and the
- * 13.5 BuildManifest gives ANE0 the same firmware (t602x_ane0_fw_selene_rc4x).
+ * 13.5 firmware list gives ANE0 the same firmware (t602x_ane0_fw_selene_rc4x).
  * ane_t6021 binds apple,t6022-ane and runs that firmware from memory it
  * allocates, with iBoot's runtime patches replayed (ane/t6021/ane_fw_validate.h),
  * so no preload address and no reserved-memory node is needed. RTK_soc is

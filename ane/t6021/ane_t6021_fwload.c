@@ -222,7 +222,7 @@ const struct ane_t602x_soc ane_t6022_soc = {
 
 /* T6022 die 1 (docs/ultra-die1.md §2): the pure +0x20_0000_0000 die
  * translation (receipts/2026-10-03-ultra-die1), so pmu_pa is die 0's
- * +0x20_0000_0000 and the BuildManifest pins Ap,ANE1
+ * +0x20_0000_0000 and the firmware list pins Ap,ANE1
  * (t602x_ane1_fw_selene_rc4x). Data only for now: the loader keeps
  * staging soc->fw->name (the ane1 image's byte identity against ane0 is
  * a missing fact), and the die-1 overlay stays data-only until a die-1
@@ -601,7 +601,7 @@ int ane_t6021_fwload_probe(struct ane_t6021 *ane)
 	const struct ane_t602x_soc *soc = ane_t6021_soc_for(ane->dev);
 	const struct ane_fw_image *img = soc->fw;
 	/* The die's own image pin (ane_t6022_soc_die1.fw_pin): request the
-	 * die's BuildManifest name, still validated against soc->fw's pinned
+	 * die's firmware list name, still validated against soc->fw's pinned
 	 * sha256 below — an ane1 image that is not byte-identical to ane0
 	 * (a missing fact, docs/ultra-die1.md §9.2) fails validation here,
 	 * so no unproven bytes boot. Die 0 rows carry no pin. */

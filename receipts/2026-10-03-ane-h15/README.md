@@ -4,7 +4,7 @@ Actor: AneH15Driver2. Static desk work on the lab CT. No Mac was touched, nothin
 booted or loaded, and nothing was fetched from Apple. Branch `agent/ane-h15-b0` from
 `origin/main` `16cfa87`.
 
-Inputs: data that was already on disk. These are the AneAllSoc ADT and BuildManifest
+Inputs: data that was already on disk. These are the AneAllSoc ADT and firmware list
 receipts that the M3 data files cite, the four M3 data
 files, the `ane_t6021` sources, and the aurora tree that the data files cite (read-only).
 The output of the stopped AneH15Driver run (`artifacts/AneH15Driver/h15-b0`) was not used.
@@ -41,7 +41,7 @@ missing, so no code is written.
 | id | path | sha256 |
 | --- | --- | --- |
 | A1 | `~/.local/share/apple-silicon-lab/artifacts/AneAllSoc/every-soc/receipt/adt-27.0.txt` (macOS 27.0 26A428 ADT summary) | `04fe38b8ee009700f02e2c01e83bf608afab5e843f5878a83f162973a1ffdb84` |
-| A2 | `~/.local/share/apple-silicon-lab/artifacts/AneAllSoc/every-soc/receipt/firmware-27.0.txt` (BuildManifest ANE rows) | `3e17bc4d66bd523251436f46281495ff30baa9abf81e772270feb24c05594f7d` |
+| A2 | the lab receipt `firmware-27.0.txt` (the ANE rows of the firmware list) | `3e17bc4d66bd523251436f46281495ff30baa9abf81e772270feb24c05594f7d` |
 | A3 | `~/.local/share/apple-silicon-lab/artifacts/AneH15Driver2/h15-b0/logs/offsets.txt`, output of `scripts/h15_offsets.py` (`215c05d6…`) over A1 | `a49d23d3caca88bded85e3058b5337978a66931412057943368504cfd0fcc98d` |
 | A4 | `~/.local/share/apple-silicon-lab/artifacts/AneH15Driver2/h15-b0/logs/aurora-s4.txt`: aurora `94fb2334` dtsi, `rtkit-helper.c` and `rtkit.c` lines, each file hashed | `4db8c28812e857de158326dee9b03cabc43900f9b7928c93fdd1fd70056781a5` |
 | A5 | `~/.local/share/apple-silicon-lab/artifacts/AneH15Driver2/h15-b0/logs/probe-synthetic-m3.json`: `omarchy-ane-probe --root` on minimal M3 trees | `03ff2d444aacc2ea0f82f13db2f7d83be6d7f4702cd5d764bdccc2443fddf374` |
@@ -55,7 +55,7 @@ missing, so no code is written.
 ## Per-SoC table
 
 T6034 (j514m, j516m) has the T6031 ADT nodes (A1 groups them under `arm-io,t6031`), so the
-T6031 column applies to it. j575d is also `arm-io,t6031` in the ADT, but its BuildManifest
+T6031 column applies to it. j575d is also `arm-io,t6031` in the ADT, but its firmware list
 chip id is 0x6032 and it carries two ANEs (A2 line 19). Engine-relative offsets are
 arithmetic on A1 values (A3).
 
@@ -65,7 +65,7 @@ arithmetic on A1 values (A3).
 | --- | --- | --- | --- | --- | --- | --- |
 | ADT ANE compatible (ASC wrapper version) | `ane,t8020`; no wrapper version named | `iop,ascwrap-v6` | `iop,ascwrap-v6` | `iop,ascwrap-v6` (j575d ane0 and ane1) | MEASURED | A1 |
 | ane-type | 160 | 176 | 192 | 224 | MEASURED | A1 |
-| BuildManifest chip id and boards | 0x6021 j414c j416c j475c | 0x8122 j433 j434 j504 j613 j615 | 0x6030 j514s j516s | 0x6031 j514c j516c; 0x6034 j514m j516m; 0x6032 j575d | MEASURED | A2 |
+| firmware-list chip id and boards | 0x6021 j414c j416c j475c | 0x8122 j433 j434 j504 j613 j615 | 0x6030 j514s j516s | 0x6031 j514c j516c; 0x6034 j514m j516m; 0x6032 j575d | MEASURED | A2 |
 | 27.0 IPSW ANE image | `t602x_ane0_fw_selene_rc4x` | `h15_ane_fw_themis_j51y`, payload 1605632 B, `19b6a499…` | `t603x_ane0_fw_erebus_ls5x`, `43da9d56…` | `t603x_ane0_fw_erebus_pc5x`, `ddac37c7…`; j575d also `t603x_ane1_fw_erebus_pc5x` | MEASURED | A2 |
 | Image flags | not in these sources | IsLoadedByiBoot true, plain Mach-O, no KBAG | same | same | MEASURED | earlier private receipt |
 | Image the Linux boot runs | 13.5 stub image, pinned `a9c4b771…`, 0x4C5B28 B | the stub OS's image; stub version unknown | unknown | unknown | T6021 MEASURED; M3 missing | R4 §2, R7 |
@@ -117,9 +117,9 @@ the old value.
 - `t6030.json` `mailbox.compatible` was `apple,t6031-asc-mailbox`. Its own source,
   `t6030.dtsi`, uses `apple,t6030-asc-mailbox`. The T6031 and T6034 compatibles are now null
   too, because no ANE mailbox node exists to cite.
-- `t6031.json` called j575d a "MacBook Pro 16-inch M3 Max, dual-die". The BuildManifest gives
+- `t6031.json` called j575d a "MacBook Pro 16-inch M3 Max, dual-die". The firmware list gives
   j575dap chip id 0x6032 with two ANE images. The board leaf now cites only the ADT, and
-  `ane1_j575d.buildmanifest_chip_id` records 0x6032 from the BuildManifest.
+  `ane1_j575d.buildmanifest_chip_id` records 0x6032 from the firmware list.
 - `t8122.json` said the ADT ane node has no iommu-parent. The receipt summary does not print
   that field, so absence is not shown. The reason now says unknown.
 - `t6031.json` `ane1_j575d.reg` held five of the eight windows that A1 lists for die 1. It

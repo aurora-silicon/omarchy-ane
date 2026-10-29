@@ -90,7 +90,7 @@ address remains.
   names a physical firmware address; the one reservation is the IOVA
   0x10000000000 (ADT `dart-ane0` `vm-base`).
 - `packaging/omarchy-ane-firmware-fetch`: T6020 and T6022 fetch the same
-  pinned image (the 13.5 BuildManifest gives `t602x_ane0_fw_selene_rc4x` to
+  pinned image (the 13.5 firmware list gives `t602x_ane0_fw_selene_rc4x` to
   j414s, j416s, j474s, j414c, j416c, j475c, j180d and j475d).
   `packaging/omarchy-ane-check`: T6020/T6022 report UNTESTED and check
   `ane_t6021`.

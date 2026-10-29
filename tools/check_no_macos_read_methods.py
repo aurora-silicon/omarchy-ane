@@ -25,7 +25,7 @@ PATTERNS = [
     ("kernel address", r"0xfffffe[0-9a-fA-F]{6,}"),
     ("code offset", r"\b(kext|kernelcache|kc)\s*[+@]\s*0x[0-9a-fA-F]+"),
     ("tool or command", r"\b(ipsw\s+(extract|kernel|macho|dl|download)|pyimg4|img4tool|otool\s+-|ghidra|radare2|objdump\s+-d|disarm64|jtool2?)\b"),
-    ("restore-image locator", r"kernelcache\.release|\bhdr_off=|__PRELINK_INFO|__TEXT_EXEC|BuildManifest\.plist"),
+    ("restore-image locator", r"kernelcache\.release|\bhdr_off=|__PRELINK_INFO|__TEXT_EXEC|\bBuildManifest\b|updates\.cdn-apple|\.ipsw\b|by HTTP range"),
     ("Apple symbol or bundle", r"\bcom\.apple\.driver\.|\bApple(H1\d|H1\dANE|ASCWrap|A7IOP|T60\d\d|ANE|PMGR|DART)[A-Za-z0-9_]*(::|\b)"),
     ("decode wording", r"(static|offline) decode|decoded (statically )?from the (macOS )?(kext|kernelcache|kernel extension)|reverse[- ]engineer(ed|ing)? (the )?(macOS|kext)"),
 ]

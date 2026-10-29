@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- docs: `receipts/2026-10-01-t8112-ane`, `t8112-optin`, `2026-10-03-ane-h15` and `ane-h16`, and a few header comments no longer give restore-image download addresses, say how members were read, or name the firmware list file. The `data/ane-soc/*.json` records lose their `kext` driver sections (kept in the private archive) and the `kernelcache_*` fields, and their source kinds are renamed to `hw-adt`, `hw-behaviour`, `hw-chip-map` and `hw-firmware`, which name the hardware fact and not where it came from. `tools/check_no_macos_read_methods.py` now also flags restore-image download addresses, restore-image file names, the firmware list file name and the phrase for reading members by range; the baseline is 2 files, 5 lines (four lines in `omarchy-ane-firmware-fetch`, which needs them to work, and one line of our own vmlinux disassembly). The fetch tool still contains the two restore-image addresses it downloads from; that needs a decision.
 - tools: `tools/check_no_macos_read_methods.py` and the `public-text` workflow stop new public text that shows how we read macOS: kernel addresses, code offsets, extraction or decode commands, restore-image locators, Apple symbol names and decode wording. It is a ratchet with a baseline of the 9 files (58 lines) that still carry such text. The baseline must equal the tree, so a cleaned file cannot regain matches until someone lowers its entry. The patterns are literal and miss plain words such as kext or kernelcache. The test builds a throwaway repository and covers 51 cases.
 - docs: `ane/h15/README-bringup.md` now says that the `pwgate_t6031` register facts are macOS behaviour that we have not measured on an M3, and that the full notes stay private. It also says what they do not show: why the step applies to a T6031 only, and that naming the fifth ADT window PWGATE is an inference. This replaces the draft receipt of PR 275.
 - `t6022-ane` overlay (M2 Ultra, opt-in): the three ANE DART nodes now take their power from the ANE_SYS state (pmgr `0x260`) instead of pmp and ANE_CPU. On a J475d the shipped overlay panicked the boot with an asynchronous SError in the DART probe on most boots (kernel 7.1.13). With the change the machine boots, the DARTs initialize, and the add smoke fixture ran 20 of 20 calls bit-exact. This is the first T6022 boot report. We have no T6022 machine; the panic and the run are the reporter's (Ophuscado, PR 278). Our macOS 13.5 device trees show the `ANE-SYS-DART` gate on `dart-ane0`; that the gate sits under ANE_SYS comes from the reporter's IORegistry reading. The overlay builds against the j180d and j475d device trees in CI. T6020 and T6021 keep the shared values; whether they need the same change is not known.
@@ -734,7 +735,7 @@ changes.
   offset is RVBAR on T6021. Both values are now null, with the expected
   wrapper + 0x8000 address in the reason. Also corrected: the mailbox
   compatible in all four M3 files (the T6030 one contradicted its own
-  source), the j575d board (BuildManifest chip id 0x6032) and its three
+  source), the j575d board (firmware-list chip id 0x6032) and its three
   missing die-1 windows, the T8122 iommu-parent reason, and the driver
   family. See `receipts/2026-10-03-ane-h15`.
 - `omarchy-ane-check` lists `sudo omarchy-ane-firmware-fetch` in the

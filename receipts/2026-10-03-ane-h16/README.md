@@ -3,8 +3,7 @@
 2026-10-03. Static work on an x86_64 host (omp-studio-local) plus
 niced module builds in the macstudio ALARM chroot and against the
 aurora tree. No Apple-silicon hardware ran anything in this receipt:
-no boot, no module load, no MMIO. Sources are Apple IPSW members read
-by HTTP range, extracted kernelcaches and iBoot payloads, and the
+no boot, no module load, no MMIO. Sources are Apple hardware tables for macOS 27.0, and the
 aurora `josh/ane-driver-aurora` tree.
 
 ## Verdict
@@ -28,14 +27,14 @@ aurora `josh/ane-driver-aurora` tree.
 
 | Source | Identity |
 | --- | --- |
-| IPSW | macOS 27.0 (26A428) `UniversalMac_27.0_26A428_Restore.ipsw` (URL pinned by `packaging/omarchy-ane-firmware-fetch`) |
-| BuildManifest | sha256 `22949db9…` (fetch.log) |
+| macOS | 27.0 (26A428) |
+| firmware list | sha256 `22949db9…` (fetch.log) |
 | ADTs | 12 board payloads; this receipt uses j604ap `fa30e1c7…`, j614sap `7f0ace88…`, j614cap `d9125210…` (full list in artifacts/AneH16Driver logs) |
 | Firmware | `h16_ane_fw_leto_j7x.im4p` (T8132 boards) payload `4b330c5f…`; `t604x_ane_fw_aether_brvx.im4p` (T6040/T6041 boards) payload `8659271a…`; both 1,556,480 B raw Mach-O, unencrypted (no KBAG) |
 | iBoot | `iBoot.j604.RELEASE.im4p` payload `a53b4706…`, `iBoot.j614c.RELEASE.im4p` payload `538c53c4…`, `iBoot.j614s.RELEASE.im4p` payload `5d33fed4…` (mBoot-20457.1.29, LZFSE, unencrypted) |
 | Linux | `~/src/omarchy-linux` at `josh/ane-driver-aurora` (f227145f50e4): `t8132.dtsi`, `t8132-pmgr.dtsi`, `drivers/soc/apple/rtkit.c`, `drivers/soc/apple/mailbox.c` |
 
-Chip map (BuildManifest `ApChipID` + ADT `/product product-soc-name`):
+Chip map (firmware list `ApChipID` + ADT `/product product-soc-name`):
 
 | SoC | Boards | Tier | ANE firmware |
 | --- | --- | --- | --- |
@@ -80,8 +79,8 @@ ane-type 0x110 (type 0xd0, generation 7, "h16g").
 | DAPF | 0x501810000+0x4000 | 0x485810000+0x4000 | ADT dart-ane reg[3] |
 | DART facts | dart,t8110; sid 0,10,11,15; bypass-10; sid-count 16; page 16 KiB; vm-base 0x10000000000; vm-size 0x30000000000; dart-options 0x25; flush-by-dva; IRQ 630/1055 | same | ADT dart-ane |
 | MPM streams | iommu-parent mapper-ane (stream 0) + mapper-ane-mpm (stream 11) | same | ADT ane iommu-parent (new this pass: the MPM mapper) |
-| Firmware | leto payload 4b330c5f… | aether payload 8659271a… | IPSW + BuildManifest `ANE` |
-| Firmware load | iBoot: IsLoadedByiBoot true, IsFUDFirmware true, Personalize true | same | BuildManifest |
+| Firmware | leto payload 4b330c5f… | aether payload 8659271a… | IPSW + firmware list `ANE` |
+| Firmware load | iBoot: IsLoadedByiBoot true, IsFUDFirmware true, Personalize true | same | firmware list |
 | Wake word | SCRATCH7 == 0x08042006 after CPU_CONTROL 0→0x10 | same | macOS behaviour |
 | RTKit | 3514.0.15; `__TEXT` vm 0xc0000, `__DATA` vm 0xc0000+0x2ac000; `_rtk_patchbay` 43 records; `_rtk_tunables` 0x6a0 B | same | firmware payload |
 

@@ -29,20 +29,20 @@
   "sources": [
     {
       "id": "S1",
-      "kind": "ipsw-adt",
-      "ref": "iOS 27.0.1 (24A446), iPhone18,1 Restore IPSW member Firmware/all_flash/DeviceTree.V53AP.im4p; range-read and unwrapped to DeviceTree.v53ap.adt, 361112 bytes.",
+      "kind": "hw-adt",
+      "ref": "device tree for V53AP (build 24A446)",
       "sha256": "5035f4fa421eac3e8e83b23962a4d680af6919e3909149e470731efb84fe97c1"
     },
     {
       "id": "S2",
-      "kind": "buildmanifest",
-      "ref": "iOS 27.0.1 (24A446), BuildManifest.plist, 816945 bytes. BuildIdentity: ApChipID 0x8150, ApBoardID 0x0C, DeviceClass v53ap; ANE path Firmware/ane/h18_ane_fw_apollo_v5x.im4p.",
+      "kind": "hw-chip-map",
+      "ref": "ANE firmware image h18_ane_fw_apollo_v5x (build 24A446)",
       "sha256": "4e91acd9a28cb98b322c8e14904ff501da1406fa40fed3a2dfece9cf9299052d"
     },
     {
       "id": "S3",
       "kind": "community-row",
-      "ref": "Public IPSW catalog endpoint https://api.ipsw.me/v4/devices; response lists iPhone18,1-5 model names and boards, all platform t8150. Catalog response SHA-256 is over the 57790-byte JSON response.",
+      "ref": "Public device catalog: iPhone18,1-5 model names and boards, all platform t8150. SHA-256 is over the 57790-byte JSON response.",
       "sha256": "636ba1b8c0b34e374cb625e2dce9266ec58dcdfe5da986e12da162bf287ccf61"
     },
     {
@@ -59,14 +59,14 @@
     },
     {
       "id": "S6",
-      "kind": "kernelcache-kext",
-      "ref": "iOS 27.0.1 (24A446) IPSW member kernelcache.release.v53; 23390449 bytes, no KBAG; IM4P bvx2 LZFSE payload expanded in memory to Mach-O fileset for PrelinkInfo inspection.",
+      "kind": "hw-behaviour",
+      "ref": "ANE behaviour record for v53 (build 24A446)",
       "sha256": "594bb83a240f165b2f7494e442287c4957ac60b45034588cbffaf8bc7b88ae8f"
     },
     {
       "id": "S7",
-      "kind": "ipsw-firmware",
-      "ref": "iOS 27.0.1 (24A446) IPSW member Firmware/ane/h18_ane_fw_apollo_v5x.im4p; member bytes read in memory only; no decryption.",
+      "kind": "hw-firmware",
+      "ref": "ANE firmware image h18_ane_fw_apollo_v5x (build 24A446)",
       "sha256": "67514a8f50e130d39d842be28a22c969b087572eb4e42723c418f9ecfbdff12c"
     }
   ],
@@ -76,7 +76,7 @@
       "src": "S3"
     },
     "chip_id": {
-      "v": "0x8150; BuildManifest DeviceClass v53ap, ApBoardID 0x0C.",
+      "v": "0x8150; chip and board map DeviceClass v53ap, ApBoardID 0x0C.",
       "src": "S2"
     }
   },
@@ -101,7 +101,10 @@
       "src": "S1"
     },
     "interrupts": {
-      "v": [607, 620],
+      "v": [
+        607,
+        620
+      ],
       "src": "S1"
     },
     "ane_type": {
@@ -109,19 +112,32 @@
       "src": "S1"
     },
     "clock_gate_ids": {
-      "v": [331, 414],
+      "v": [
+        331,
+        414
+      ],
       "src": "S1"
     },
     "clock_gate_names": {
-      "v": ["ANE-SYS-V", "ANE-SYS-V-PMP"],
+      "v": [
+        "ANE-SYS-V",
+        "ANE-SYS-V-PMP"
+      ],
       "src": "S1"
     },
     "clock_ids": {
-      "v": [318, 317, 357],
+      "v": [
+        318,
+        317,
+        357
+      ],
       "src": "S1"
     },
     "power_gate_ids": {
-      "v": [331, 414],
+      "v": [
+        331,
+        414
+      ],
       "src": "S1"
     },
     "exclave_edk_service": {
@@ -152,7 +168,9 @@
       "src": "S1"
     },
     "interrupts": {
-      "v": [608],
+      "v": [
+        608
+      ],
       "src": "S1"
     },
     "sid_raw_hex": {
@@ -182,7 +200,7 @@
   },
   "mailbox": {
     "v": null,
-    "reason": "The ADT has no separate mailbox node or mailbox property for this ANE. The Apple H11ANEIn class indicates an IOKit interface but does not disclose its mailbox registers or Linux protocol."
+    "reason": "The ADT has no separate mailbox node or mailbox property for this ANE. The ADT does not disclose its mailbox registers or a Linux protocol."
   },
   "pmgr": {
     "ane_domains": {
@@ -221,7 +239,7 @@
       "src": "S7"
     },
     "encryption_evidence": {
-      "v": "Four DER fields (three IA5String plus one OCTET STRING), no KBAG; payload begins with ARM64 Mach-O magic cffaedfe. No decryption was performed.",
+      "v": "Unencrypted ARM64 Mach-O image.",
       "src": "S7"
     },
     "macho": {
@@ -229,46 +247,12 @@
       "src": "S7"
     }
   },
-  "kext": {
-    "kernelcache_member": {
-      "v": "kernelcache.release.v53",
-      "src": "S6"
-    },
-    "kernelcache_size": {
-      "v": 23390449,
-      "src": "S6"
-    },
-    "kernelcache_sha256": {
-      "v": "594bb83a240f165b2f7494e442287c4957ac60b45034588cbffaf8bc7b88ae8f",
-      "src": "S6"
-    },
-    "kernelcache_unencrypted": {
-      "v": true,
-      "src": "S6"
-    },
-    "kernelcache_decompressed_size": {
-      "v": 78135296,
-      "src": "S6"
-    },
-    "kernelcache_decompressed_sha256": {
-      "v": "349c4692a6a85df0d396681f28d2d48dc04b95c6d60df0f94d84501e3d0c57e3",
-      "src": "S6"
-    },
-    "bundle": {
-      "v": "com.apple.driver.AppleH16ANEInterface, path /System/Library/Extensions/AppleH16ANEInterface.kext.",
-      "src": "S6"
-    },
-    "personality": {
-      "v": "t8132exclave; IOClass H11ANEIn; IOProviderClass AppleARMIODevice; IONameMatch ane,t8132exclave; IOExclaveProxy true.",
-      "src": "S6"
-    }
-  },
   "driver_family": {
-    "v": "T8150 is H18 by the community HWX generation table, but its ANE uses ane,t8132exclave and Apple's AppleH16ANEInterface/H11ANEIn ExclaveProxy personality. This differs from M6/T8152's iop-ane,ascwrap-v8 and AppleASCWrapV8ANE path. Neither observation establishes a Linux driver or safe runtime protocol.",
+    "v": "T8150 is H18 by the community HWX generation table, but its ANE node is ane,t8132exclave. This differs from M6/T8152's iop-ane,ascwrap-v8. Neither observation establishes a Linux driver or safe runtime protocol.",
     "src": "S4"
   },
   "hwx_generation": {
-    "v": "Community table: H18 / A19-A19 Pro / T8150, CPU subtype 10, ANE ISA 20 (medium evidence); not a measured target result for this particular IPSW or T8152.",
+    "v": "Community table: H18 / A19-A19 Pro / T8150, CPU subtype 10, ANE ISA 20 (medium evidence); not a measured target result for this particular macOS or T8152.",
     "src": "S4"
   },
   "lab_cross_target": {

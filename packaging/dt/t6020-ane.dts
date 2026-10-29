@@ -3,7 +3,7 @@
  * Overlay state: on by default.
  * ANE for T6020 (M2 Pro) board device trees.
  * The node values are the T6021 ones (t602x-ane.dtsi, same in the macOS 13.5
- * ADTs of j414s, j416s and j474s), and the 13.5 BuildManifest gives these
+ * ADTs of j414s, j416s and j474s), and the 13.5 firmware list gives these
  * boards the same ANE firmware (t602x_ane0_fw_selene_rc4x). ane_t6021 binds
  * apple,t6020-ane and runs that firmware from memory it allocates, with
  * iBoot's runtime patches replayed (ane/t6021/ane_fw_validate.h), so no

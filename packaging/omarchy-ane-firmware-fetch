@@ -4,11 +4,11 @@
 M2 family and H16 (M4) family. T6020, T6021 and T6022 (M2 Pro, Max, Ultra):
 Linux must start the ANE firmware there, and the driver accepts exactly one
 image: the selene payload from the macOS 13.5 (22G74) stub that every Omarchy
-M1/M2 install boots; its BuildManifest gives that one file to the die-0 ANE of
-all three. T8112 (M2): the 13.5 BuildManifest gives h14_ane_fw_bia_j4xx to
+M1/M2 install boots; its firmware list gives that one file to the die-0 ANE of
+all three. T8112 (M2): the 13.5 firmware list gives h14_ane_fw_bia_j4xx to
 j413, j415, j473 and j493 (receipts/2026-10-01-t8112-ane); ane_t6021 loads it
 (UNTESTED, receipts/2026-10-01-t8112-optin). T8132, T6040, T6041 (M4 family):
-the macOS 27.0 (26A428) BuildManifest gives h16_ane_fw_leto_j7x to T8132 and
+the macOS 27.0 (26A428) firmware list gives h16_ane_fw_leto_j7x to T8132 and
 t604x_ane_fw_aether_brvx to T6040/T6041 (receipts/2026-10-03-ane-h16); the
 ane_h16 module pins those payload bytes. This tool
 reads the stub version from the device tree, maps it to a pinned IPSW URL,
