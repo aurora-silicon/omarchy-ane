@@ -29,6 +29,8 @@ PATTERNS = [
     ("Apple symbol or bundle", r"\bcom\.apple\.driver\.|\bApple(H1\d|H1\dANE|ASCWrap|A7IOP|T60\d\d|ANE|PMGR|DART)[A-Za-z0-9_]*(::|\b)"),
     ("decode wording", r"(static|offline) decode|decoded (statically )?from the (macOS )?(kext|kernelcache|kernel extension)|reverse[- ]engineer(ed|ing)? (the )?(macOS|kext)"),
 ]
+# Decided 2026-10-29: the tool that installs a Mac's own firmware keeps its two download addresses, in code only.
+ALLOWED = {"packaging/omarchy-ane-firmware-fetch"}
 COMPILED = [(n, re.compile(p)) for n, p in PATTERNS]
 HERE = os.path.dirname(os.path.abspath(__file__))
 BASELINE = os.path.join(HERE, "macos_read_methods_baseline.json")
@@ -39,7 +41,7 @@ def files():
     out = subprocess.run(["git", "ls-files", "-z"], capture_output=True, check=True, cwd=os.path.dirname(HERE)).stdout.split(b"\0")
     for raw in out:
         name = raw.decode()
-        if name and not name.endswith(SKIP_SUFFIX) and name != "tools/check_no_macos_read_methods.py" and name != "tools/test_check_no_macos_read_methods.py" and not name.endswith("macos_read_methods_baseline.json"):
+        if name and not name.endswith(SKIP_SUFFIX) and name not in ALLOWED and name != "tools/check_no_macos_read_methods.py" and name != "tools/test_check_no_macos_read_methods.py" and not name.endswith("macos_read_methods_baseline.json"):
             yield name
 
 

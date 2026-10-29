@@ -66,6 +66,20 @@ for kind, samples in BANNED.items():
         with open(os.path.join(repo, "new.md"), "w") as f:
             f.write("Observed macOS behaviour: it writes 0 to the gate word first.\n")
         commit(repo)
+# the firmware fetch tool carries its download addresses by decision; no other file may
+os.makedirs(os.path.join(repo, "packaging"), exist_ok=True)
+url = '"13.5": "https://updates.cdn-apple.com/2023SummerFCS/x/UniversalMac_13.5_Restore.ipsw"\n'
+with open(os.path.join(repo, "packaging", "omarchy-ane-firmware-fetch"), "w") as f:
+    f.write(url)
+commit(repo)
+expect("the fetch tool may hold its download addresses", run(repo), 0, "ok")
+with open(os.path.join(repo, "packaging", "omarchy-ane-other-tool"), "w") as f:
+    f.write(url)
+commit(repo)
+expect("another packaging file may not", run(repo), 1, "omarchy-ane-other-tool")
+with open(os.path.join(repo, "packaging", "omarchy-ane-other-tool"), "w") as f:
+    f.write("clean\n")
+commit(repo)
 # baseline: an existing offender may keep its count, not gain
 with open(os.path.join(repo, "old.md"), "w") as f:
     f.write(BANNED["kernel address"][0] + "ordinary line\n")
@@ -104,4 +118,4 @@ if failures:
     print("FAIL")
     print("\n".join(failures))
     sys.exit(1)
-print("ok: check_no_macos_read_methods behaves on", sum(len(v) for v in BANNED.values()) + 12, "cases")
+print("ok: check_no_macos_read_methods behaves on", sum(len(v) for v in BANNED.values()) + 15, "cases")
