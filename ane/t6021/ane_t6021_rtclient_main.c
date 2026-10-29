@@ -2500,9 +2500,15 @@ static int ane_rtclient_probe_inner(struct platform_device *pdev,
 			writel(0, set + ane->soc->pwgate_off);
 			if (readl_poll_timeout(set + ane->soc->pwgate_off, gate,
 					       !(gate & ANE_PWGATE_CLOSED_MASK), 100,
-					       ANE_PWGATE_WAIT_US))
+					       ANE_PWGATE_WAIT_US)) {
+				/* The gate did not open after our write. The probe returns an
+				 * error below; latch it as dirty so that a later probe in this
+				 * boot (deferred probe, manual bind) is refused and cannot read
+				 * the word and write again. A write that worked leaves the
+				 * latch alone, so later clean failures stay retryable. */
+				*hardware_touched = true;
 				plan = ANE_PWGATE_REFUSE;
-			else
+			} else
 				dev_info(dev, "PWGATE open (word 0x%x)\n", gate);
 		}
 		if (plan == ANE_PWGATE_REFUSE) {
