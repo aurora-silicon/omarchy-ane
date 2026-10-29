@@ -15,7 +15,7 @@ The macOS numbers are CoreML `cpuAndNeuralEngine` medians of 15 reps after 3 war
 
 - It is one workload. It is not a language model decode, and it says nothing about the M2 family or the M3 family.
 - On the 16-inch M1 Max the macOS run drew 2.9 W of ANE power in `powermetrics` during the reps, with the CPU and GPU at idle levels. That is a macOS number for that chip. It is not a calibration for any Linux power reading.
-- The 16-inch Linux cell ran with the PMP loaded, which is what the clock level driver needs. Five earlier 16-inch runs on other kernels, all with the PMP loaded as well, read 289.58 to 289.69 ms. The encoder time with the PMP not loaded has not been measured, so this page does not say whether the clock level moves this program.
+- The 16-inch Linux cell ran with the PMP loaded, which is what the clock level driver needs. Five earlier 16-inch runs on other kernels, all with the PMP loaded as well, read 289.58 to 289.69 ms. With the PMP not loaded, on the next boot of the same machine, the encoder took 438.75 ms (20 calls, spread 0.04 ms, bit-exact), which is 1.52 times the loaded time. The clock level therefore moves this program, and the 289.60 ms in the table is the loaded state. With the PMP loaded the gap to macOS is the 2.11 times above; with it not loaded it is 3.19 times.
 - Why the 16-inch gap is larger than the 13-inch gap is not known. The Linux side does not log the clock or the power of the M1 Max during the encoder run, and nothing here compares the ANE program CoreML builds on the M1 Max with the one Linux runs.
 - The all-units macOS arm on the 16-inch ran once (156.65 ms); its repeat did not finish, so only the ANE arms are paired.
 
