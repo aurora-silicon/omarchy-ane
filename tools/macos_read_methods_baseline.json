@@ -1,0 +1,11 @@
+{
+ "data/ane-soc/t6040.json": 8,
+ "data/ane-soc/t6041.json": 8,
+ "data/ane-soc/t6050.json": 7,
+ "data/ane-soc/t8132.json": 7,
+ "data/ane-soc/t8140.json": 7,
+ "data/ane-soc/t8142.json": 7,
+ "data/ane-soc/t8150.json": 5,
+ "data/ane-soc/t8152.json": 8,
+ "receipts/2026-10-01-t6021-dart-kernel/logs/hw_reset.disasm.txt": 1
+}
