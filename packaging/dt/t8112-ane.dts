@@ -13,13 +13,12 @@
  *    ps_ane_sys). No apple,dma-range: ane_t6021 maps its buffers with a
  *    32-bit DMA mask and aliases the firmware at the RVBAR entry itself, as
  *    on T6021 (t602x-ane.dtsi has none either).
- *  - AppleH11ANEInterface 6.602.1 in the 13.5 kernelcache.release.mac14g:
- *    for this ANE (ane-type 0x80) it powers on 0xc008, 0xc010, 0xc018,
+ *  - macOS 13.5: for this ANE (ane-type 0x80) it powers on 0xc008, 0xc010, 0xc018,
  *    0xc020, 0xc028, 0xc030, 0xc038 in that order, powers them off in the
  *    reverse order, and names them ANE_SYS_CPU, ANE_TD, ANE_BASE and
- *    ANE_SET1..4 (DumpANERegisters). The parent links below give genpd that
+ *    ANE_SET1..4. The parent links below give genpd that
  *    order. The ADT gives a parent only for 0xc008.
- *  - mailbox@26b408000: the ASC is engine + 0x1400000 (kext ANE_Init) and an
+ *  - mailbox@26b408000: the ASC is engine + 0x1400000 and an
  *    ASC v4 mailbox sits at ASC + 0x8000, as for every T8112 ASC in
  *    t8112.dtsi (dcp_mbox 0x231c08000, sio_mbox 0x236408000) and for the
  *    T6021 ANE (0x285408000). recv-not-empty is the ADT ane interrupt 520,

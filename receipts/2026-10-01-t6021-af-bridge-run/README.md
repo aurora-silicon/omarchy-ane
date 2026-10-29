@@ -6,7 +6,7 @@ measurements stay valid. The code is at `d3b8561`.
 ## Result: rejected
 
 Under Linux, none of the 26 bridge registers that macOS programs
-(`AppleT6020PMGR::applyBridgeTunables`) holds the macOS value. With the new
+holds the macOS value. With the new
 default-off parameter `af_bridge_macos=1`, the driver writes all 26 and they
 read back as macOS writes them. The firmware still boots, and every output
 stays bit-exact. The encoder time does not change: **254.274 ms** with the

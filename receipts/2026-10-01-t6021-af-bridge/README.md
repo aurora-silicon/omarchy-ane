@@ -7,8 +7,7 @@ No register on the M2 was read or written for this receipt.
 
 ## Question
 
-macOS 27.0 (`AppleT6020PMGR::applyBridgeTunables`, the same table in the
-T6020 and T6021 kexts) programs 26 registers on the ANE0 AXI2AF bridge.
+macOS 27.0 (the same table on the T6020 and T6021) programs 26 registers on the ANE0 AXI2AF bridge.
 Each is a 32-bit read-modify-write: `reg = (reg & ~mask) | value`. m1n1
 v1.6.1 has no T6020/T6021 case in its static tunables. Do these registers
 hold the macOS values under Linux, that is `(read & mask) == value`? If
@@ -41,9 +40,8 @@ and m1n1 hv MMIO addresses are already absolute.
 1. **The bridge base is the ANE engine base, 0x284000000.** The kext
    takes it from RegMap 4 = ADT `/arm-io/pmgr` reg[38]. The Linux DT
    cannot give that index: each of the seven pmgr nodes in the live DT has
-   one or two `reg` entries. The macOS 13.5 hv trace gives the answer
-   another way ([../../tools/m2hv_replay-trace-135.txt](../../tools/m2hv_replay-trace-135.txt),
-   events 2816-2841). The guest writes exactly 26 engine-low words, at
+   one or two `reg` entries. A macOS 13.5 trace gives the answer
+   another way. The guest writes exactly 26 engine-low words, at
    0x284000000 plus exactly the 26 offsets above. It writes them right
    after `ps_ane_sys` goes T=0, T=f, AUTO (events 2813-2815) and before
    `ps_ane_cpu` goes on (event 2842). All 26 written values pass the mask

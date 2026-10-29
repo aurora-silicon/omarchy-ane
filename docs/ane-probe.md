@@ -65,7 +65,7 @@ The opt-in driver is the test for that. `verdict` is one of these values:
 | `verdict` | Meaning |
 |---|---|
 | `reachable` | an ANE node has status `okay` (or no status), a `reg` window, and `iommus` and `power-domains` targets that are all enabled, and no ownership property |
-| `owned-elsewhere` | an ANE node has the ADT property `exclave-assigned` (also with a vendor prefix, for example `apple,exclave-assigned`): the ADT assigns the engine to the exclave, an execution environment other than the OS. The macOS ANE driver binds such a node, and its strings name an exclave mode switch, so this does not prove that Linux is locked out (`receipts/2026-10-03-ane-h17`) |
+| `owned-elsewhere` | an ANE node has the ADT property `exclave-assigned` (also with a vendor prefix, for example `apple,exclave-assigned`): the ADT assigns the engine to the exclave, an execution environment other than the OS. The macOS ANE driver binds such a node, and its strings name an exclave mode switch, so this does not prove that Linux is locked out |
 | `not-exposed` | the device tree has no ANE node, or each ANE node is disabled, has no `reg`, or lacks an enabled `iommus` or `power-domains` target |
 | `unknown` | no `/proc/device-tree`, or no `apple,tNNNN` compatible at the root |
 

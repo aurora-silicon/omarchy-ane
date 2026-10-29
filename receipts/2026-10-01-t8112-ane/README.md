@@ -7,8 +7,7 @@ linux-asahi 7.1.13 device tree sources and m1n1 a878095.
 ## Result
 
 - The T8112 ANE is the same kind of ANE as the T6021 ANE: an ASC that runs
-  RTKit firmware which macOS starts. In AppleH11ANEInterface 6.602.1 (macOS
-  13.5), `ane-type` 0x80 (T8112) maps to internal type 0x70, generation 5.
+  RTKit firmware which macOS starts. In macOS 13.5, `ane-type` 0x80 (T8112) maps to internal type 0x70, generation 5.
   `ane-type` 0xa0 (T6021) maps to type 0x80, also generation 5. M1 is
   generation 4. `ANE_Init` has no type branch: RVBAR, CPU_CONTROL and the
   SCRATCH registers sit at the same engine offsets on both SoCs. The DART is
@@ -39,8 +38,6 @@ linux-asahi 7.1.13 device tree sources and m1n1 a878095.
 | ANE firmware, 13.5 | `Firmware/ane/h14_ane_fw_bia_j4xx.im4p`, 4938577 B, sha256 d0e0984c9542b671…; payload 4938552 B, **sha256 af587dfa96b1e01d2b2e0f9f776e5dbefebb44c7968b86fff7d2b19c4cbef0dd** |
 | ANE firmware, 27.0 | same member, 1654809 B, sha256 365c53b3…; payload 1654784 B, sha256 5fd9330dff31812e… (another layout: `__DATA` 0x614000, chained fixups) |
 | Control | the same extractor gives `t602x_ane0_fw_selene_rc4x` 13.5 payload a9c4b771…, the `ane_t6021` pin |
-| Kernelcache, 13.5 | `kernelcache.release.mac14g` (BuildManifest `KernelCache` of j413ap/j415ap/j473ap/j493ap), 25826504 B, sha256 538b1dc0d038e371…; LZFSE payload 96550912 B, 36de6685…; `Darwin Kernel Version 22.6.0 … RELEASE_ARM64_T8112` |
-| ANE kext | `com.apple.driver.AppleH11ANEInterface` 6.602.1 from mac14g, extracted with `ipsw kernel extract` (ipsw 3.1.724), sha256 288d60e100cd7bcd…; disassembled with capstone 5.0.7. For comparison, the same kext from 13.5 `kernelcache.release.mac14j` (RELEASE_ARM64_T6020): 22b6a8ec…, the same size, with different addresses |
 | Linux | AsahiLinux/linux tag `asahi-7.1.13-3` (94fb2334): `t8112.dtsi`, `t8112-pmgr.dtsi`. `tools/asahi-dtbs` builds `t8112-j413/j415/j473/j493.dtb` (8e6c9d4a…, 8afa377f…, a18edba7…, 5000f81c…), and these are byte-identical to the linux-asahi-7.1.13.asahi3-2 package DTBs |
 | m1n1 | AsahiLinux/m1n1 a878095: `proxyclient/m1n1/adt.py` (ADT parser), `src/kboot.c`, `src/dapf.c`, `src/tunables_static.c` |
 
@@ -49,33 +46,37 @@ Only phandles and the `function-mcc_dataset` index differ.
 
 ## Derived values
 
-"kext" means AppleH11ANEInterface 6.602.1 (13.5, mac14g). Kext addresses are
-unslid kernelcache addresses.
-
 | Value | T8112 | Source | T6021 (comparison) |
 | --- | --- | --- | --- |
 | ANE node | `/arm-io/ane`, `compatible` `ane,t8020`, `ane-type` 128 | ADT | `/arm-io/ane0`, `ane-type` 160 |
-| Engine window | 0x26a000000 + 0x2000000 | ADT `ane` reg[0]; the kext maps it first (object +0x1e8) | 0x284000000 + 0x2000000 |
-| pmgr window | 0x23b700000 + 0x18000 | ADT reg[1]; the kext writes the ANE power states through this map (object +0x200) | 0x28e080000 + 0x4034 |
-| Third window | 0x23b724000 + 0x4000 | ADT reg[2]; the kext maps it (object +0x220) only for internal type ≥ 0x70 with `anePowerManagement` bit 1 (default 3) and writes PWGATE at +0x8b8 | 0x28e08c000 + 0x4000 (PWGATE at +0x2dc) |
+| Engine window | 0x26a000000 + 0x2000000 | macOS behaviour | 0x284000000 + 0x2000000 |
+| pmgr window | 0x23b700000 + 0x18000 | macOS behaviour | 0x28e080000 + 0x4034 |
+| Third window | 0x23b724000 + 0x4000 | macOS behaviour | 0x28e08c000 + 0x4000 (PWGATE at +0x2dc) |
 | ANE interrupt | AIC 520 | ADT `ane` interrupts | 884 (the mailbox recv-not-empty line, seen live) |
-| Internal type | 0x70, generation 5 | kext `H11ANEIn::start` switch on `ane-type` | 0x80, generation 5 |
+| Internal type | 0x70, generation 5 | macOS behaviour | 0x80, generation 5 |
 | DART | `dart,t8110`, page 16 KiB; reg LLT 0x26b800000, BRD 0x26b810000, BWR 0x26b820000, DAPF 0x26b804000 (each 0x4000) | ADT `dart-ane` reg and `instance` (DART 0 LLT, DART 1 BRD, DART 2 BWR, DAPF 0 LLT) | same layout at 0x285800000 |
 | DART interrupt | AIC 521 | ADT | 885 |
 | DART stream | 0 | ADT `sid` = {0, 15}, `bypass-15`, `sid-count` 16 | same `sid` |
 | DART IOVA range | `vm-base` 0x800000000, `vm-size` 0x7ffff0000, so `apple,dma-range = <0x8 0x0 0x7 0xffff0000>` | ADT; ADT `dart-dcp` has the same two values and `t8112.dtsi` writes them as this `apple,dma-range` (dcp_dart) | `vm-base` 1 TiB |
 | DART power | gate `ANE-SYS-DART`, parent `ANE_SYS` | ADT `clock-gates`/`power-gates`, pmgr device parents | parent `ANE_SYS` |
 | `ANE_SYS` | pmgr 0x23b7004a8, parent `MMX`; linux-asahi `ps_ane_sys: power-controller@4a8` | ADT pmgr device id 136 | 0x28e080260 |
-| ANE power states | 0x23b70c000 `ANE_MPM`, 0x23b70c008 `ANE_SYS_CPU`, 0x23b70c010 `ANE_TD`, 0x23b70c018 `ANE_BASE`, 0x23b70c020/028/030/038 `ANE_SET1..4` | kext `DumpANERegisters` type-0x70 branch (the format strings name each read). ADT pmgr device `ANE_CPU` (id 209) = 0x23b70c008, flag `no_ps`, parent `ANE_SYS`; pmgr `ps-regs[13]` = 0x23b70c000; the others have no ADT entry | `ANE_CPU` 0x2e0, `ANE_SYS_MPM`/`TD`/`BASE`/`SET1..4` 0x4000..0x4030 |
-| Power-on | PWGATE 0x23b7248b8 ← 0, wait for bits 29:28 = 0; 0x23b70c008 ← 0x1000000f; then 0xf into 0xc010, 0xc018, 0xc020, 0xc028, 0xc030, 0xc038, in that order; poll until each word reads ACTUAL = TARGET = 0xf | kext `EnableANEClocksAndPower`, type 0x70, `anePowerManagement` bit 1 set (the default value 3 is set in `start`; the boot-arg `anePowerManagement` changes it). With bit 1 clear: no PWGATE write, and 0xc008 ← 0xf. `ane-type` 0x70 parts use PWGATE +0x6dc instead of +0x8b8 | reg2+0x2dc &= ~0x30000000; 0x2e0 ← 0x1000000f; then 0x4008.. |
-| Power-off | 0xc038, 0xc030, …, 0xc010, then 0xc008 ← 0x300; PWGATE ← 0x30000000, wait until set | kext `DisableANEClocksAndPower`, type 0x70 | 0x4030..0x4008, 0x2e0 ← 0; reg2+0x2dc \|= 0x30000000 |
-| ASC registers | RVBAR 0x26b050000 (engine +0x1050000); CPU_CONTROL 0x26b400044 (+0x1400044, written 0 then 0x10); CPU_STATUS +0x1400048; SCRATCH0..7 +0x1840048..+0x1840064 | kext `ANE_Init`: no type branch for RVBAR or CPU_CONTROL; the per-type SCRATCH table entry for type 0x70 equals the entry for type 0x80 | the same offsets from 0x284000000 |
-| ANE IRQ status/ack | engine +0x184c000 read, +0x1850000 written | kext `aneInterruptHandler` (no type branch) | same |
+| ANE power states | 0x23b70c000 `ANE_MPM`, 0x23b70c008 `ANE_SYS_CPU`, 0x23b70c010 `ANE_TD`, 0x23b70c018 `ANE_BASE`, 0x23b70c020/028/030/038 `ANE_SET1..4` | macOS behaviour | `ANE_CPU` 0x2e0, `ANE_SYS_MPM`/`TD`/`BASE`/`SET1..4` 0x4000..0x4030 |
+| Power-on | PWGATE 0x23b7248b8 ← 0, wait for bits 29:28 = 0; 0x23b70c008 ← 0x1000000f; then 0xf into 0xc010, 0xc018, 0xc020, 0xc028, 0xc030, 0xc038, in that order; poll until each word reads ACTUAL = TARGET = 0xf | macOS behaviour | reg2+0x2dc &= ~0x30000000; 0x2e0 ← 0x1000000f; then 0x4008.. |
+| Power-off | 0xc038, 0xc030, …, 0xc010, then 0xc008 ← 0x300; PWGATE ← 0x30000000, wait until set | macOS behaviour | 0x4030..0x4008, 0x2e0 ← 0; reg2+0x2dc \|= 0x30000000 |
+| ASC registers | RVBAR 0x26b050000 (engine +0x1050000); CPU_CONTROL 0x26b400044 (+0x1400044, written 0 then 0x10); CPU_STATUS +0x1400048; SCRATCH0..7 +0x1840048..+0x1840064 | macOS behaviour | the same offsets from 0x284000000 |
+| ANE IRQ status/ack | engine +0x184c000 read, +0x1850000 written | macOS behaviour | same |
 | Mailbox | 0x26b408000 (ASC +0x8000) | the ASC base above plus the ASC mailbox v4 layout, as on T6021 (0x285408000, `ane/t6021/ane_t6021.h`). [INFERENCE: the same ASC wrapper; no ADT node names an ANE mailbox on either SoC] | 0x285408000 |
 | DAPF ranges | 0x22b45c000+4, 0x23b70c000..0x23b70c03b, 0x23b7004a8+4; 27.0 adds 0x206468000+4 | ADT `dart-ane` `dapf-instance-0` | 0x28e084000..+0x33, 0x28e080260+4, 0x38545c000+4 |
 | Firmware | `h14_ane_fw_bia_j4xx` | BuildManifest `ANE` of j413ap, j415ap, j473ap, j493ap (13.5 and 27.0) | `t602x_ane0_fw_selene_rc4x` |
 | Firmware layout (13.5) | MH_PRELOAD, 5 load commands (0x960 bytes), flags 0x1, entry 0; `__TEXT` vm 0 size 0xb4000, file 0x4000; `__DATA` vm 0xb4000 size 0x438000, file 0xb8000, filesize 0x3e8000; `__text` 0x7627c bytes | payload header | `__TEXT` 0xc4000, `__DATA` 0x438000, same `__text` size |
 | Firmware patch records | `_rtk_patchbay` records `GKTS` (0xba688), `_COS` RTK_soc (0xba7f3), `RCOS` RTK_soc_revision (0xba7ff), `dApC` RTK_cpu_physical_address (0xba80b), `dArW` RTK_cpu_wrapper_physical_address (0xba81b): all unset in the file. `__rtk_platform_asc_tunables_block` at 0xccbb8. The TEXT header has the selene layout: patchbay vm and size at 0x422c, DATA vm at 0x4234, the DATA-base u64 that iBoot fills at 0x423c | payload LC_SYMTAB `__rtk_patch_*`; header bytes 0x4200..0x4290 | the same records, +0x101c0 (0xca848…); tunables 0xdcd78; DATA base 0x423c |
+
+Notes on the rows above (macOS behaviour on the 13.5 image; not re-checked on a running M2):
+
+- `ane-type` 0x70 parts use the PWGATE register at +0x6dc of the third window, not +0x8b8.
+- The PWGATE write and the `0xc008` ← 0xf step depend on bit 1 of the ANE power-management setting, whose default is 3. With bit 1 clear there is no PWGATE write, and `0xc008` is written with 0xf.
+- The third window is mapped only for internal type 0x70 or higher with that bit set. PWGATE in that window is at +0x8b8.
+- ADT pmgr device `ANE_CPU` (id 209) is 0x23b70c008, flag `no_ps`, parent `ANE_SYS`. pmgr `ps-regs[13]` is 0x23b70c000. The other ANE power islands have no ADT entry.
 
 The 13.5 image is the T8112 analog of the pinned T6021 image: the same IPSW,
 the same RTKit release, and the stub version that `omarchy-ane-firmware-fetch`

@@ -1,13 +1,13 @@
 # T6021: can ane_t6021 power the ANE down when idle? (offline study, 2026-10-03)
 
 Desk study only. No hardware ran. Every number below comes from a saved log or a
-static decode, and the source is named next to it. INFERENCE marks a conclusion
+measurement, and the source is named next to it. INFERENCE marks a conclusion
 that no source states.
 
 Sources: omarchy-ane `160b209`; omarchy-linux `57f8f6deaa3a` (asahi 7.1.13-3 with
 the m2-mailbox patch); the selene 13.5 (22G74) firmware and the 13.5
-AppleH11ANEInterface kext, decoded with capstone 5.0.7; saved macOS kernel logs
-and powermetrics from the lab record. No firmware or kext bytes are in this
+macOS ANE driver; saved macOS kernel logs
+and powermetrics from the lab record. No firmware or driver bytes are in this
 receipt.
 
 ## Question

@@ -304,7 +304,7 @@
     }
   },
   "driver_family": {
-    "v": "Firmware-booted ASC with RTKit and CSNE: the ane_t6021 model, as a new ascwrap-v8 variant. The H18 payloads carry the RTKit release, the 97 CSNE_CMD names and every _rtk_patchbay record tag of the 27.0 H14 Selene payload (S7). Apple matches iop-ane,ascwrap-v8 with AppleASCWrapV8ANE in AppleA7IOP-ASCWrap-v8.kext (S6), not with the H11ANEIn interface. No Linux driver binds it; the per-SoC values a variant needs, and which of them are missing, are in receipts/2026-10-03-ane-h18.",
+    "v": "Firmware-booted ASC with RTKit and CSNE: the ane_t6021 model, as a new ascwrap-v8 variant. The H18 payloads carry the RTKit release, the 97 CSNE_CMD names and every _rtk_patchbay record tag of the 27.0 H14 Selene payload (S7). Apple matches iop-ane,ascwrap-v8 with AppleASCWrapV8ANE in AppleA7IOP-ASCWrap-v8.kext (S6), not with the H11ANEIn interface. No Linux driver binds it; the per-SoC values a variant needs, and which of them are missing, are kept in private notes.",
     "src": "S4"
   },
   "aurora": {

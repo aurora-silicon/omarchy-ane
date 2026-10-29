@@ -1684,7 +1684,7 @@ static int ane_t6021_bo_alloc_attempt(void *data)
 		return -ENOMEM;
 	}
 	/* Every fw-visible DMA surface must be 16 KiB aligned and clear
-	 * of the firmware entry alias (receipt 2026-09-20-t6021-entry-alias:
+	 * of the firmware entry alias (private notes of 2026-09-20:
 	 * the same invariant ane_rtclient_legacy_alloc enforces). */
 	if (!IS_ALIGNED(bo->dma, SZ_16K) ||
 	    (c->ane->fw && !ane_t6021_fw_alias_iova_ok(c->ane->fw, bo->dma,

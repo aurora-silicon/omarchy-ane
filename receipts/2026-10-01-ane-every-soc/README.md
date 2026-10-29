@@ -91,11 +91,8 @@ die-1 node would use die-0 registers.
 
 ## How
 
-- `ipsw_ane.py fetch` reads only BuildManifest.plist and the DeviceTree
-  members of each IPSW with HTTP range requests (the reader of
-  `omarchy-ane-firmware-fetch`), and unwraps the LZFSE ADTs.
-  `ipsw_ane.py firmware` and `adt` (m1n1 `proxyclient/m1n1/adt.py` at
-  AsahiLinux/m1n1 a878095) wrote the `.txt` files here. A second fetch gave
+- The `.txt` files here were written from the device trees with the m1n1 ADT parser
+  (`proxyclient/m1n1/adt.py` at AsahiLinux/m1n1 a878095). A second fetch gave
   byte-identical ADTs and BuildManifests (25 files of 13.5, 61 of 27.0).
 - `tools/asahi-dtbs` builds the linux-asahi board DTBs from tag
   asahi-7.1.13-3 (94fb2334) with the kernel's own dtc. All 19 that the

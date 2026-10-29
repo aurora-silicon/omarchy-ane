@@ -18,7 +18,7 @@
  *      cache clean.
  *   4. W16 entry alias: the staged fw pages are ALIASED at the latched
  *      RVBAR entry on the device's default DMA domain. Placement
- *      contract, receipt receipts/2026-09-20-t6021-entry-alias.md:
+ *      contract, from the private notes of 2026-09-20:
  *        - live RVBAR read64 = 0x10000000001 (bit0 latched, entry
  *          bits 0x10000000000 = dart-ane vm base); kext law
  *          (rvbar-lifecycle 6288b0b): bit0 set => the RVBAR write
