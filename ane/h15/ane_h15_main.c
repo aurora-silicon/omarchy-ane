@@ -41,8 +41,8 @@
  *              CPU_STATUS and pops at most four mailbox messages (raw words,
  *              no reply), then stops the core again. Refused on any SoC row
  *              without a measured rvbar_expect (today t6030 and t6031), and without a live DART
- *              stream from the same scan stage 4 does (run_unmapped=1 overrides). kext_boot=1 (off by
- *              default) starts the core in the macOS kext's cold-boot order instead of the read-modify-write
+ *              stream from the same scan stage 4 does (run_unmapped=1 overrides). scratch_boot=1 (off by
+ *              default) starts the core in macOS's cold-boot order instead of the read-modify-write
  *              and reports s7_ready on the RESULT line. See the
  *              comment above ane_h15_stage_run().
  *
@@ -176,22 +176,27 @@ MODULE_PARM_DESC(run_wait_ms,
 static bool run_scratch;
 module_param(run_scratch, bool, 0444);
 MODULE_PARM_DESC(run_scratch,
-		 "Stage=run (5) only: read the eight SCRATCH words, read only, once before RUN and once after the wait, and log them. Off by default. The offsets come from the macOS kext's T6030 case and have not been read on an M3.");
+		 "Stage=run (5) only: read the eight SCRATCH words, read only, once before RUN and once after the wait, and log them. Off by default. The offsets come from macOS's T6030 case and have not been read on an M3.");
 
-static bool kext_boot;
-module_param(kext_boot, bool, 0444);
-MODULE_PARM_DESC(kext_boot,
-		 "Stage=run (5) only: start the core in the macOS kext's cold-boot order instead of the read-modify-write: write 0 to SCRATCH0..7, then SCRATCH6=1, SCRATCH7=0 (read back), then CPU_CONTROL 0 and 0x10, then poll SCRATCH7 for the ready word 0x08042006. Never RVBAR, the mailbox or the DART; SCRATCH5 only ever receives 0. Off by default. Decoded from the macOS kext, never run on an M3.");
+static bool scratch_boot;
+module_param(scratch_boot, bool, 0444);
+MODULE_PARM_DESC(scratch_boot,
+		 "Stage=run (5) only: start the core in macOS's cold-boot order instead of the read-modify-write: write 0 to SCRATCH0..7, then SCRATCH6=1, SCRATCH7=0 (read back), then CPU_CONTROL 0 and 0x10, then poll SCRATCH7 for the ready word 0x08042006. Never RVBAR, the mailbox or the DART; SCRATCH5 only ever receives 0. Off by default. Decoded from macOS, never run on an M3.");
 
-static unsigned int kb_wait_ms = 1000;
-module_param(kb_wait_ms, uint, 0444);
-MODULE_PARM_DESC(kb_wait_ms,
-		 "Stage=run kext_boot=1: how long to poll SCRATCH7 for the ready word, 10 to 5000 ms. Default 1000.");
+static unsigned int sb_wait_ms = 1000;
+module_param(sb_wait_ms, uint, 0444);
+MODULE_PARM_DESC(sb_wait_ms,
+		 "Stage=run scratch_boot=1: how long to poll SCRATCH7 for the ready word, 10 to 5000 ms. Default 1000.");
+
+/* The names these two parameters had before the rename. Accepted, not listed (permission 0), so the commands already
+ * posted to volunteers still run. Remove both lines once those runs are done. */
+module_param_named(kext_boot, scratch_boot, bool, 0);
+module_param_named(kb_wait_ms, sb_wait_ms, uint, 0);
 
 static unsigned int pwgate_t6031;
 module_param(pwgate_t6031, uint, 0444);
 MODULE_PARM_DESC(pwgate_t6031,
-		 "Stage=run (5) only, T6031 only: the macOS kext's PWGATE step before the first CPU_CONTROL write. 0 off (default, byte-identical). 1: read the word at PWGATE+0x199c, log it; if bits 1:0 are nonzero write 0 once and poll up to 5000 times (10 us each) until they read 0; if already 0 write nothing. 2: like 1 but always write 0 first (the unconditional macOS order). Other values refuse in probe. Decoded from the macOS kext, never run on an M3.");
+		 "Stage=run (5) only, T6031 only: macOS's PWGATE step before the first CPU_CONTROL write. 0 off (default, byte-identical). 1: read the word at PWGATE+0x199c, log it; if bits 1:0 are nonzero write 0 once and poll up to 5000 times (10 us each) until they read 0; if already 0 write nothing. 2: like 1 but always write 0 first (the unconditional macOS order). Other values refuse in probe. Decoded from macOS, never run on an M3.");
 
 static char *fw_path;
 module_param(fw_path, charp, 0444);
@@ -945,11 +950,11 @@ static int ane_h15_map_firmware(struct ane_h15 *ane)
  *   3. preflight, read only: CPU_STATUS (STOPPED set, RUNNING clear), CPU_CONTROL (RUN clear), RVBAR (exactly
  *      rvbar_expect) and both mailbox CTRL words (EMPTY, bit 17, set: nothing stale). Anything else refuses;
  *   4. CPU_CONTROL |= RUN (bit 4), the macOS sequence (read, OR 0x10, write);
- *      with kext_boot=1 instead the whole macOS cold-boot order runs first: 0 to SCRATCH0..7, SCRATCH6=1,
+ *      with scratch_boot=1 instead the whole macOS cold-boot order runs first: 0 to SCRATCH0..7, SCRATCH6=1,
  *      SCRATCH7=0 (read back), CPU_CONTROL 0 then 0x10, then a 1 ms poll of SCRATCH7 for the ready word
- *      0x08042006 (ane_h15_kext_boot below);
- *      with pwgate_t6031 (T6031 rows only) the kext's PWGATE gate clear runs last, after the
- *      kext SCRATCH sequence (if any) and before the first CPU_CONTROL write (ane_h15_pwgate_open below);
+ *      0x08042006 (ane_h15_scratch_boot below);
+ *      with pwgate_t6031 (T6031 rows only) macOS's PWGATE gate clear runs last, after the
+ *      macOS SCRATCH sequence (if any) and before the first CPU_CONTROL write (ane_h15_pwgate_open below);
  *   5. for run_wait_ms every 10 ms: CPU_STATUS and I2A_CTRL; if I2A is not EMPTY it pops the message
  *      (I2A_RECV0 at wrapper+0x8830, I2A_RECV1 at +0x8838, the Linux apple-mailbox v4 layout the other T6030 ASCs
  *      use) and logs the raw words, at most 4 messages. It sends NOTHING and never replies to a HELLO;
@@ -957,7 +962,7 @@ static int ane_h15_map_firmware(struct ane_h15 *ane)
  *      STOPPED. If the core does not stop the power domains stay on, the windows stay mapped and remove()
  *      refuses: reboot.
  * It writes only CPU_CONTROL (bits 4 and 5), never RVBAR, never the mailbox, never the DART; with
- * kext_boot=1 it also writes the eight SCRATCH words, each only as 0 except SCRATCH6=1 (the kext's
+ * scratch_boot=1 it also writes the eight SCRATCH words, each only as 0 except SCRATCH6=1 (macOS's
  * helper zeroes all eight before it sets the wake bit, and its SCRATCH5 config value is unknown, so
  * SCRATCH5 receives 0 only); with pwgate_t6031 on a T6031 it also writes the one PWGATE word at
  * 0x199c (nothing else in that window). The order is the one macOS uses, never run on an M3. The ANE DART
@@ -1201,7 +1206,7 @@ static int ane_h15_rtk_poll_once(struct ane_h15 *ane, struct ane_h15_rtk *k)
 /* ---- stage 7: the macOS SCRATCH handshake and the channel step ----
  *
  * The M6 module (ane/h18, PRs 195, 196, 205) found the wall this stage is for: the firmware ran RTKit, but the
- * restartable stop got no acknowledgement and the core did not stop until the channels existed. The macOS kext, after AP
+ * restartable stop got no acknowledgement and the core did not stop until the channels existed. macOS, after AP
  * power ON, allocates surfaces, publishes a 0x174 byte init block in SCRATCH0/1, writes a wake word to SCRATCH7, reads the
  * firmware's channel table back, makes the host the owner of every host-to-firmware ring slot, writes READY to SCRATCH3
  * and waits for the firmware to clear it. This stage does that, and with chan_cmds=1 sends PRINT_ENABLE and CONFIG_GET.
@@ -1265,7 +1270,7 @@ static u32 ane_h15_scr_peek(struct ane_h15 *ane, unsigned int i)
 	return readl_relaxed(ane->engine + ANE_H15_SCRATCH_OFF + 4 * i);
 }
 
-/* Stage 7 only: one poll of the firmware's IPI pending word, as the macOS kext's interrupt path does: read engine +
+/* Stage 7 only: one poll of the firmware's IPI pending word, as macOS's interrupt path does: read engine +
  * 0x184c000, and when a bit is set write the same value back to engine + 0x1850000. The pending register is never
  * written; a zero pending writes nothing; the acknowledges are capped per run. The window check uses the larger of
  * the two offsets. */
@@ -1311,8 +1316,8 @@ static int ane_h15_scr_wr(struct ane_h15 *ane, unsigned int i, u32 v)
 	return 0;
 }
 
-/* kext_boot=1 writes only: any SCRATCH word as 0 (the kext zeroes all eight first), and the
- * wake word 1 in SCRATCH6. SCRATCH5 never receives anything but 0: the kext's config word
+/* scratch_boot=1 writes only: any SCRATCH word as 0 (macOS zeroes all eight first), and the
+ * wake word 1 in SCRATCH6. SCRATCH5 never receives anything but 0: macOS's config word
  * value there is unknown. */
 static int ane_h15_scr_wr_kboot(struct ane_h15 *ane, unsigned int i, u32 v)
 {
@@ -1448,7 +1453,7 @@ static int ane_h15_cmd(struct ane_h15 *ane, struct ane_h15_ring *io, u16 op, u32
 	return -ETIMEDOUT;
 }
 
-/* The kext's step after it created its channels: the host owns every H2T slot, writes READY to SCRATCH3 and waits until the firmware clears it. With
+/* macOS's step after it created its channels: the host owns every H2T slot, writes READY to SCRATCH3 and waits until the firmware clears it. With
  * chan_cmds then PRINT_ENABLE and CONFIG_GET. Nothing is written before the whole table checked out. Returns 0 only when every requested step worked. */
 static int ane_h15_chan_step(struct ane_h15 *ane, const struct ane_h15_hs_buf *tb, u64 table)
 {
@@ -1530,7 +1535,7 @@ static int ane_h15_chan_step(struct ane_h15 *ane, const struct ane_h15_hs_buf *t
 	if (ret)
 		return ret == -EPROTO || ret == -ETIMEDOUT || ret == -EBUSY ? -EIO : ret;
 	memcpy(&v, blk + 8, 4);
-	dev_info(ane->dev, "ane_h15 chan: CONFIG_GET reply u32 at +8 = %#x (the kext reads it as the tick rate)\n", v);
+	dev_info(ane->dev, "ane_h15 chan: CONFIG_GET reply u32 at +8 = %#x (macOS reads it as the tick rate)\n", v);
 	return 0;
 }
 
@@ -1581,7 +1586,7 @@ static int ane_h15_chan_run(struct ane_h15 *ane, struct ane_h15_rtk *k)
 	if (ret)
 		return ret;			/* freed after the core stopped */
 	blk = ane->hs_pool.va;
-	/* The block layout of ane_t6021_boot.h, which the T8152 kext shares and so does this one (decode of ANE_Init). Everything not listed stays zero. */
+	/* The block layout of ane_t6021_boot.h, which macOS shares on the T8152 and so does this one. Everything not listed stays zero. */
 	ane_h15_hs_put(ane, blk, 0x00, 8, ane->map_iova[0]);		/* firmware surface */
 	ane_h15_hs_put(ane, blk, 0x08, 8, ane->hs_ipc.iova);
 	ane_h15_hs_put(ane, blk, 0x10, 8, ANE_H15_HS_CFG_SIZE);
@@ -1746,20 +1751,20 @@ static int ane_h15_pwgate_open(struct ane_h15 *ane, char *suffix, size_t sz)
 	return -ETIMEDOUT;
 }
 
-/* Stage 5, kext_boot=1: macOS's cold-boot order, never run on an M3. Every write address is logged before the write, so a hang names the
- * last address. Order: 0 to SCRATCH0..7 (the kext's helper clears all eight first), SCRATCH6=1,
+/* Stage 5, scratch_boot=1: macOS's cold-boot order, never run on an M3. Every write address is logged before the write, so a hang names the
+ * last address. Order: 0 to SCRATCH0..7 (macOS's helper clears all eight first), SCRATCH6=1,
  * SCRATCH7=0 with a read back that must read 0 (anything else stops the run before CPU_CONTROL:
  * the register ignored the write and the stale word would be mistaken for the firmware's ready
  * signal in the poll), CPU_CONTROL 0 then 0x10 (RUN, plain writes, not the
- * read-modify-write), then poll SCRATCH7 every 1 ms for the ready word 0x08042006 the kext
+ * read-modify-write), then poll SCRATCH7 every 1 ms for the ready word 0x08042006 macOS
  * waits for (it logs "No wake signal" on timeout). Never RVBAR, never the mailbox, never the
  * DART; SCRATCH5 receives 0 only. The stale-ready-word hypothesis: a SCRATCH7 that still holds
  * 0x08042006 from iBoot may send the firmware down the warm-boot path, where it idles at
  * CPU_STATUS 0x300028. Zeroing it first is what this option tests. With pwgate_t6031 on a
- * T6031 the kext's PWGATE gate clear runs after the SCRATCH sequence and before the first
+ * T6031 macOS's PWGATE gate clear runs after the SCRATCH sequence and before the first
  * CPU_CONTROL write (pwgate_t6031 above); a poll timeout returns before RUN and run_common
  * reports pwgate-not-open. */
-static int ane_h15_kext_boot(struct ane_h15 *ane, u32 ctrl, bool *s7_ready,
+static int ane_h15_scratch_boot(struct ane_h15 *ane, u32 ctrl, bool *s7_ready,
 			     char *pwres, size_t pwres_sz)
 {
 	unsigned int i, waited;
@@ -1779,15 +1784,15 @@ static int ane_h15_kext_boot(struct ane_h15 *ane, u32 ctrl, bool *s7_ready,
 		return ret;
 	if (ane_h15_scr_rd(ane, 7, &v))
 		return -EPERM;
-	dev_info(ane->dev, "ane_h15 kext_boot SCRATCH7 reads %#x after the cold-boot write\n", v);
+	dev_info(ane->dev, "ane_h15 scratch_boot SCRATCH7 reads %#x after the cold-boot write\n", v);
 	/* The clear must take: a non-zero readback means the register ignored the write and the
 	 * stale word would be mistaken for the firmware's ready signal in the poll. Stop here,
 	 * before the first CPU_CONTROL write; run_common reports clear-failed. */
 	if (v) {
-		dev_err(ane->dev, "ane_h15 kext_boot SCRATCH7 still reads %#x after the clear, not writing CPU_CONTROL\n", v);
+		dev_err(ane->dev, "ane_h15 scratch_boot SCRATCH7 still reads %#x after the clear, not writing CPU_CONTROL\n", v);
 		return -EIO;
 	}
-	/* pwgate_t6031: the kext's PWGATE gate clear, after the SCRATCH
+	/* pwgate_t6031: macOS's PWGATE gate clear, after the SCRATCH
 	 * sequence and before the first CPU_CONTROL write. A poll timeout
 	 * stops the run here, before RUN; run_common reports
 	 * pwgate-not-open and cleans up like the clear-failed path. */
@@ -1798,22 +1803,22 @@ static int ane_h15_kext_boot(struct ane_h15 *ane, u32 ctrl, bool *s7_ready,
 	}
 	/* Plain writes of 0 then RUN, not the read-modify-write. write_ctrl still checks that
 	 * only bits 4 and 5 differ: a CPU_CONTROL with any other bit set refuses before the write. */
-	ret = ane_h15_write_ctrl(ane, ctrl, 0, "kext boot: CPU_CONTROL to 0");
+	ret = ane_h15_write_ctrl(ane, ctrl, 0, "scratch boot: CPU_CONTROL to 0");
 	if (ret)
 		return ret;
-	ret = ane_h15_write_ctrl(ane, 0, ANE_H15_CPU_RUN, "kext boot: RUN");
+	ret = ane_h15_write_ctrl(ane, 0, ANE_H15_CPU_RUN, "scratch boot: RUN");
 	if (ret)
 		return ret;
-	for (waited = 0; waited < kb_wait_ms; waited++) {
+	for (waited = 0; waited < sb_wait_ms; waited++) {
 		usleep_range(1000, 1000);
 		if (ane_h15_scr_peek(ane, 7) == ANE_H15_HS_READY) {
 			*s7_ready = true;
-			dev_info(ane->dev, "ane_h15 kext_boot SCRATCH7 ready word %#x after %ums\n",
+			dev_info(ane->dev, "ane_h15 scratch_boot SCRATCH7 ready word %#x after %ums\n",
 				 ANE_H15_HS_READY, waited + 1);
 			return 0;
 		}
 	}
-	dev_err(ane->dev, "ane_h15 kext_boot SCRATCH7 ready word not seen within %ums\n", kb_wait_ms);
+	dev_err(ane->dev, "ane_h15 scratch_boot SCRATCH7 ready word not seen within %ums\n", sb_wait_ms);
 	return 0;
 }
 
@@ -1824,7 +1829,7 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 	u64 m0, m1;
 	unsigned int waited, i, msgs = 0, started_seen = 0, posted = 0, live = 0, locked = 0;
 	bool stopped = false;
-	bool kboot = stg == 5 && kext_boot;
+	bool kboot = stg == 5 && scratch_boot;
 	bool s7_ready = false;
 	char kres[128], pwres[40] = "";
 	struct ane_h15_rtk rtk = { 0 };
@@ -1838,8 +1843,8 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 		ane_h15_result(ane, stg, "REFUSED", "run_wait_ms 10 to 2000");
 		return -EINVAL;
 	}
-	if (stg == 5 && kext_boot && (kb_wait_ms < 10 || kb_wait_ms > 5000)) {
-		ane_h15_result(ane, stg, "REFUSED", "kb_wait_ms 10 to 5000");
+	if (stg == 5 && scratch_boot && (sb_wait_ms < 10 || sb_wait_ms > 5000)) {
+		ane_h15_result(ane, stg, "REFUSED", "sb_wait_ms 10 to 5000");
 		return -EINVAL;
 	}
 	if (stg >= 6 && !confirm_rtkit) {
@@ -1948,7 +1953,7 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 	if (stg == 5 && (run_scratch || kboot))
 		ane_h15_scr_dump(ane, "before RUN");
 
-	/* pwgate_t6031 (T6031 rows only): the kext's PWGATE gate clear, the
+	/* pwgate_t6031 (T6031 rows only): macOS's PWGATE gate clear, the
 	 * last action before the core is released. On a poll timeout the run
 	 * stops here: nothing written to the core, nothing pinned, claims
 	 * released (the probe failure path unmaps and detaches). */
@@ -1966,16 +1971,16 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 	ane->fw_started = true;
 	ane->fw_touched = true;
 	if (kboot)
-		ret = ane_h15_kext_boot(ane, ctrl, &s7_ready, pwres, sizeof(pwres));
+		ret = ane_h15_scratch_boot(ane, ctrl, &s7_ready, pwres, sizeof(pwres));
 	else
 		ret = ane_h15_write_ctrl(ane, ctrl, ctrl | ANE_H15_CPU_RUN, "RUN");
 	if (ret) {
 		ane->fw_started = false;
 		ane->fw_touched = false;
 		ane_h15_unmap_firmware(ane);
-		ane_h15_result(ane, stg, "FAIL", kboot ? (ret == -EIO ? "kext_boot=1 s7_ready=no clear-failed" :
+		ane_h15_result(ane, stg, "FAIL", kboot ? (ret == -EIO ? "scratch_boot=1 s7_ready=no clear-failed" :
 							   ret == -ETIMEDOUT ? "pwgate-not-open" :
-							   "kext-boot-write-refused") : "write-refused");
+							   "scratch-boot-write-refused") : "write-refused");
 		return ret;
 	}
 	if (stg >= 6) {
@@ -2032,7 +2037,7 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 		dev_emerg(ane->dev,
 			  "ane_h15 the core did not report STOPPED after RUN was cleared: power domains stay on, do NOT unload, reboot required\n");
 		if (kboot) {
-			snprintf(kres, sizeof(kres), "kext_boot=1 s7_ready=%s core-not-stopped",
+			snprintf(kres, sizeof(kres), "scratch_boot=1 s7_ready=%s core-not-stopped",
 				 s7_ready ? "yes" : "no");
 			ane_h15_result(ane, stg, "FAIL", kres);
 		} else {
@@ -2070,7 +2075,7 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 		return 0;
 	}
 	if (kboot) {
-		snprintf(kres, sizeof(kres), "kext_boot=1 s7_ready=%s %s", s7_ready ? "yes" : "no",
+		snprintf(kres, sizeof(kres), "scratch_boot=1 s7_ready=%s %s", s7_ready ? "yes" : "no",
 			 started_seen ? "core-started-and-stopped" : "core-never-left-stopped");
 		if (pwres[0])
 			snprintf(kres + strlen(kres), sizeof(kres) - strlen(kres), " %s", pwres);
@@ -2137,12 +2142,12 @@ static int ane_h15_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "unknown stage \"%s\"\n", stage);
 		return ret;
 	}
-	if (kext_boot && stage_idx != 5) {
-		dev_err(&pdev->dev, "kext_boot=1 is stage=run (5) only: refusing\n");
+	if (scratch_boot && stage_idx != 5) {
+		dev_err(&pdev->dev, "scratch_boot=1 is stage=run (5) only: refusing\n");
 		return -EINVAL;
 	}
 	/* pwgate_t6031 refusals, all before any MMIO and before any mapping,
-	 * exactly as kext_boot is refused on other stages. */
+	 * exactly as scratch_boot is refused on other stages. */
 	if (pwgate_t6031 > 2) {
 		dev_err(&pdev->dev, "REFUSED reason=pwgate_t6031 0 to 2 (got %u)\n", pwgate_t6031);
 		return -EINVAL;

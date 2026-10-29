@@ -227,8 +227,8 @@ static void reset_all(void)
 	confirm_read = false;
 	confirm_run = false;
 	run_scratch = false;
-	kext_boot = false;
-	kb_wait_ms = 1000;
+	scratch_boot = false;
+	sb_wait_ms = 1000;
 	pwgate_t6031 = 0;
 	run_unmapped = false;
 	sim_module_gets = 0;
@@ -1194,7 +1194,7 @@ void (*sim_write64_hook)(u64 pa, u64 v);
 #define DM_STOPPED 0x2u
 #define DM_EMPTY_WORD 0x20001u
 /* the t6031 row's PWGATE window (ADT ane0 reg entry 5) and the word the
- * kext clears */
+ * macOS clears */
 #define PW_PA		0x292290000ull
 #define PW_SZ		0x4000u
 #define PW_WORD_OFF	0x199cu
@@ -1202,8 +1202,8 @@ void (*sim_write64_hook)(u64 pa, u64 v);
 static const struct ane_h15_soc *dm_soc;
 static bool dm_stuck, dm_nostart;
 static int dm_msgs_left;
-static bool dm_s7_ready;	/* kext_boot model: the firmware publishes the ready word in SCRATCH7 once started */
-static bool dm_s7_stuck;	/* kext_boot model: the SCRATCH7 register ignores the clear and always reads the stale word */
+static bool dm_s7_ready;	/* scratch_boot model: the firmware publishes the ready word in SCRATCH7 once started */
+static bool dm_s7_stuck;	/* scratch_boot model: the SCRATCH7 register ignores the clear and always reads the stale word */
 static u32 dm_pw_word;		/* pwgate model: what the word at PWGATE + 0x199c reads */
 static bool dm_pw_stuck;	/* pwgate model: the register ignores the 0 write and the poll never opens */
 
@@ -1419,7 +1419,7 @@ static void pos_run(void)
 static void pos_run_scratch(void)
 {
 	const struct ane_h15_soc *s = &ane_t6030_soc;
-	const u32 off = 0x1840050u;	/* ANE_H15_SCRATCH_OFF, the kext's T6030 case */
+	const u32 off = 0x1840050u;	/* ANE_H15_SCRATCH_OFF, macOS's T6030 case */
 	unsigned int rstage;
 	char verdict[32], reason[128];
 	int i, first, k, n_touch, before_first = 0, ret;
@@ -1461,38 +1461,38 @@ static void pos_run_scratch(void)
 	ane_h15_remove(&pdev);
 }
 
-/* stage 5 with kext_boot=1: macOS's cold-boot order, never run on an M3. Zero SCRATCH0..7, SCRATCH6=1, SCRATCH7=0 with a read back, CPU_CONTROL 0
+/* stage 5 with scratch_boot=1: macOS's cold-boot order, never run on an M3. Zero SCRATCH0..7, SCRATCH6=1, SCRATCH7=0 with a read back, CPU_CONTROL 0
  * then 0x10 (RUN), then poll SCRATCH7 for 0x08042006. The RESULT line carries
- * kext_boot=1 s7_ready=<yes|no>; the verdict rules do not change. */
-static void pos_run_kext(void)
+ * scratch_boot=1 s7_ready=<yes|no>; the verdict rules do not change. */
+static void pos_run_scratch_boot(void)
 {
 	const struct ane_h15_soc *s = &ane_t6030_soc;
-	const u32 off = 0x1840050u;	/* ANE_H15_SCRATCH_OFF, the kext's T6030 case */
+	const u32 off = 0x1840050u;	/* ANE_H15_SCRATCH_OFF, macOS's T6030 case */
 	unsigned int rstage;
 	char verdict[32], reason[128], name[128];
 	int i, n, first, ret, before = fails;
 	u32 w[16];
 
-	/* KB1: kext_boot off (default) keeps the old write sequence byte for byte. */
+	/* KB1: scratch_boot off (default) keeps the old write sequence byte for byte. */
 	run_setup(s, "apple,t6030-ane", 0x0);
 	ret = probe_now();
 	n = run_writes(s, w, 16, &first);
 	chk(ret == 0 && n == 2 && w[0] == 0x10 && w[1] == 0x0 &&
 	    events_in(s->engine_pa + off, 0x20, 1) == 0,
-	    "KB1 kext_boot off: the engine writes stay [CPU_CONTROL=0x10, CPU_CONTROL=0], nothing at SCRATCH");
+	    "KB1 scratch_boot off: the engine writes stay [CPU_CONTROL=0x10, CPU_CONTROL=0], nothing at SCRATCH");
 	ane_h15_remove(&pdev);
 
-	/* KB2: kext_boot=1, the firmware publishes the ready word. SCRATCH7 starts
+	/* KB2: scratch_boot=1, the firmware publishes the ready word. SCRATCH7 starts
 	 * holding the stale ready word (the T6030 observation the hypothesis names). */
 	run_setup(s, "apple,t6030-ane", 0x0);
-	kext_boot = true;
-	kb_wait_ms = 50;
+	scratch_boot = true;
+	sb_wait_ms = 50;
 	dm_s7_ready = true;
 	eng_set(s, off + 4 * 7, 0x08042006);
 	ret = probe_now();
 	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) && rstage == 5 &&
-	    !strcmp(verdict, "PASS") && !strcmp(reason, "kext_boot=1 s7_ready=yes core-started-and-stopped"),
-	    "KB2 kext_boot=1 ready seen: PASS, reason kext_boot=1 s7_ready=yes core-started-and-stopped");
+	    !strcmp(verdict, "PASS") && !strcmp(reason, "scratch_boot=1 s7_ready=yes core-started-and-stopped"),
+	    "KB2 scratch_boot=1 ready seen: PASS, reason scratch_boot=1 s7_ready=yes core-started-and-stopped");
 	{
 		const struct { u32 off; u32 val; } want[] = {
 			{ off + 4 * 0, 0 }, { off + 4 * 1, 0 }, { off + 4 * 2, 0 }, { off + 4 * 3, 0 },
@@ -1530,47 +1530,47 @@ static void pos_run_kext(void)
 	    "KB2 the SCRATCH dump runs before RUN and after the wait without run_scratch");
 	ane_h15_remove(&pdev);
 
-	/* KB3: kext_boot=1, the ready word never comes (the firmware idles, the hypothesis). */
+	/* KB3: scratch_boot=1, the ready word never comes (the firmware idles, the hypothesis). */
 	run_setup(s, "apple,t6030-ane", 0x0);
-	kext_boot = true;
-	kb_wait_ms = 20;
+	scratch_boot = true;
+	sb_wait_ms = 20;
 	eng_set(s, off + 4 * 7, 0x08042006);
 	ret = probe_now();
 	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) && rstage == 5 &&
-	    !strcmp(verdict, "PASS") && !strcmp(reason, "kext_boot=1 s7_ready=no core-started-and-stopped"),
-	    "KB3 kext_boot=1 ready not seen: the reason carries kext_boot=1 s7_ready=no");
-	chk(log_count("not seen within 20ms") == 1, "KB3 the timeout is logged once with the kb_wait_ms value");
+	    !strcmp(verdict, "PASS") && !strcmp(reason, "scratch_boot=1 s7_ready=no core-started-and-stopped"),
+	    "KB3 scratch_boot=1 ready not seen: the reason carries scratch_boot=1 s7_ready=no");
+	chk(log_count("not seen within 20ms") == 1, "KB3 the timeout is logged once with the sb_wait_ms value");
 	n = run_writes(s, w, 16, &first);
 	chk(n == 13 && eng_events_at(s, off + 4 * 7) == 2 + 1 + 20 + 2,
 	    "KB3 SCRATCH7 is written twice, read back, polled 20 times and dumped twice");
 	ane_h15_remove(&pdev);
 
-	/* KB4: kext_boot=1 is stage 5 only; stage 2 and stage 4 refuse before any MMIO.
+	/* KB4: scratch_boot=1 is stage 5 only; stage 2 and stage 4 refuse before any MMIO.
 	 * No remove(): a probe refused this early never ran devm_kzalloc, so drvdata is NULL. */
 	run_setup(s, "apple,t6030-ane", 0x0);
 	stage = "wrapper";
-	kext_boot = true;
+	scratch_boot = true;
 	ret = probe_now();
-	chk(ret != 0 && log_count("kext_boot=1 is stage=run (5) only") == 1 &&
+	chk(ret != 0 && log_count("scratch_boot=1 is stage=run (5) only") == 1 &&
 	    events_in(0, ~0ULL, 0) == 0 && sim_n_iomap == 0,
-	    "KB4 stage=2 with kext_boot=1 refuses before any bus access");
+	    "KB4 stage=2 with scratch_boot=1 refuses before any bus access");
 	run_setup(s, "apple,t6030-ane", 0x0);
 	stage = "dart";
-	kext_boot = true;
+	scratch_boot = true;
 	ret = probe_now();
-	chk(ret != 0 && log_count("kext_boot=1 is stage=run (5) only") == 1 &&
+	chk(ret != 0 && log_count("scratch_boot=1 is stage=run (5) only") == 1 &&
 	    events_in(0, ~0ULL, 0) == 0 && sim_n_iomap == 0,
-	    "KB4 stage=4 with kext_boot=1 refuses before any bus access");
+	    "KB4 stage=4 with scratch_boot=1 refuses before any bus access");
 
-	/* KB5: kb_wait_ms outside 10 to 5000 refuses stage 5 before any write. */
+	/* KB5: sb_wait_ms outside 10 to 5000 refuses stage 5 before any write. */
 	run_setup(s, "apple,t6030-ane", 0x0);
-	kext_boot = true;
-	kb_wait_ms = 9;
+	scratch_boot = true;
+	sb_wait_ms = 9;
 	ret = probe_now();
 	chk(ret != 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) && rstage == 5 &&
-	    !strcmp(verdict, "REFUSED") && strstr(reason, "kb_wait_ms") &&
+	    !strcmp(verdict, "REFUSED") && strstr(reason, "sb_wait_ms") &&
 	    run_writes(s, w, 16, &first) == 0 && sim_bus_faults == 0,
-	    "KB5 kb_wait_ms=9 refuses with no write");
+	    "KB5 sb_wait_ms=9 refuses with no write");
 	ane_h15_remove(&pdev);
 
 	/* KB6: the SCRATCH7 clear does not take (the register ignores the write and keeps
@@ -1579,15 +1579,15 @@ static void pos_run_kext(void)
 	 * The firmware never starts and never publishes READY (dm_nostart, dm_s7_ready off),
 	 * so a s7_ready=yes here could only come from the stale word. */
 	run_setup(s, "apple,t6030-ane", 0x0);
-	kext_boot = true;
-	kb_wait_ms = 50;
+	scratch_boot = true;
+	sb_wait_ms = 50;
 	dm_nostart = true;
 	dm_s7_stuck = true;
 	eng_set(s, off + 4 * 7, 0x08042006);
 	ret = probe_now();
 	chk(ret != 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) && rstage == 5 &&
-	    !strcmp(verdict, "FAIL") && !strcmp(reason, "kext_boot=1 s7_ready=no clear-failed"),
-	    "KB6 stale S7 survives the clear: FAIL, reason kext_boot=1 s7_ready=no clear-failed");
+	    !strcmp(verdict, "FAIL") && !strcmp(reason, "scratch_boot=1 s7_ready=no clear-failed"),
+	    "KB6 stale S7 survives the clear: FAIL, reason scratch_boot=1 s7_ready=no clear-failed");
 	n = run_writes(s, w, 16, &first);
 	chk(n == 10 && events_in(s->engine_pa + s->cpu_control, 4, 1) == 0,
 	    "KB6 the ten SCRATCH writes happen and no CPU_CONTROL write at all");
@@ -1602,20 +1602,20 @@ static void pos_run_kext(void)
 	 * times out and the result stays PASS with s7_ready=no and the core never left
 	 * STOPPED (the model never starts it). */
 	run_setup(s, "apple,t6030-ane", 0x0);
-	kext_boot = true;
-	kb_wait_ms = 20;
+	scratch_boot = true;
+	sb_wait_ms = 20;
 	dm_nostart = true;
 	eng_set(s, off + 4 * 7, 0x08042006);
 	ret = probe_now();
 	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) && rstage == 5 &&
-	    !strcmp(verdict, "PASS") && !strcmp(reason, "kext_boot=1 s7_ready=no core-never-left-stopped"),
-	    "KB7 same setup, clear takes: PASS, reason kext_boot=1 s7_ready=no core-never-left-stopped");
+	    !strcmp(verdict, "PASS") && !strcmp(reason, "scratch_boot=1 s7_ready=no core-never-left-stopped"),
+	    "KB7 same setup, clear takes: PASS, reason scratch_boot=1 s7_ready=no core-never-left-stopped");
 	n = run_writes(s, w, 16, &first);
 	chk(n == 13 && eng_events_at(s, off + 4 * 7) == 2 + 1 + 20 + 2,
 	    "KB7 the boot sequence and the poll run as before the clear check");
 	ane_h15_remove(&pdev);
 
-	printf("  %-58s %s\n", "pos_run_kext summary", fails == before ? "all KB checks PASS" : "FAILURES above");
+	printf("  %-58s %s\n", "pos_run_scratch_boot summary", fails == before ? "all KB checks PASS" : "FAILURES above");
 }
 
 /* stage 5 with pwgate_t6031: macOS's PWGATE step on a T6031,
@@ -1625,8 +1625,8 @@ static void pos_run_kext(void)
  * when bits 1:0 are set and the gate then opens at the first poll; a stuck
  * register ignores the write (the negative controls); mode 2 writes 0 even
  * when the word already reads 0 (the unconditional macOS order). The step
- * must sit between the preflight (and the kext SCRATCH sequence, when
- * kext_boot=1) and the first CPU_CONTROL write. */
+ * must sit between the preflight (and the macOS SCRATCH sequence, when
+ * scratch_boot=1) and the first CPU_CONTROL write. */
 static void pos_run_pwgate(void)
 {
 	const struct ane_h15_soc *s = &ane_t6031_soc;
@@ -1741,20 +1741,20 @@ static void pos_run_pwgate(void)
 	    "PW4 the engine writes stay the normal RUN sequence");
 	ane_h15_remove(&pdev);
 
-	/* PW5 (h): kext_boot=1 with pwgate_t6031=1. The kext SCRATCH sequence
+	/* PW5 (h): scratch_boot=1 with pwgate_t6031=1. The macOS SCRATCH sequence
 	 * is unchanged; the PWGATE step sits after the last SCRATCH write and
 	 * before the first CPU_CONTROL write, the last action before RUN. */
 	run_setup(s, "apple,t6031-ane", 0x0);
-	kext_boot = true;
-	kb_wait_ms = 50;
+	scratch_boot = true;
+	sb_wait_ms = 50;
 	pwgate_t6031 = 1;
 	dm_pw_word = 0x1237u;
 	dm_nostart = true;	/* the model never starts the core: s7_ready=no */
 	ret = probe_now();
 	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
 	    rstage == 5 && !strcmp(verdict, "PASS") &&
-	    !strcmp(reason, "kext_boot=1 s7_ready=no core-never-left-stopped pwgate=opened word=0x1234"),
-	    "PW5 kext_boot=1: PASS with the pwgate suffix after the s7_ready reason");
+	    !strcmp(reason, "scratch_boot=1 s7_ready=no core-never-left-stopped pwgate=opened word=0x1234"),
+	    "PW5 scratch_boot=1: PASS with the pwgate suffix after the s7_ready reason");
 	{
 		const u32 soff = 0x1840050u;
 		int last_scr = -1, pw_ri = -1, pw_wi = -1, cc = -1, nw = 0, ok;
@@ -1782,10 +1782,10 @@ static void pos_run_pwgate(void)
 		}
 		ok = nw == 13 && last_scr >= 0 && pw_ri >= 0 && pw_wi >= 0 && cc >= 0 &&
 		     last_scr < pw_ri && pw_ri < pw_wi && pw_wi < cc;
-		chk(ok, "PW5 the order is the 13 kext writes, SCRATCH last, then PWGATE read, write, first CPU_CONTROL write");
+		chk(ok, "PW5 the order is the 13 SCRATCH-sequence writes, SCRATCH last, then PWGATE read, write, first CPU_CONTROL write");
 	}
 	chk(log_count("ane_h15 write SCRATCH") == 10 && log_count("ane_h15 write CPU_CONTROL=") == 3,
-	    "PW5 the kext SCRATCH and CPU_CONTROL write counts are unchanged");
+	    "PW5 the macOS SCRATCH and CPU_CONTROL write counts are unchanged");
 	ane_h15_remove(&pdev);
 
 	printf("  %-58s %s\n", "pos_run_pwgate summary", fails == before ? "all PW checks PASS" : "FAILURES above");
@@ -2486,7 +2486,7 @@ static void rt_write(u64 pa, u32 v)
 	if (fw_chan && pa == s->engine_pa + DOORBELL_OFF)
 		fw_doorbell(v);
 	if (fw_chan && pa == s->engine_pa + IPI_ACK_OFF && !fw_ipi_hold)
-		fw_ipi_pend &= ~v;	/* write-1-to-clear, as the kext's acknowledge */
+		fw_ipi_pend &= ~v;	/* write-1-to-clear, as macOS's acknowledge */
 	if (run && fw_chan) {
 		scr_set(s, 0, hso.s0_big ? 0x21 : 8);
 		scr_set(s, 1, 0xc440);
@@ -3035,7 +3035,7 @@ int main(int argc, char **argv)
 		pos_stage2();
 		pos_run();
 		pos_run_scratch();
-		pos_run_kext();
+		pos_run_scratch_boot();
 		pos_run_pwgate();
 		pos_dart();
 		pos_map();

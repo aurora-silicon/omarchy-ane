@@ -115,19 +115,19 @@ template is `ane/h16/`.
   and one after the wait, `ane_h15 scratch before RUN: S0=... S7=...` and `ane_h15 scratch after the wait: ...`. It writes nothing. The offsets are the ones macOS uses for the T6030
   and have not been read on an M3. On the M2 (T6021) macOS waits for `0x08042006` in SCRATCH7 after it starts the firmware (`ane/t6021/ane_t6021.h`); whether this firmware writes it is what the dump is for.
   Clearing RUN does not stop a core that has started (see the stage 5 results below), so a run with a started core still ends in `core-not-stopped` and needs a reboot.
-  `kext_boot=1` (stage 5 only, off by default) replaces the read-modify-write with the order macOS
+  `scratch_boot=1` (stage 5 only, off by default) replaces the read-modify-write with the order macOS
   boots the firmware in, as macOS does it, never run on an M3: write 0 to all eight SCRATCH words
   (macOS clears SCRATCH0 to SCRATCH7 first), then SCRATCH6=1, then SCRATCH7=0 and read it back, then
   CPU_CONTROL 0 and CPU_CONTROL 0x10 (RUN) as plain writes, then poll SCRATCH7 every 1 ms for the ready word
-  `0x08042006` for `kb_wait_ms` ms (10 to 5000, default 1000). macOS logs "No wake signal" when its wait
+  `0x08042006` for `sb_wait_ms` ms (10 to 5000, default 1000). macOS logs "No wake signal" when its wait
   times out; this module logs the first-seen time or `not seen`. The hypothesis under test (an inference,
   not measured): a SCRATCH7 that still holds the ready word from iBoot sends the firmware down the
   warm-boot path, where it idles at `0x300028`; zeroing all eight words first is what the run decides on.
   The option writes the eight SCRATCH words and CPU_CONTROL only (SCRATCH5 receives 0 only, the macOS config
   value there is unknown), never RVBAR, the mailbox or the DART. Every write address is logged before the write,
   so a hang names the last address. The read back after the SCRATCH7 clear must read 0: a non-zero value stops
-  the run before RUN with `FAIL kext_boot=1 s7_ready=no clear-failed` and means the register ignored the write.
-  The RESULT line carries `kext_boot=1 s7_ready=<yes|no>`; the verdict rules
+  the run before RUN with `FAIL scratch_boot=1 s7_ready=no clear-failed` and means the register ignored the write.
+  The RESULT line carries `scratch_boot=1 s7_ready=<yes|no>`; the verdict rules
   are unchanged. The option is refused on every stage other than 5, before any bus access.
   `pwgate_t6031` (stage 5 only, off by default, T6031 rows only) adds one more step as the
   last action before the first CPU_CONTROL write, on top of either start order. macOS behaviour on a T6031: it writes 0 to the 32 bit register at
@@ -145,7 +145,7 @@ template is `ane/h16/`.
   refuse the parameter in probe before any bus access and before any mapping, and so does
   every stage other than 5. A poll timeout stops the run before any CPU_CONTROL write with
   `FAIL pwgate-not-open`: the core never starts, nothing is pinned, and the probe releases
-  the power claims and unmaps the windows, like the `clear-failed` path of `kext_boot`. A
+  the power claims and unmaps the windows, like the `clear-failed` path of `scratch_boot`. A
   successful run adds one suffix to the RESULT reason: `pwgate=already-open`,
   `pwgate=opened word=0x...` or `pwgate=forced word=0x...`. The only new write in the whole
   module is that one 32 bit write of 0 to PWGATE + 0x199c. The offsets 0x2b8c and 0x2e0
@@ -419,16 +419,16 @@ Without them (only if stage 4 found a live stream):
     dmesg | grep ane_h15
 
 A second run to try only after a plain stage 5 run (`run_scratch=1` first, so the log
-keeps the SCRATCH words before anything clears them): the same stage with `kext_boot=1`
-adds `kb_wait_ms=...` if 1000 ms is not enough. This order writes the eight SCRATCH words
+keeps the SCRATCH words before anything clears them): the same stage with `scratch_boot=1`
+adds `sb_wait_ms=...` if 1000 ms is not enough. This order writes the eight SCRATCH words
 (each 0, then SCRATCH6=1 and SCRATCH7=0) and CPU_CONTROL only; never RVBAR, the mailbox or
 the DART. macOS behaviour, never run on an M3. The `RESULT` line ends with
-`kext_boot=1 s7_ready=<yes|no>`: send that line back either way.
+`scratch_boot=1 s7_ready=<yes|no>`: send that line back either way.
 
-    insmod ane/h15/ane_h15.ko optin=t6030 stage=5 confirm_run=1 kext_boot=1
+    insmod ane/h15/ane_h15.ko optin=t6030 stage=5 confirm_run=1 scratch_boot=1
     dmesg | grep ane_h15
 
-The next run to try on a T6031, after a plain stage 5 run and a `kext_boot=1` run: the
+The next run to try on a T6031, after a plain stage 5 run and a `scratch_boot=1` run: the
 same stage with `pwgate_t6031=1`. It adds one step as the last action before RUN: read the
 word at PWGATE + 0x199c, log it, and if bits 1:0 are set write 0 once and poll until they
 read 0. A timeout stops the run before RUN with `FAIL pwgate-not-open`, so no reboot is
@@ -462,7 +462,7 @@ back. macOS behaviour, never run on an M3.
   does not hold. Instance 0 of the four DART windows may not be enough for the firmware fetch (an
   open question on the M6).
 - Stage 5 reads CPU_CONTROL and writes it (bits 4 and 5 only). It has run on a T6030
-  and left the core idle with no message. With `kext_boot=1` it also writes the eight SCRATCH
+  and left the core idle with no message. With `scratch_boot=1` it also writes the eight SCRATCH
   words, each only as 0 except SCRATCH6=1, before the same RUN write; that
   order follows macOS behaviour and has never run on an M3. The M6
   (T8152) result it is modelled on: the same RUN
