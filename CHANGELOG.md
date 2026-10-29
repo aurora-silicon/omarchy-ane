@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- docs: `receipts/2026-10-29-h15-pwgate-decode/README.md` gives the source of every register claim behind `pwgate_t6031`: the restore image and kext hashes, the kext addresses, the device tree window list and the instructions. It also lists what the decode does not show.
 - `ane_h15` stage 5 gains `pwgate_t6031` (default 0, T6031 rows only). A static decode of
   the macOS ANE kext shows that on a T6031 it clears the gate word at offset 0x199c of the
   PWGATE window and polls bits 1:0 until they read 0 before it releases the core. That

@@ -131,7 +131,8 @@ template is `ane/h16/`.
   are unchanged. The option is refused on every stage other than 5, before any bus access.
   `pwgate_t6031` (stage 5 only, off by default, T6031 rows only) adds one more step as the
   last action before the first CPU_CONTROL write, on top of either start order. A static
-  decode of the macOS ANE kext shows that on a T6031 it writes 0 to the 32 bit register at
+  decode of the macOS ANE kext (receipt: receipts/2026-10-29-h15-pwgate-decode/README.md, with the kernelcache hash and the kext
+  addresses) shows that on a T6031 it writes 0 to the 32 bit register at
   offset 0x199c of a register window named PWGATE, then polls that word until bits 1:0 read 0
   (up to 0x1388 polls, 10 microseconds each). The window is the fifth reg entry of the ADT
   ane0 node in the macOS 27.0 device tree: physical 0x292290000, size 0x4000, next to the

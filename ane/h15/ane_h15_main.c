@@ -1687,7 +1687,7 @@ static void ane_h15_rtk_session(struct ane_h15 *ane, struct ane_h15_rtk *k)
  * hypothesis under test (inferred, never measured): a gate still closed
  * there is why the two T6031 stage 5 runs ended with CPU_STATUS 0x30002a
  * to 0x300028 and no mailbox message. Decoded from the kext, never run
- * on an M3.
+ * on an M3. Source, kernelcache hash and kext addresses: receipts/2026-10-29-h15-pwgate-decode/README.md.
  *
  * pwgate_t6031=1 reads the word first and writes 0 only when bits 1:0
  * are set; pwgate_t6031=2 always writes 0 first (the unconditional
