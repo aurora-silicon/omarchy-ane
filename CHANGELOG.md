@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- docs: the 13-inch M1 and 14-inch M2 Max rows in `docs/qwen-decode-packages.md` now say they ran with the ANE clock set by the boot. The driver has no clock control on those chips yet, so their level is unknown.
+- docs: `docs/qwen-decode-packages.md` now says that every 13-inch M1 and 14-inch M2 Max step time in it was measured with the ANE clock set by the boot. The driver has no clock control on those chips yet, so their level is unknown.
 - docs: the two 16-inch M1 Max rows at 2,048 positions in `docs/qwen-decode-packages.md` were measured on boots without the PMP firmware, so the ANE ran at clock level 0. They are relabelled, and two rows with the PMP running are added (step 0.1253 s for fp16, 8.3 percent lower for the proposed package). The third 14-inch M2 Max session on another boot reads 9.50 percent lower.
 - `ane_h15` stage 5 gains `pwgate_t6031` (default 0, T6031 rows only). A static decode of
   the macOS ANE kext shows that on a T6031 it clears the gate word at offset 0x199c of the

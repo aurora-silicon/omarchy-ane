@@ -27,6 +27,8 @@ The int8 package replaces the weights of 15 of the 17 large programs with int8 p
 
 ## Results
 
+Every 13-inch M1 and 14-inch M2 Max step time in this document was measured with the ANE clock set by the boot. The driver has no clock control on those two chips yet, so their clock level is not known. On the 16-inch M1 Max a Qwen decode step is about 1.7 times faster at the higher clock level (0.2009 s to 0.1158 s).
+
 Step time, p50 over the prompts, measured in one session on one boot with the arms interleaved:
 
 | Chip | Pair | First | Second | Change |
@@ -35,8 +37,6 @@ Step time, p50 over the prompts, measured in one session on one boot with the ar
 | 14-inch M2 Max | fp16, int8 GPTQ | 0.1579 s | 0.1243 s | 21.3 percent lower |
 | 13-inch M1 | int8 plain rounding, int8 GPTQ | 0.0678 s | 0.0680 s | equal (a different harness, so not comparable with the rows above) |
 | 14-inch M2 Max | int8 plain rounding, int8 GPTQ | 0.1234 s | 0.1232 s | equal |
-
-The 13-inch M1 and 14-inch M2 Max rows ran with the ANE clock set by the boot. The driver has no clock control on those two chips yet, so I do not know which level they ran at. On the 16-inch M1 Max the same job is 1.7 times faster at the higher clock level. I will re-measure these rows once the clock can be controlled.
 
 Quality against the fp32 reference, from the quality harness:
 
