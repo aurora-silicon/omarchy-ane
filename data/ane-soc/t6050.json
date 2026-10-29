@@ -388,7 +388,7 @@
       "v": "h17_ane0_fw_hyperion_j71y.im4p",
       "src": "B1"
     },
-    "buildmanifest": {
+    "chip_map": {
       "v": {
         "ANE": {
           "path": "Firmware/ane/h17_ane0_fw_hyperion_j71y.im4p",

@@ -195,7 +195,7 @@
     }
   },
   "ane1_j575d": {
-    "buildmanifest_chip_id": {
+    "chip_map_chip_id": {
       "v": "0x6032 (board j575dap, two ANE images: ANE and Ap,ANE1)",
       "src": "S2"
     },

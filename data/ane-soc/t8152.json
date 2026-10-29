@@ -170,15 +170,15 @@
     "reason": "No separate mailbox node appears in the T8152 macOS ADT. The host/ASC mailbox protocol and addresses are not identified by static ADT data; do not infer that the interface is integrated."
   },
   "firmware": {
-    "ane0_im4p_name": {
+    "ane0_image_name": {
       "v": "h18_ane0_fw_kirkland_j8xx.im4p",
       "src": "S2"
     },
-    "ane0_im4p_size": {
+    "ane0_image_size": {
       "v": 1572889,
       "src": "S4"
     },
-    "ane0_im4p_sha256": {
+    "ane0_image_sha256": {
       "v": "3a1bb26439c28a146546810de8096717ada8b8eb8052156330c5b16d021293b8",
       "src": "S4"
     },
@@ -190,15 +190,15 @@
       "v": "830505bc95786da1bf499ba95b6d3cf1d00a5f4e8efe8fe7dab4821014b23d72",
       "src": "S4"
     },
-    "ane1_im4p_name": {
+    "ane1_image_name": {
       "v": "h18_ane1_fw_kirkland_j8xx.im4p",
       "src": "S2"
     },
-    "ane1_im4p_size": {
+    "ane1_image_size": {
       "v": 1572889,
       "src": "S5"
     },
-    "ane1_im4p_sha256": {
+    "ane1_image_sha256": {
       "v": "1571c3da969e76fbf013d25b84c43f39eae151bf6408b8cce3b6ea53a986e988",
       "src": "S5"
     },
@@ -292,7 +292,7 @@
       ],
       "src": "S4"
     },
-    "buildmanifest_flags": {
+    "chip_map_flags": {
       "v": "For manifest key ANE (ane0): IsLoadedByiBoot=true and IsFUDFirmware=true. For Ap,ANE1 (ane1): IsLoadedByiBoot=false and IsFUDFirmware=true. For Ap,RestoreANE1: IsLoadedByiBoot=true; IsFUDFirmware absent. Three j873gap BuildIdentities repeat these entries.",
       "src": "S2"
     },
@@ -300,7 +300,7 @@
       "v": "Unique CSNE_CMD_* identifier strings: H18 ane0 97; 27.0 H14/T602x Selene 97; H18-only names []; H14-only names [].",
       "src": "S4"
     },
-    "selene_im4p_sha256": {
+    "selene_image_sha256": {
       "v": "ad9151af4e732575a67ce007d385413b3d55a8eecffc562085678daa5bac151a",
       "src": "S7"
     },
