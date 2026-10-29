@@ -155,6 +155,13 @@ template is `ane/h16/`.
   the two T6031 runs ended with CPU_STATUS `0x30002a` to `0x300028` and no mailbox message.
   Decoded from the macOS kext, never run on an M3.
 
+  Where this comes from. The register behaviour above was read from Apple's own ANE driver in a macOS
+  restore image: a static read of the shipped driver, not a run of it. This repository does not publish
+  Apple code addresses, instruction listings or extraction steps, and the full decode stays private. The
+  read does not show two things. It does not say why the driver takes this step on a T6031 and not on
+  the other rows. And the register window is named only by position: the fifth reg entry of the ADT ane0
+  node is the one the driver uses for this step, so calling it PWGATE is an inference.
+
 - `stage=6` or `stage=rtkit`: stage 5 (all of its gates, `map_fw`, `fw_seg`) plus an RTKit management
   session over the ASC mailbox, behind `confirm_run=1` AND `confirm_rtkit=1`. It is the first stage that
   writes the mailbox: the two send registers (A2I_SEND0 at wrapper + 0x8800, then A2I_SEND1 at + 0x8808, 64-bit;
