@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- `ane_h15` stage 5 gains `pwgate_t6031` (default 0, T6031 rows only). A static decode of
+  the macOS ANE kext shows that on a T6031 it clears the gate word at offset 0x199c of the
+  PWGATE window and polls bits 1:0 until they read 0 before it releases the core. That
+  window is the fifth reg entry of the ADT ane0 node in the macOS 27.0 device tree:
+  0x292290000, size 0x4000, next to the pmgr window. With `pwgate_t6031=1` the module reads
+  and logs that word as the last action before the first CPU_CONTROL write; if bits 1:0 are
+  set it writes 0 once and polls up to 5000 times, 10 microseconds apart, and an already
+  open gate is logged and left alone. `pwgate_t6031=2` always writes 0 first, the
+  unconditional macOS order. Other values, other stages, and the rows without the window
+  refuse in probe before any bus access and before any mapping. A poll timeout stops the
+  run with `FAIL pwgate-not-open` before any CPU_CONTROL write: the core never starts,
+  nothing is pinned, and every window is unmapped again. A successful run adds a
+  `pwgate=` suffix to the RESULT reason. The two T6031 stage 5 runs ended with the core at
+  CPU_STATUS `0x30002a` to `0x300028` and no mailbox message; the hypothesis under test
+  (inferred from the decode, not measured) is that a gate still closed there idles the
+  core. Decoded from the macOS kext, never run on an M3. The sim pins all of it: one write
+  at most, the T6031-only refusal, the timeout stop, and the byte-identical default.
+
 ## 0.5.5 (2026-10-28)
 
 This release is mostly M3 bring-up, and nothing about it makes the ANE run on an M3. Users of the M1 family and the M2 family get no change: the smoke program, the Qwen packages and the modules behave as in 0.5.4 with default settings. One new module parameter, `pwgate_open`, is off by default and applies only to the base M2 (T8112), where it has never run. On the M3 family (T8122, T6030, T6031, T6034) nothing is supported and no job runs. The H15 module stays an opt-in bring-up tool. What is new is evidence and tools. On a 16-inch M3 Max (T6031) stages 0, 1, 2 and 4 passed, all read only. RVBAR reads 0x10000000001 and the firmware ranges were the same on two boots. The stub firmware matches the macOS 14.6.1 ANE firmware of that board on 41 of 44 TEXT pages. On a 16-inch M3 Pro (T6030), stage 5 ran earlier and left the core idle with no mailbox message. The module gains an option that starts the core in the order macOS uses (`kext_boot=1`), a check that stops that option when the SCRATCH7 clear does not read back as zero, and an interrupt acknowledge in stage 7. None of those three has run on an M3. Still unproven on every M3: that the ANE core runs firmware, any mailbox message, any job, a boot with the T6031 DART overlay, and the smoke program, which exits 2 on every M3 chip.

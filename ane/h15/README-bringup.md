@@ -129,6 +129,31 @@ template is `ane/h16/`.
   the run before RUN with `FAIL kext_boot=1 s7_ready=no clear-failed` and means the register ignored the write.
   The RESULT line carries `kext_boot=1 s7_ready=<yes|no>`; the verdict rules
   are unchanged. The option is refused on every stage other than 5, before any bus access.
+  `pwgate_t6031` (stage 5 only, off by default, T6031 rows only) adds one more step as the
+  last action before the first CPU_CONTROL write, on top of either start order. A static
+  decode of the macOS ANE kext shows that on a T6031 it writes 0 to the 32 bit register at
+  offset 0x199c of a register window named PWGATE, then polls that word until bits 1:0 read 0
+  (up to 0x1388 polls, 10 microseconds each). The window is the fifth reg entry of the ADT
+  ane0 node in the macOS 27.0 device tree: physical 0x292290000, size 0x4000, next to the
+  pmgr window at 0x292280000. The module maps that one window with ioremap for the step and
+  unmaps it again on every exit path. No device tree entry changes. Value 1 reads the word
+  and logs it; if bits 1:0 are nonzero it writes 0 once (`ane_h15 write PWGATE=0x0
+  pa=0x...`, logged before the write like every access) and polls up to 5000 times, 10
+  microseconds apart, until bits 1:0 read 0; the final word is logged. If the word already
+  reads open, value 1 writes nothing. Value 2 always writes 0 first (the unconditional
+  macOS order) and then polls. Any other value refuses in probe with
+  `REFUSED reason=pwgate_t6031 0 to 2`. The rows without the window (t8122, t6030, t6034)
+  refuse the parameter in probe before any bus access and before any mapping, and so does
+  every stage other than 5. A poll timeout stops the run before any CPU_CONTROL write with
+  `FAIL pwgate-not-open`: the core never starts, nothing is pinned, and the probe releases
+  the power claims and unmaps the windows, like the `clear-failed` path of `kext_boot`. A
+  successful run adds one suffix to the RESULT reason: `pwgate=already-open`,
+  `pwgate=opened word=0x...` or `pwgate=forced word=0x...`. The only new write in the whole
+  module is that one 32 bit write of 0 to PWGATE + 0x199c. The offsets 0x2b8c and 0x2e0
+  appear in other chips' branches of the kext and are never touched here. The hypothesis
+  under test (inferred from the decode, never measured): a gate still closed there is why
+  the two T6031 runs ended with CPU_STATUS `0x30002a` to `0x300028` and no mailbox message.
+  Decoded from the macOS kext, never run on an M3.
 
 - `stage=6` or `stage=rtkit`: stage 5 (all of its gates, `map_fw`, `fw_seg`) plus an RTKit management
   session over the ASC mailbox, behind `confirm_run=1` AND `confirm_rtkit=1`. It is the first stage that
@@ -399,6 +424,16 @@ the DART. Decoded from the macOS kext, never run on an M3. The `RESULT` line end
     insmod ane/h15/ane_h15.ko optin=t6030 stage=5 confirm_run=1 kext_boot=1
     dmesg | grep ane_h15
 
+The next run to try on a T6031, after a plain stage 5 run and a `kext_boot=1` run: the
+same stage with `pwgate_t6031=1`. It adds one step as the last action before RUN: read the
+word at PWGATE + 0x199c, log it, and if bits 1:0 are set write 0 once and poll until they
+read 0. A timeout stops the run before RUN with `FAIL pwgate-not-open`, so no reboot is
+needed on that result. The RESULT line ends with the `pwgate=` suffix either way; send it
+back. Decoded from the macOS kext, never run on an M3.
+
+    insmod ane/h15/ane_h15.ko optin=t6031 stage=5 confirm_run=1 map_fw=1 pwgate_t6031=1
+    dmesg | grep ane_h15
+
 ## Not verified (honest limits)
 
 - Stages 0, 1, 2, 4 and 5 have run on a 16-inch M3 Pro (T6030), and stage 3 ran there and refused with
@@ -430,7 +465,9 @@ the DART. Decoded from the macOS kext, never run on an M3. The `RESULT` line end
   (T8152) result it is modelled on: the same RUN
   write cleared the STOPPED bit and left the core with no message, with the
   DART unprogrammed. A started H15 core may do the same. A "core-started-and-
-  stopped" result with no message is a valid, useful result.
+  stopped" result with no message is a valid, useful result. The `pwgate_t6031` step is
+  decoded from the same kext, has never run on an M3, and its register has never been
+  read on any M3 part: the first run answers whether the window exists there at all.
 - The mailbox message pop (wrapper + 0x8830 and + 0x8838) is the apple-mailbox
   v4 layout inferred from the other T6030 ASCs. It is read only when
   `MBOX_I2A_CTRL` loses its EMPTY bit, so a wrong layout costs nothing unless
