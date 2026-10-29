@@ -20,7 +20,7 @@ BANNED = {
     "restore-image locator": ["member kernelcache.release.mac14j in the image\n", "at hdr_off=0x62be4d7db in it\n", "section __PRELINK_INFO holds it\n",
                               "segment __TEXT_EXEC has it\n", "read BuildManifest.plist first\n",
                               "https://updates.cdn-apple.com/2023SummerFCS/x/UniversalMac_13.5_Restore.ipsw\n", "the file UniversalMac_Restore.ipsw is big\n",
-                              "the BuildManifest names the image\n", "members read by HTTP range\n"],
+                              "the BuildManifest names the image\n", "members read by HTTP range\n", "fetch it from updates.cdn-apple.com/anything\n"],
     "Apple symbol": ["com.apple.driver.Foo is loaded\n", "AppleH16ANEInterface::start is called first\n", "AppleH11ANEInterface starts it\n", "AppleASCWrapV8 owns it\n",
                      "AppleA7IOP handles it\n", "AppleT6020PMGR::apply sets it\n", "AppleANELoadBalancer picks one\n", "ApplePMGR::send does it\n",
                      "AppleDART programs it\n", "AppleH16CamIn carries IPC\n"],
@@ -118,4 +118,4 @@ if failures:
     print("FAIL")
     print("\n".join(failures))
     sys.exit(1)
-print("ok: check_no_macos_read_methods behaves on", sum(len(v) for v in BANNED.values()) + 15, "cases")
+print("ok: check_no_macos_read_methods behaves on", sum(len(v) for v in BANNED.values()) + 16, "cases")

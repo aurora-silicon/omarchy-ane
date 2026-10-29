@@ -119,7 +119,7 @@ the old value.
   too, because no ANE mailbox node exists to cite.
 - `t6031.json` called j575d a "MacBook Pro 16-inch M3 Max, dual-die". The firmware list gives
   j575dap chip id 0x6032 with two ANE images. The board leaf now cites only the ADT, and
-  `ane1_j575d.buildmanifest_chip_id` records 0x6032 from the firmware list.
+  `ane1_j575d.chip_map_chip_id` records 0x6032 from the firmware list.
 - `t8122.json` said the ADT ane node has no iommu-parent. The receipt summary does not print
   that field, so absence is not shown. The reason now says unknown.
 - `t6031.json` `ane1_j575d.reg` held five of the eight windows that A1 lists for die 1. It

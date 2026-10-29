@@ -370,7 +370,7 @@
       "v": "h17_ane_fw_theia_j73y.im4p",
       "src": "B1"
     },
-    "buildmanifest": {
+    "chip_map": {
       "v": {
         "ANE": {
           "path": "Firmware/ane/h17_ane_fw_theia_j73y.im4p",

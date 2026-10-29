@@ -10,7 +10,7 @@
   "mailbox": {"v": null, "reason": "no mailbox row in synthetic fixture"},
   "pmgr": {"v": null, "reason": "no PMGR row in synthetic fixture"},
   "firmware": {"name": {"v": "ane-fw.bin", "src": "S1"}, "encrypted": {"v": true, "src": "S1"}},
-  "kext": {"v": null, "reason": "synthetic fixture has no kext"},
+  "driver": {"v": null, "reason": "synthetic fixture has no driver record"},
   "driver_family": {"v": "unknown", "src": "S1"},
   "hwx_generation": {"v": null, "reason": "no compile attempted in synthetic fixture"},
   "state": "data-only"

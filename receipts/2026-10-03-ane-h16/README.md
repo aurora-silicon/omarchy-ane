@@ -28,7 +28,6 @@ aurora `josh/ane-driver-aurora` tree.
 | Source | Identity |
 | --- | --- |
 | macOS | 27.0 (26A428) |
-| firmware list | sha256 `22949db9…` (fetch.log) |
 | ADTs | 12 board payloads; this receipt uses j604ap `fa30e1c7…`, j614sap `7f0ace88…`, j614cap `d9125210…` (full list in artifacts/AneH16Driver logs) |
 | Firmware | `h16_ane_fw_leto_j7x.im4p` (T8132 boards) payload `4b330c5f…`; `t604x_ane_fw_aether_brvx.im4p` (T6040/T6041 boards) payload `8659271a…`; both 1,556,480 B raw Mach-O, unencrypted (no KBAG) |
 | iBoot | `iBoot.j604.RELEASE.im4p` payload `a53b4706…`, `iBoot.j614c.RELEASE.im4p` payload `538c53c4…`, `iBoot.j614s.RELEASE.im4p` payload `5d33fed4…` (mBoot-20457.1.29, LZFSE, unencrypted) |
