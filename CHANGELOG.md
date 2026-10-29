@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- docs: the two 16-inch M1 Max rows at 2,048 positions in `docs/qwen-decode-packages.md` were measured on boots without the PMP firmware, so the ANE ran at clock level 0. They are relabelled, and two rows with the PMP running are added (step 0.1253 s for fp16, 8.3 percent lower for the proposed package). The third 14-inch M2 Max session on another boot reads 9.50 percent lower.
 - `ane_h15` stage 5 gains `pwgate_t6031` (default 0, T6031 rows only). A static decode of
   the macOS ANE kext shows that on a T6031 it clears the gate word at offset 0x199c of the
   PWGATE window and polls bits 1:0 until they read 0 before it releases the core. That
