@@ -71,6 +71,13 @@ Only phandles and the `function-mcc_dataset` index differ.
 | Firmware layout (13.5) | MH_PRELOAD, 5 load commands (0x960 bytes), flags 0x1, entry 0; `__TEXT` vm 0 size 0xb4000, file 0x4000; `__DATA` vm 0xb4000 size 0x438000, file 0xb8000, filesize 0x3e8000; `__text` 0x7627c bytes | payload header | `__TEXT` 0xc4000, `__DATA` 0x438000, same `__text` size |
 | Firmware patch records | `_rtk_patchbay` records `GKTS` (0xba688), `_COS` RTK_soc (0xba7f3), `RCOS` RTK_soc_revision (0xba7ff), `dApC` RTK_cpu_physical_address (0xba80b), `dArW` RTK_cpu_wrapper_physical_address (0xba81b): all unset in the file. `__rtk_platform_asc_tunables_block` at 0xccbb8. The TEXT header has the selene layout: patchbay vm and size at 0x422c, DATA vm at 0x4234, the DATA-base u64 that iBoot fills at 0x423c | payload LC_SYMTAB `__rtk_patch_*`; header bytes 0x4200..0x4290 | the same records, +0x101c0 (0xca848…); tunables 0xdcd78; DATA base 0x423c |
 
+Notes on the rows above (macOS behaviour on the 13.5 image; not re-checked on a running M2):
+
+- `ane-type` 0x70 parts use the PWGATE register at +0x6dc of the third window, not +0x8b8.
+- The PWGATE write and the `0xc008` ← 0xf step depend on bit 1 of the ANE power-management setting, whose default is 3. With bit 1 clear there is no PWGATE write, and `0xc008` is written with 0xf.
+- The third window is mapped only for internal type 0x70 or higher with that bit set. PWGATE in that window is at +0x8b8.
+- ADT pmgr device `ANE_CPU` (id 209) is 0x23b70c008, flag `no_ps`, parent `ANE_SYS`. pmgr `ps-regs[13]` is 0x23b70c000. The other ANE power islands have no ADT entry.
+
 The 13.5 image is the T8112 analog of the pinned T6021 image: the same IPSW,
 the same RTKit release, and the stub version that `omarchy-ane-firmware-fetch`
 maps to an IPSW. The 27.0 image has another layout and would need its own pin.

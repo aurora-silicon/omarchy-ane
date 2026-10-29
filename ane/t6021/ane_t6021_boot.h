@@ -12,7 +12,7 @@
  *    DMA domain).
  *  - SCRATCH0/1 u64 split: low32 -> 0x01840048 first, high32 -> 0x0184004c, dsb st
  *    before; the writes are 32 bits wide.
- *  - 0x174 init suballocation: header[0x00] u64 = fw DVA, [0x68] u32 = 64 count,
+ *  - 0x174 init suballocation (legacy branch): header[0x00] u64 = fw DVA, [0x68] u32 = 64 count,
  *    template 256 B at [0x6C,0x16C) with template+0xC0 = 4; the conditional |=0x10
  *    is separate, unqualified, not set.
  *

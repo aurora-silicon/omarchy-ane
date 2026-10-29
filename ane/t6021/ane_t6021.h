@@ -487,7 +487,7 @@ int ane_t6021_boot_start(struct ane_t6021 *ane, int stop_after, int table_mode,
 /* ---- CSNE_CMD wire structs (host->fw on the INIT channel) ----
  *
  * The command id is a u16 at header offset +4: three firmware parse sites read it
- * there (an earlier note that said offset 0 was wrong). Wire is little-endian; this
+ * there (an earlier note put it at offset 0; that was wrong). Wire is little-endian; this
  * module is arm64-only so host order is wire order.
  *
  * The generic processor takes commands below 0x1b89 bytes and writes completion state

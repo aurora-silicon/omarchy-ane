@@ -644,7 +644,7 @@ static int ane_h15_stage_boot(struct ane_h15 *ane)
  *
  * Sources: ane/h15/run-stage-sources.md (apple-dart.c t8110 at omarchy-linux 94fb2334, data/ane-soc/t6030.json).
  *
- * The M6 (T8152) lesson (an earlier run on a Mac mini M6, boot 235c8ff4,, 2026-10-23): RUN alone gave
+ * The M6 (T8152) lesson (an earlier run on a Mac mini M6, boot 235c8ff4, 2026-10-23): RUN alone gave
  * a core that left STOPPED and posted nothing; a later board read of the ANE DART (boot 5f6aa530, PR 183 and 185) found every
  * ENABLE_STREAMS word 0, so iBoot left no stream enabled on the M6. macOS maps TEXT and DATA through the ANE DART before it
  * releases the core. This stage reads, and only reads, what the T6030 DART says, so a tester's first boot answers
