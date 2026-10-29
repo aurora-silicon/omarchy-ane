@@ -670,14 +670,14 @@ def selftest():
          "# PT[28e080100:28e080104] -> RESERVED PMGR HACK",
          "# PT[28e080104:28e0801a8] -> ASYNC. PrintTracer",
          "# [cpu0] Pass: mrs x13, ACC_CFG_EL1 = d (ACC_CFG_EL1)",
-         "TTY> AppleH11ANEInterface::start",
+         "TTY> ANE start",
          # verbatim from the 13.5 trace (/tmp/m2hv/trace-135.log lines 110-111)
          "# [cpu0] PMGR R 28e080100+0:32 = 0xf0000ff -> 0xf0000ff",
          "# [cpu0] PMGR W 28e080100+0:32 = 0xf0000ff: Dangerous write"]
     assert untraced(t) == [("pmgr", PM + 0x100, PM + 0x104, "RESERVED PMGR HACK")]
     assert reg_name(PM + 0x100)[1:] == ("ps_afi", True)
     W = lambda addr, val, w=4, dev="ane[0]", start=A, multi=False: \
-        t.extend(_line(0, 0xFFFFFE0008BC5180, "W", w, addr, dev, start, val, multi))
+        t.extend(_line(0, 0xFFFFFE0000001000, "W", w, addr, dev, start, val, multi))
     W(PM + 0x2E0, 0x1000000F, dev="pmgr[0]", start=PM)     # ps_ane_cpu
     W(PM + 0x238, 0xF, dev="pmgr[0]", start=PM)            # ps_atc2_common
     W(D0 + 0x800, 0x3, dev="dart-ane0[0]", start=D0)       # UNK_TUNABLES[0]
@@ -688,7 +688,7 @@ def selftest():
         for b in (D0, 0x285810000, 0x285820000):
             W(b + 0x80, 0x100, dev="dart", start=b)
     for v in (0, 0, 0, 1, 0x08042006):
-        t.extend(_line(1, 0xFFFFFE00095E99E4, "R", 4, A + 0x1840064,
+        t.extend(_line(1, 0xFFFFFE0000002000, "R", 4, A + 0x1840064,
                        "ane[0]", A, v))
     t.append("TTY> RTBuddy: startCPU")
     W(A + 0x1408114, 0x20001)                              # _enableOutbox

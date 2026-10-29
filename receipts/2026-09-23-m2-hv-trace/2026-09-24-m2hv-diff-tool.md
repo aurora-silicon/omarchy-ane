@@ -113,10 +113,9 @@ data" inside `Uart.readfull()`. That is a USB disconnect of the ACM. What
 the guest was doing at that moment, read from the traces: the last ~500
 lines of both logs are only ps_i2c6 (0x290280230) power cycles, 58
 transactions in run a and 53 in run b, and nothing else. The J414c ADT
-(DeviceTree.j414cap.im4p, decoded here) has exactly three children on
+(the J414c ADT) has exactly three children on
 /arm-io/i2c6: atcrt0, atcrt1, atcrt2, the Type-C retimers (i2c 0x18-0x1a).
-The macOS driver is com.apple.driver.AppleTypeCRetimer (strings: matches
-"atcrt", apCommsTransaction, enablePolling, getRetimerState). The proxy port
+macOS drives these retimers itself and matches them by the name "atcrt". The proxy port
 is left-back = hpm0 = atc-phy0 = usb-drd0 (shared dock id 0x183) and the hv
 runs over iodev USB0. m1n1's `setup_adt()` scrubs that port's dart-usb,
 atc-phy, usb-drd, acio, hpm and dp nodes, but not its retimer, so macOS
@@ -164,14 +163,14 @@ timeout) so the next death carries a last-trace-time timestamp. That
 distinguishes "guest idle while host stalls" from "host idle while guest
 runs".
 
-## Stand down: lazy ASC start (added 2026-09-24, per AneStaticStart via Main)
-AneStaticStart proved the 13.5 ANE kext starts the ASC lazily: it powers the
+## Stand down: lazy ASC start (added 2026-09-24)
+The 13.5 ANE driver starts the ASC lazily: it powers the
 coprocessor on only when a user client (aned/CoreML) opens it. Our hv guest
 is kernel-only, so no kernel-only trace can ever contain the CPU_CONTROL /
 mailbox sequence. The three 13.5 runs end at the ISP power-down walk not
 because the trace is too short, but because the start sequence is never
 issued inside that guest. This also closes the 35 s SerialException hunt on
-the trace side: there is no later kext sequence for a longer run to reach.
+the trace side: there is no later driver sequence for a longer run to reach.
 A trace that captures the start needs a 13.5 userspace in the guest that
 opens the ANE (an aned/CoreML inference workload). Recorded in
 docs/t6021-ane-bringup-findings.md (trace section, superseded next step,

@@ -15,6 +15,6 @@ fw_start_venc_gates=1 fw_alias_reserved=1, platform bind.
   ps 0x1f0003ff), SID0 translate-enabled, no DART fault ever latched,
   single type-0 I2A word, SCRATCH zero, wake unanswered.
 - Placement eliminated (staged DMA and reserved SEG0/SEGi both negative).
-- Open: what AppleA7IOP does at ANE start between RUN and HELLO that
+- Open: what macOS does at ANE start between RUN and HELLO that
   Linux does not (clocks beyond VENC, reset line, SCRATCH/boot-arg
   publication the RTBuddy path skips).
