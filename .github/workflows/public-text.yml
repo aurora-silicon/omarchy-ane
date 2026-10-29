@@ -1,0 +1,20 @@
+name: public-text
+
+# The rule of 2026-10-29: public text must not show how we read macOS, its drivers, its firmware or its restore images.
+# tools/check_no_macos_read_methods.py fails when a file gains text of that kind (addresses, symbol names, extraction or
+# decode commands, restore-image locators). It runs on every pull request and push, whatever files they touch.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  no-macos-read-methods:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: check behaves as asserted
+        run: python3 tools/test_check_no_macos_read_methods.py
+      - name: no file gains macOS read-method text
+        run: python3 tools/check_no_macos_read_methods.py
