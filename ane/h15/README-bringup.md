@@ -376,6 +376,13 @@ the dmesg back.
   releases the CPU.
 - Any external abort, SError or DART fault in dmesg: stop, keep
   the log, do not retry the same stage.
+- Do not read the firmware DATA with the CPU past the first 232 pages (3,801,088 bytes) on a T6031. On the 16-inch M3 Max
+  of one volunteer, a read of DATA page 232 through `/dev/mem` made the machine reboot, on two boots. Pages 0 to 231 read
+  fine. Why is not known. The module does not read those pages: it maps the segments through the DART and does nothing
+  else with them. A hash or dump script must stop at page 231 on that machine.
+- A read-only probe for a volunteer's machine first reads only the ranges the driver itself uses. It logs each page
+  before it reads it. If the machine goes down, the run stops and the probe is fixed before anyone tries again; a logged
+  retry is not a fix.
 - Do not add IRQs or mailbox interrupts to the overlay: which of
   the two ADT ANE lines is the mailbox recv line is not
   established, and a mismapped mailbox IRQ stormed at ~700 kHz
