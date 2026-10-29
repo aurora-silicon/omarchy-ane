@@ -45,7 +45,7 @@ typedef int64_t s64;
 #endif
 
 /* ---- capture log: every dev_* line lands here (and on stdout) ---- */
-#define SIM_LOG_SZ (1 << 16)
+#define SIM_LOG_SZ (1 << 20)
 extern char sim_log[SIM_LOG_SZ];
 extern size_t sim_log_len;
 
@@ -158,7 +158,7 @@ struct platform_driver {
 
 /* ---- fake MMIO bus with a full access record ---- */
 #define SIM_MAX_REGIONS 8
-#define SIM_MAX_EVENTS 4096
+#define SIM_MAX_EVENTS 8192
 struct sim_region {
 	u64 pa;
 	u64 size;

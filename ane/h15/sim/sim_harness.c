@@ -229,6 +229,7 @@ static void reset_all(void)
 	run_scratch = false;
 	kext_boot = false;
 	kb_wait_ms = 1000;
+	pwgate_t6031 = 0;
 	run_unmapped = false;
 	sim_module_gets = 0;
 	map_fw = false;
@@ -1192,11 +1193,19 @@ void (*sim_write64_hook)(u64 pa, u64 v);
 #define DM_RUN 0x10u
 #define DM_STOPPED 0x2u
 #define DM_EMPTY_WORD 0x20001u
+/* the t6031 row's PWGATE window (ADT ane0 reg entry 5) and the word the
+ * kext clears */
+#define PW_PA		0x292290000ull
+#define PW_SZ		0x4000u
+#define PW_WORD_OFF	0x199cu
+#define PW_WORD_PA	(PW_PA + PW_WORD_OFF)
 static const struct ane_h15_soc *dm_soc;
 static bool dm_stuck, dm_nostart;
 static int dm_msgs_left;
 static bool dm_s7_ready;	/* kext_boot model: the firmware publishes the ready word in SCRATCH7 once started */
 static bool dm_s7_stuck;	/* kext_boot model: the SCRATCH7 register ignores the clear and always reads the stale word */
+static u32 dm_pw_word;		/* pwgate model: what the word at PWGATE + 0x199c reads */
+static bool dm_pw_stuck;	/* pwgate model: the register ignores the 0 write and the poll never opens */
 
 static u32 eng_get(const struct ane_h15_soc *s, u32 off)
 {
@@ -1207,8 +1216,13 @@ static void dm_write(u64 pa, u32 v)
 {
 	const struct ane_h15_soc *s = dm_soc;
 
-	if (pa != s->engine_pa + s->cpu_control)
+	if (pa != s->engine_pa + s->cpu_control) {
+		/* pwgate model: a 0 to the gate word opens it within the
+		 * first 10 us poll, unless the register ignores the write */
+		if (s->pwgate_pa && pa == s->pwgate_pa + PW_WORD_OFF && !dm_pw_stuck)
+			dm_pw_word &= ~3u;
 		return;
+	}
 	if (v & DM_RUN) {
 		if (!dm_nostart)
 			eng_set(s, s->cpu_status, eng_get(s, s->cpu_status) & ~DM_STOPPED);
@@ -1225,6 +1239,8 @@ static u32 dm_read(u64 pa, u32 v)
 {
 	const struct ane_h15_soc *s = dm_soc;
 
+	if (s->pwgate_pa && pa == s->pwgate_pa + PW_WORD_OFF)
+		return dm_pw_word;
 	if (dm_s7_stuck && pa == s->engine_pa + 0x1840050u + 4 * 7)
 		return 0x08042006u;	/* the register ignored the clear */
 	if (pa == s->engine_pa + s->mbox + 0x838) {	/* popping a message */
@@ -1269,6 +1285,8 @@ static void run_setup(const struct ane_h15_soc *s, const char *compat, u32 ctrl)
 	dm_stuck = dm_nostart = false;
 	dm_s7_ready = false;
 	dm_s7_stuck = false;
+	dm_pw_word = 0;
+	dm_pw_stuck = false;
 	dm_msgs_left = 0;
 	sim_write_hook = dm_write;
 	sim_read_hook = dm_read;
@@ -1601,6 +1619,179 @@ static void pos_run_kext(void)
 	printf("  %-58s %s\n", "pos_run_kext summary", fails == before ? "all KB checks PASS" : "FAILURES above");
 }
 
+/* stage 5 with pwgate_t6031: the macOS kext's PWGATE step on a T6031,
+ * decoded from the kernelcache and never run on an M3. The device model
+ * holds a configurable word at PWGATE + 0x199c (the window at 0x292290000,
+ * 0x4000, the fifth reg entry of the ADT ane0 node): mode 1 writes 0 once
+ * when bits 1:0 are set and the gate then opens at the first poll; a stuck
+ * register ignores the write (the negative controls); mode 2 writes 0 even
+ * when the word already reads 0 (the unconditional macOS order). The step
+ * must sit between the preflight (and the kext SCRATCH sequence, when
+ * kext_boot=1) and the first CPU_CONTROL write. */
+static void pos_run_pwgate(void)
+{
+	const struct ane_h15_soc *s = &ane_t6031_soc;
+	unsigned int rstage;
+	char verdict[32], reason[192];
+	int i, first, n, ret, before = fails;
+	u32 w[8];
+
+	/* PW1 (a): pwgate_t6031 off (default). The run is byte-identical to
+	 * before: the two CPU_CONTROL writes, no PWGATE access of any kind,
+	 * no third window mapped, no suffix on the RESULT line. */
+	run_setup(s, "apple,t6031-ane", 0x0);
+	ret = probe_now();
+	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    rstage == 5 && !strcmp(verdict, "PASS") && !strcmp(reason, "core-started-and-stopped"),
+	    "PW1 default off: PASS core-started-and-stopped, no pwgate suffix");
+	chk(events_in(PW_PA, PW_SZ, 0) == 0 && log_count("PWGATE") == 0,
+	    "PW1 default off: no PWGATE access of any kind, none logged");
+	n = run_writes(s, w, 8, &first);
+	chk(n == 2 && w[0] == 0x10 && w[1] == 0x0,
+	    "PW1 default off: the engine writes stay [CPU_CONTROL=0x10, CPU_CONTROL=0]");
+	chk(sim_n_iomap == 2 && sim_n_iounmap == 0,
+	    "PW1 default off: only the two ADT windows mapped, none released by the run");
+	ane_h15_remove(&pdev);
+	chk(sim_n_iomap == 2 && sim_n_iounmap == 2,
+	    "PW1 default off: remove unmaps exactly the two windows");
+
+	/* PW2 (b): pwgate_t6031=1 with bits 1:0 set. Exactly one write of 0,
+	 * then the poll opens the gate, then the normal RUN sequence; the
+	 * RESULT line carries the opened suffix with the final word. */
+	run_setup(s, "apple,t6031-ane", 0x0);
+	pwgate_t6031 = 1;
+	dm_pw_word = 0x1237u;
+	ret = probe_now();
+	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    rstage == 5 && !strcmp(verdict, "PASS") &&
+	    !strcmp(reason, "core-started-and-stopped pwgate=opened word=0x1234"),
+	    "PW2 word 0x1237: PASS, reason core-started-and-stopped pwgate=opened word=0x1234");
+	{
+		int wi = -1, ri = -1, cc = -1;
+
+		for (i = 0; i < sim_n_events && i < SIM_MAX_EVENTS; i++) {
+			if (sim_events[i].pa != PW_WORD_PA)
+				continue;
+			if (sim_events[i].write) {
+				if (wi < 0)
+					wi = i;
+			} else if (ri < 0) {
+				ri = i;
+			}
+		}
+		for (i = 0; i < sim_n_events && i < SIM_MAX_EVENTS; i++)
+			if (sim_events[i].write && sim_events[i].pa == s->engine_pa + s->cpu_control) {
+				cc = i;
+				break;
+			}
+		chk(wi >= 0 && ri >= 0 && ri < wi && sim_events[wi].val == 0,
+		    "PW2 exactly one write of 0, and the first read of the word precedes it");
+		chk(cc > wi, "PW2 the PWGATE write happens before the first CPU_CONTROL write");
+	}
+	chk(events_in(PW_WORD_PA, 4, 1) == 1,
+	    "PW2 exactly one write inside the whole PWGATE window");
+	chk(log_count("ane_h15 read PWGATE pa=0x29229199c") == 2 &&
+	    log_count("ane_h15 write PWGATE=0x0 pa=0x29229199c") == 1,
+	    "PW2 the word is read before the write and once in the poll; the write is logged before it happens");
+	chk(log_count("ane_h15 pwgate open after 1 poll") == 1,
+	    "PW2 the poll opens at its first pass and the final word is logged");
+	n = run_writes(s, w, 8, &first);
+	chk(n == 2 && w[0] == 0x10 && w[1] == 0x0,
+	    "PW2 the engine writes stay the normal RUN sequence");
+	chk(sim_pm_get == 1 && sim_pm_put == 1, "PW2 power claim released");
+	ane_h15_remove(&pdev);
+	chk(sim_n_iomap == 2 && sim_n_iounmap == 3,
+	    "PW2 the PWGATE window was mapped and unmapped again (remove unmaps engine and pmgr)");
+
+	/* PW3 (c): pwgate_t6031=1, the word already 0. A read, no write, no
+	 * poll, the already-open suffix. */
+	run_setup(s, "apple,t6031-ane", 0x0);
+	pwgate_t6031 = 1;
+	dm_pw_word = 0;
+	ret = probe_now();
+	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    rstage == 5 && !strcmp(verdict, "PASS") &&
+	    !strcmp(reason, "core-started-and-stopped pwgate=already-open"),
+	    "PW3 word already 0: PASS, reason core-started-and-stopped pwgate=already-open");
+	chk(events_in(PW_WORD_PA, 4, 1) == 0 && log_count("ane_h15 write PWGATE") == 0,
+	    "PW3 nothing is written to the PWGATE window");
+	chk(log_count("ane_h15 read PWGATE pa=0x29229199c") == 1 &&
+	    log_count("pwgate already open") == 1,
+	    "PW3 one logged read and the already-open line once");
+	n = run_writes(s, w, 8, &first);
+	chk(n == 2 && w[0] == 0x10 && w[1] == 0x0,
+	    "PW3 the engine writes stay the normal RUN sequence");
+	ane_h15_remove(&pdev);
+
+	/* PW4 (d): pwgate_t6031=2 with the word 0. The unconditional macOS
+	 * order writes 0 anyway, exactly once, and the suffix names the
+	 * forced write. */
+	run_setup(s, "apple,t6031-ane", 0x0);
+	pwgate_t6031 = 2;
+	dm_pw_word = 0;
+	ret = probe_now();
+	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    rstage == 5 && !strcmp(verdict, "PASS") &&
+	    !strcmp(reason, "core-started-and-stopped pwgate=forced word=0x0"),
+	    "PW4 mode 2 word 0: PASS, reason core-started-and-stopped pwgate=forced word=0x0");
+	chk(events_in(PW_WORD_PA, 4, 1) == 1 &&
+	    log_count("ane_h15 write PWGATE=0x0 pa=0x29229199c") == 1,
+	    "PW4 exactly one forced write with its log line");
+	n = run_writes(s, w, 8, &first);
+	chk(n == 2 && w[0] == 0x10 && w[1] == 0x0,
+	    "PW4 the engine writes stay the normal RUN sequence");
+	ane_h15_remove(&pdev);
+
+	/* PW5 (h): kext_boot=1 with pwgate_t6031=1. The kext SCRATCH sequence
+	 * is unchanged; the PWGATE step sits after the last SCRATCH write and
+	 * before the first CPU_CONTROL write, the last action before RUN. */
+	run_setup(s, "apple,t6031-ane", 0x0);
+	kext_boot = true;
+	kb_wait_ms = 50;
+	pwgate_t6031 = 1;
+	dm_pw_word = 0x1237u;
+	dm_nostart = true;	/* the model never starts the core: s7_ready=no */
+	ret = probe_now();
+	chk(ret == 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    rstage == 5 && !strcmp(verdict, "PASS") &&
+	    !strcmp(reason, "kext_boot=1 s7_ready=no core-never-left-stopped pwgate=opened word=0x1234"),
+	    "PW5 kext_boot=1: PASS with the pwgate suffix after the s7_ready reason");
+	{
+		const u32 soff = 0x1840050u;
+		int last_scr = -1, pw_ri = -1, pw_wi = -1, cc = -1, nw = 0, ok;
+
+		for (i = 0; i < sim_n_events && i < SIM_MAX_EVENTS; i++) {
+			u64 pa = sim_events[i].pa;
+
+			if (!sim_events[i].write) {
+				if (pa == PW_WORD_PA && pw_ri < 0)
+					pw_ri = i;
+				continue;
+			}
+			if (pa == PW_WORD_PA) {
+				if (pw_wi < 0)
+					pw_wi = i;
+				continue;
+			}
+			if (pa < s->engine_pa || pa >= s->engine_pa + s->engine_size)
+				continue;
+			nw++;
+			if (pa >= s->engine_pa + soff && pa < s->engine_pa + soff + 0x20)
+				last_scr = i;
+			else if (pa == s->engine_pa + s->cpu_control && cc < 0)
+				cc = i;
+		}
+		ok = nw == 13 && last_scr >= 0 && pw_ri >= 0 && pw_wi >= 0 && cc >= 0 &&
+		     last_scr < pw_ri && pw_ri < pw_wi && pw_wi < cc;
+		chk(ok, "PW5 the order is the 13 kext writes, SCRATCH last, then PWGATE read, write, first CPU_CONTROL write");
+	}
+	chk(log_count("ane_h15 write SCRATCH") == 10 && log_count("ane_h15 write CPU_CONTROL=") == 3,
+	    "PW5 the kext SCRATCH and CPU_CONTROL write counts are unchanged");
+	ane_h15_remove(&pdev);
+
+	printf("  %-58s %s\n", "pos_run_pwgate summary", fails == before ? "all PW checks PASS" : "FAILURES above");
+}
+
 static int neg_run(void)
 {
 	const struct ane_h15_soc *s = &ane_t6030_soc;
@@ -1699,6 +1890,63 @@ static int neg_run(void)
 	ane_h15_remove(&pdev);
 	chk(sim_n_iounmap == before && sim_pm_put == 0 && log_count("remove with the firmware released") == 1,
 	    "N13 stuck core: remove() refuses");
+
+	/* PW6 (e): pwgate_t6031=1 and the register ignores the 0 write: the
+	 * poll runs its 5000 passes, the run stops BEFORE any CPU_CONTROL
+	 * write, nothing is pinned, every window is unmapped. */
+	{
+		const struct ane_h15_soc *t = &ane_t6031_soc;
+
+		run_setup(t, "apple,t6031-ane", 0x0);
+		pwgate_t6031 = 1;
+		dm_pw_word = 0x1237u;
+		dm_pw_stuck = true;
+		dm_nostart = true;	/* the firmware never runs and never publishes READY */
+		ret = probe_now();
+		chk(ret != 0 && parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+		    rstage == 5 && !strcmp(verdict, "FAIL") && !strcmp(reason, "pwgate-not-open"),
+		    "PW6 stuck gate: FAIL, reason pwgate-not-open");
+		chk(run_writes(t, w, 16, &first) == 0 && log_count("ane_h15 write CPU_CONTROL") == 0,
+		    "PW6 stuck gate: ZERO CPU_CONTROL writes, the core never started");
+		chk(sim_module_gets == 0 && sim_pm_get == sim_pm_put &&
+		    sim_n_iomap == 2 && sim_n_iounmap == 3 &&
+		    log_count("do NOT unload") == 0 && log_count("clear RUN") == 0,
+		    "PW6 stuck gate: nothing pinned, claims released, all three windows unmapped");
+		chk(log_count("bits 1:0 still set after 5000 polls") == 1,
+		    "PW6 stuck gate: the timeout is logged once with the poll count and the final word");
+		ane_h15_remove(&pdev);
+
+		/* PW7 (f): pwgate_t6031=3 refuses in probe before any bus
+		 * access and before any mapping. */
+		run_setup(t, "apple,t6031-ane", 0x0);
+		pwgate_t6031 = 3;
+		ret = probe_now();
+		chk(ret != 0 && log_count("REFUSED reason=pwgate_t6031 0 to 2") == 1 &&
+		    events_in(0, ~0ULL, 0) == 0 && sim_n_iomap == 0 && sim_bus_faults == 0,
+		    "PW7 pwgate_t6031=3: refused before any bus access, no window mapped");
+
+		/* PW8 (g): the window is a T6031 row property. t8122, t6030
+		 * and t6034 refuse the parameter in probe before any MMIO and
+		 * any mapping. */
+		{
+			static const struct { const struct ane_h15_soc *soc; const char *compat; } rows[] = {
+				{ &ane_t8122_soc, "apple,t8122-ane" },
+				{ &ane_t6030_soc, "apple,t6030-ane" },
+				{ &ane_t6034_soc, "apple,t6034-ane" },
+			};
+
+			for (i = 0; i < (int)ARRAY_SIZE(rows); i++) {
+				run_setup(rows[i].soc, rows[i].compat, 0);
+				pwgate_t6031 = 1;
+				ret = probe_now();
+				snprintf(name, sizeof(name),
+					 "PW8 %s pwgate_t6031=1: refused before any MMIO and any mapping",
+					 rows[i].soc->name);
+				chk(ret != 0 && log_count("pwgate_t6031") >= 1 &&
+				    events_in(0, ~0ULL, 0) == 0 && sim_n_iomap == 0, name);
+			}
+		}
+	}
 	return fails;
 }
 
@@ -2789,6 +3037,7 @@ int main(int argc, char **argv)
 		pos_run();
 		pos_run_scratch();
 		pos_run_kext();
+		pos_run_pwgate();
 		pos_dart();
 		pos_map();
 		pos_rtkit();

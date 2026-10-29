@@ -189,6 +189,13 @@ const struct ane_h15_soc ane_t6031_soc = {
 	.engine_size = 0x2000000,
 	.pmgr_pa     = 0x292280000ull,
 	.pmgr_size   = 0x10000,
+	/* PWGATE: ADT ane0 reg entry 5 of the macOS 27.0 device tree for
+	 * the J516C (0x292290000, 0x4000, next to the pmgr window). The
+	 * kext function EnableCPUClocksAndPower clears its 0x199c word and
+	 * polls it before it releases the core. Never run on an M3; the
+	 * step is opt-in per run (pwgate_t6031). */
+	.pwgate_pa   = 0x292290000ull,
+	.pwgate_size = 0x4000,
 	.ps_off      = ane_h15_ps_6031,
 	.words       = ane_h15_words_6031,
 	.fw          = &ane_fw_t6031,
