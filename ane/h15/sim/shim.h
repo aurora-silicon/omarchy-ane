@@ -149,6 +149,7 @@ struct platform_driver {
 };
 
 #define module_param(n, t, p)
+#define module_param_named(n, v, t, p)
 #define MODULE_PARM_DESC(n, d)
 #define MODULE_AUTHOR(x)
 #define MODULE_LICENSE(x)
