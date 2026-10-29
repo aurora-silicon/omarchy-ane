@@ -13,8 +13,7 @@
  *
  * T6021-only: refuses to load unless an apple,t6021-ane node is present
  * in the device tree, so M1 (t8103) and M1 Max (t6001) paths are
- * untouched. Default order is the kext's parents-first sequence that
- * the 13.5 AppleH11ANEInterface EnableANEClocksAndPower uses on the
+ * untouched. Default order is macOS's parents-first sequence on the
  * pre-ANE_Init path: VENC_SYS, VENC_DMA, then the PIPE4/PIPE5/ME0
  * leaves. The firmware runs code only with this leg up (DATA footprint
  * in receipts/2026-09-24-t6021-pwgate); without it the ASC parks before

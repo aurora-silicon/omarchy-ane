@@ -1,4 +1,4 @@
-# Procedure-section, run-time dispatch, tdprop / TD-chain, and the multi-task recipe — fw135 static decode (2026-09-30)
+# Procedure-section, run-time dispatch, tdprop / TD-chain, and the multi-task recipe (2026-09-30)
 
 Source: `/tmp/fw135.macho` (sha256 `a9c4b771…8427bc`, macOS 13.5 (22G74), VA = file
 off − 0x4000 for `__TEXT`). Disassembler: `/tmp/fw135-dis.py <lo>-<hi>`.
@@ -300,8 +300,7 @@ block entry:
 
 ### PROCEDURE_CALL wire format (already established in `kext135-command-sequence.md`)
 
-- kext-side builder: `ANE_ProgramSendCachedRequest_gated` at kext
-  `0xfffffe0009508300`, len `0x268` (cached variant), id `0x20a` (the kext uses
+- macOS's cached request: len `0x268` (cached variant), id `0x20a` (macOS uses
   `0x20a` for the trigger path that fires pushToHWDirect; `0x209` and `0x20b` /
   `0x20d` are NO-OPs in fw135 per the coarse table at fw 0x2a658 — see
   `hwready-gate.md` §4).
@@ -312,8 +311,8 @@ block entry:
 
 **Not found in the present fleet worktrees.** Searches:
 
-- `tools/m2hv_replay-trace-135.txt` in every worktree is a register-write diff
-  (mmio only); it does not include mailbox H2T/T2H command payloads.
+- The 13.5 trace kept in private notes is a register-write diff (mmio only); it does not include
+  mailbox H2T/T2H command payloads.
 - `receipts/2026-09-24-m2-macos-denominators/` contains Parakeet transcript
   diffs (encoder/decoder output), not ANE command traces.
 - The corpus of macOS-emitted ANEC sections (subagent AppleGroundTruth, prior

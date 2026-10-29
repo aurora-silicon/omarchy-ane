@@ -1461,8 +1461,7 @@ static void pos_run_scratch(void)
 	ane_h15_remove(&pdev);
 }
 
-/* stage 5 with kext_boot=1: the macOS kext's cold-boot order, decoded from the kernelcache and
- * never run on an M3. Zero SCRATCH0..7, SCRATCH6=1, SCRATCH7=0 with a read back, CPU_CONTROL 0
+/* stage 5 with kext_boot=1: macOS's cold-boot order, never run on an M3. Zero SCRATCH0..7, SCRATCH6=1, SCRATCH7=0 with a read back, CPU_CONTROL 0
  * then 0x10 (RUN), then poll SCRATCH7 for 0x08042006. The RESULT line carries
  * kext_boot=1 s7_ready=<yes|no>; the verdict rules do not change. */
 static void pos_run_kext(void)
@@ -1619,8 +1618,8 @@ static void pos_run_kext(void)
 	printf("  %-58s %s\n", "pos_run_kext summary", fails == before ? "all KB checks PASS" : "FAILURES above");
 }
 
-/* stage 5 with pwgate_t6031: the macOS kext's PWGATE step on a T6031,
- * decoded from the kernelcache and never run on an M3. The device model
+/* stage 5 with pwgate_t6031: macOS's PWGATE step on a T6031,
+ * never run on an M3. The device model
  * holds a configurable word at PWGATE + 0x199c (the window at 0x292290000,
  * 0x4000, the fifth reg entry of the ADT ane0 node): mode 1 writes 0 once
  * when bits 1:0 are set and the gate then opens at the first poll; a stuck

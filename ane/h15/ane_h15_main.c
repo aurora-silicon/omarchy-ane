@@ -644,7 +644,7 @@ static int ane_h15_stage_boot(struct ane_h15 *ane)
  *
  * Sources: ane/h15/run-stage-sources.md (apple-dart.c t8110 at omarchy-linux 94fb2334, data/ane-soc/t6030.json).
  *
- * The M6 (T8152) lesson (an earlier run on a Mac mini M6, boot 235c8ff4, and an offline decode of the Gen3 DART, 2026-10-23): RUN alone gave
+ * The M6 (T8152) lesson (an earlier run on a Mac mini M6, boot 235c8ff4,, 2026-10-23): RUN alone gave
  * a core that left STOPPED and posted nothing; a later board read of the ANE DART (boot 5f6aa530, PR 183 and 185) found every
  * ENABLE_STREAMS word 0, so iBoot left no stream enabled on the M6. macOS maps TEXT and DATA through the ANE DART before it
  * releases the core. This stage reads, and only reads, what the T6030 DART says, so a tester's first boot answers
@@ -944,7 +944,7 @@ static int ane_h15_map_firmware(struct ane_h15 *ane)
  *      then runs the stage 4 DART scan and refuses if no stream is live (run_unmapped=1 overrides);
  *   3. preflight, read only: CPU_STATUS (STOPPED set, RUNNING clear), CPU_CONTROL (RUN clear), RVBAR (exactly
  *      rvbar_expect) and both mailbox CTRL words (EMPTY, bit 17, set: nothing stale). Anything else refuses;
- *   4. CPU_CONTROL |= RUN (bit 4), the macOS AppleASCWrapV8::_runCPU(true) sequence (read, OR 0x10, write);
+ *   4. CPU_CONTROL |= RUN (bit 4), the macOS sequence (read, OR 0x10, write);
  *      with kext_boot=1 instead the whole macOS cold-boot order runs first: 0 to SCRATCH0..7, SCRATCH6=1,
  *      SCRATCH7=0 (read back), CPU_CONTROL 0 then 0x10, then a 1 ms poll of SCRATCH7 for the ready word
  *      0x08042006 (ane_h15_kext_boot below);
@@ -960,7 +960,7 @@ static int ane_h15_map_firmware(struct ane_h15 *ane)
  * kext_boot=1 it also writes the eight SCRATCH words, each only as 0 except SCRATCH6=1 (the kext's
  * helper zeroes all eight before it sets the wake bit, and its SCRATCH5 config value is unknown, so
  * SCRATCH5 receives 0 only); with pwgate_t6031 on a T6031 it also writes the one PWGATE word at
- * 0x199c (nothing else in that window). The kext order is decoded from the kernelcache, never run on an M3. The ANE DART
+ * 0x199c (nothing else in that window). The order is the one macOS uses, never run on an M3. The ANE DART
  * nodes are disabled in the overlay and nothing here programs the DART: a core that cannot fetch its firmware
  * may simply sit started. That is a result, not a failure of this stage.
  */
@@ -1206,14 +1206,13 @@ static int ane_h15_rtk_poll_once(struct ane_h15 *ane, struct ane_h15_rtk *k)
  * firmware's channel table back, makes the host the owner of every host-to-firmware ring slot, writes READY to SCRATCH3
  * and waits for the firmware to clear it. This stage does that, and with chan_cmds=1 sends PRINT_ENABLE and CONFIG_GET.
  *
- * Register offsets: the T6030 case (ane-type 0xc0, "AppleT6030ANEHAL", h15g) of AppleH16ANEInterface's SoC config,
- * kernelcache 26A434 mac18g: SCRATCH0..7 = engine + 0x1840050 .. + 0x184006c, doorbell = engine + 0x1844000 (the constant
- * its doorBellRing() writes (1 << bit) to), config size 0x380000 (the h15g case stores it). The same decode shows the
- * interrupt pair: pending at engine + 0x184c000, acknowledge at engine + 0x1850000. The kext's handler reads the pending
- * word (0xffff when it polls every channel instead), writes the value back to the acknowledge register, then dispatches
- * per channel on the bits it read. The M6 module services the same pair at engine + 0x18ac000 / + 0x18b0000; without the
- * write the firmware can wait for an acknowledge that never comes. Decoded, never read or written on an H15 part. The
- * block layout and the table layout are the M6/T6021 ones (the same kext code). The M6 numbers are different (SCRATCH at
+ * Register offsets (the T6030 case, ane-type 0xc0, h15g): SCRATCH0..7 = engine + 0x1840050 .. + 0x184006c,
+ * doorbell = engine + 0x1844000 (macOS writes (1 << bit) there), config size 0x380000. The interrupt pair is:
+ * pending at engine + 0x184c000, acknowledge at engine + 0x1850000. macOS reads the pending word (0xffff when it
+ * polls every channel instead), writes the value back to the acknowledge register, then dispatches per channel on
+ * the bits it read. The M6 module services the same pair at engine + 0x18ac000 / + 0x18b0000; without the write
+ * the firmware can wait for an acknowledge that never comes. Never read or written on an H15 part. The block
+ * layout and the table layout are the M6/T6021 ones. The M6 numbers are different (SCRATCH at
  * engine + 0x18a0024, doorbell 0x18a4000): do not mix them up.
  *
  * Writes of this stage beyond stage 6: SCRATCH0, 1, 7 and 3 only (anything else refused), DMA memory it allocated,
@@ -1674,20 +1673,15 @@ static void ane_h15_rtk_session(struct ane_h15 *ane, struct ane_h15_rtk *k)
 		 k->iop_idle, waited);
 }
 
-/* ---- stage 5, pwgate_t6031: the kext's PWGATE gate clear ----
+/* ---- stage 5, pwgate_t6031: the PWGATE gate clear ----
  *
- * Static decode of AppleH11ANEInterface (M3 kernelcache): on a T6031
- * (ane-type 0xe0) the kext function EnableCPUClocksAndPower writes 0 to
- * the 32 bit register at offset 0x199c of the PWGATE window, then polls
- * it until bits 1:0 read 0, up to 0x1388 polls of 10 microseconds each.
- * The PWGATE window is the fifth reg entry of the ADT ane0 node in the
- * macOS 27.0 device tree of the J516C: 0x292290000, 0x4000, next to the
- * pmgr window at 0x292280000. The offsets 0x2b8c and 0x2e0 appear only
- * in other chips' branches of the kext and are never touched here. The
- * hypothesis under test (inferred, never measured): a gate still closed
- * there is why the two T6031 stage 5 runs ended with CPU_STATUS 0x30002a
- * to 0x300028 and no mailbox message. Decoded from the kext, never run
- * on an M3.
+ * On a T6031 (ane-type 0xe0) macOS writes 0 to the 32 bit register at offset 0x199c of the
+ * PWGATE window, then polls it until bits 1:0 read 0, up to 0x1388 polls of 10 microseconds
+ * each. The PWGATE window is the fifth reg entry of the ADT ane0 node in the macOS 27.0
+ * device tree of the J516C: 0x292290000, 0x4000, next to the pmgr window at 0x292280000.
+ * Other chips use other offsets that are never touched here. The hypothesis under test
+ * (inferred, never measured): a gate still closed there is why the two T6031 stage 5 runs
+ * ended with CPU_STATUS 0x30002a to 0x300028 and no mailbox message. Never run on an M3.
  *
  * pwgate_t6031=1 reads the word first and writes 0 only when bits 1:0
  * are set; pwgate_t6031=2 always writes 0 first (the unconditional
@@ -1752,8 +1746,7 @@ static int ane_h15_pwgate_open(struct ane_h15 *ane, char *suffix, size_t sz)
 	return -ETIMEDOUT;
 }
 
-/* Stage 5, kext_boot=1: the macOS kext's cold-boot order, decoded from the kernelcache and
- * never run on an M3. Every write address is logged before the write, so a hang names the
+/* Stage 5, kext_boot=1: macOS's cold-boot order, never run on an M3. Every write address is logged before the write, so a hang names the
  * last address. Order: 0 to SCRATCH0..7 (the kext's helper clears all eight first), SCRATCH6=1,
  * SCRATCH7=0 with a read back that must read 0 (anything else stops the run before CPU_CONTROL:
  * the register ignored the write and the stale word would be mistaken for the firmware's ready

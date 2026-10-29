@@ -81,24 +81,17 @@ enum {
 #define ANE_PS_BUSY		BIT(11)
 #define ANE_PS_AUTO_ENABLE	BIT(28)
 
-/* ANE-block-relative ASC/RTBuddy addresses.  CPU block = ANE+0x1400000
- * for h14g (K14 initializeANESoCConfig h14g blocks 0x…961365c /
- * 0x…9614084 build 0x1400044 with NO 0x200000 orr — the 0x1600044
- * phase-1 §2 quote is the h16g/h17/h18g variant block 0x…9613458;
- * runtime h14g-shaped sites 0x…95d2968 write RUN there).  CPU_STATUS
- * +0x48 keeps the m1n1 ASCRegs +4 shape (config field dev+0x49c =
- * 0x1400048; kext poll 0x…95ecfb4).
+/* ANE-block-relative ASC/RTBuddy addresses. On h14g the CPU block is ANE+0x1400000:
+ * CPU_CONTROL is 0x1400044 (no 0x200000 offset; the 0x1600044 value belongs to the
+ * h16g/h17/h18g variant) and RUN is written there. CPU_STATUS at +0x48 keeps the
+ * m1n1 ASCRegs +4 shape (0x1400048).
  *
- * W10 (2026-09-19) CORRECTS the claim that stood here — that the m1n1
- * t8103 mailbox (INBOX_CTRL +0x8110 / INBOX0 +0x8800) "has NO h14g
- * analog".  It has one, and it is live: see ANE_ASC_MBOX_* below.  The
- * earlier live test read +0x1608114, the h16g base, which is simply
- * the wrong address on this part; and the absence of 0x1408xxx
- * constants from the kext text means only that the mailbox belongs to
- * the RTBuddy provider kext, not to AppleH11ANEInterface.
+ * The m1n1 t8103 mailbox (INBOX_CTRL +0x8110 / INBOX0 +0x8800) has an h14g analog,
+ * and it is live: see ANE_ASC_MBOX_* below. An earlier live test read +0x1608114, the
+ * h16g base, which is the wrong address on this part.
  *
- * W10 also read the CPU block for the first time, on a Linux boot with
- * all eight pmgr domains at ACTUAL=0xf and the W8 grant applied:
+ * First read of the CPU block (2026-09-19), on a Linux boot with all eight pmgr
+ * domains at ACTUAL=0xf:
  *   CPU_CONTROL 0x285400044 = 0x00000000  RUN=0
  *   CPU_STATUS  0x285400048 = 0x0000002a  RUNNING=0 STOPPED=1 IDLE=1
  *   RVBAR       0x285050000 = 0x00000001  valid bit set, entry addr 0
@@ -109,7 +102,7 @@ enum {
 #define ANE_ASC_RVBAR		0x1050000	/* fw entry | valid bit0 */
 #define ANE_ASC_EDPRCR		0x1010310	/* phase1 S2 whitelist */
 #define ANE_ASC_VERS		0x1840000
-#define ANE_ASC_RTB_STATUS	0x1840088	/* K14 poll: value < 2 */
+#define ANE_ASC_RTB_STATUS	0x1840088	/* macOS polls it: value < 2 */
 #define ANE_ASC_RTB_STATUS_UNK7C 0x184007c	/* phase1 S2 whitelist */
 
 /* ASC blocks iBoot names in the firmware's __rtk_patch records
@@ -162,36 +155,18 @@ enum {
 #define ANE_FATAL_READ_LO	0x1854000
 #define ANE_FATAL_READ_HI	0x1c04000
 
-/* MBI transport (K14 h14g config: socinit stores the SCRATCH register
- * offsets as q-blobs @0x…7503a40/0x…7503a50/0x…7503a60 into dev+0x438
- * and the message-register offsets @0x…7503860 into dev+0x488; runtime
- * handshake in InitializeRTBuddy 0x…95e942c: cmd buffer base ->
- * SCRATCH0/1 (0x…95eaa94), wake 0xf7fbdff9 -> SCRATCH7 (0x…95eab24),
- * poll SCRATCH7 == 0x08042006 "channel description table ready"
- * (0x…95eab74), table base read back from SCRATCH0/1 (0x…95ead04),
- * per-channel {type,bit,size,phys} entries registered with the
- * doorbell setter 0x…95ebdd0 writing (1 << bit) to +0x1844000.  Host
- * ack = SCRATCH3 = 0x08042006 (0x…95eaee4).
+/* MBI transport. SCRATCH0..7 are the eight words at ANE+0x1840048..0x1840064 (see the
+ * defines below). The handshake order macOS uses: the command buffer base goes to
+ * SCRATCH0/1, the wake word 0xf7fbdff9 to SCRATCH7, the host polls SCRATCH7 for
+ * 0x08042006 ("channel description table ready"), reads the table base back from
+ * SCRATCH0/1, and registers one {type, bit, size, phys} entry per channel. A doorbell
+ * write sets (1 << bit) at +0x1844000. The host ack is SCRATCH3 = 0x08042006.
  *
- * PROVIDER DECODE (2026-09-19, kernelcache.release.mac14j): in
- * RTBuddy mode the TX gate lives in com.apple.driver.RTBuddy 1.0.0
- * (carved from the KC, 46088 B, __TEXT_EXEC 0x…b696860).  RTBuddy
- * publishes per-ANE nubs named "%sEndpoint%u" (0x…7cc7d3f) with the
- * role string "ANE" -> ANEEndpoint1..ANEEndpoint5, class
- * RTBuddyEndpointService (0x98 B) wrapping RTBuddyEndpoint (0xE8 B),
- * over the kernel IOSlaveEndpoint family; K14 EnableRTBuddyEndpoints
- * (0x…95feb30) formats the name ("%s%d" @0x…74c481f), waits 10 s
- * (x1 = 10^10 ns) for the match and takes the gate from [svc+0x88],
- * registering its rx callback at gate+0xd0.  The gate's per-message
- * send is the vtable+0x1e8 slot; its body ends in the AKF mailbox
- * write (AKF_AP_MAILBOX_SET = the +0x1844000 doorbell; RTBuddy dump
- * fn 0x…b69d9c8 prints "AKF_KIC_INBOX_CTRL / AKF_KIC_MAILBOX_SET /
- * AKF_AP_OUTBOX_CTRL / AKF_AP_MAILBOX_SET" and guards
- * "INBOX%d not ready"/"Inbox%d overflow").  Endpoint number =
- * doorbell bit: EP0 is RTBuddyManagementEndpoint (_handleHello /
- * _handleEPRollCall / _handlePowerAck), EP1..5 the ANE data channels.
- * [INFERENCE: the fw->host doorbell/IRQ bit numbering mirrors the
- * host->fw SET bit per Asahi rtkit semantics; pinned live by W5.] */
+ * In RTBuddy mode the ANE endpoints are numbered: endpoint 0 is the management
+ * endpoint (hello, roll call, power ack) and endpoints 1 to 5 are the ANE data
+ * channels; the endpoint number is the doorbell bit.
+ * [INFERENCE: the firmware-to-host doorbell and IRQ bit numbering mirrors the
+ * host-to-firmware SET bit, as in the rtkit mailbox semantics; pinned live later.] */
 #define ANE_MBI_SCRATCH0	0x1840048	/* SCRATCH0..7 = +0x48..+0x64 */
 #define ANE_MBI_SCRATCH6	0x1840060
 #define ANE_MBI_SCRATCH7	0x1840064
@@ -511,20 +486,14 @@ int ane_t6021_boot_start(struct ane_t6021 *ane, int stop_after, int table_mode,
 
 /* ---- CSNE_CMD wire structs (host->fw on the INIT channel) ----
  *
- * W4 static decode, extending W2 §4 (the receipt's "fw parses a u16 id
- * at header offset 0" was WRONG — three independent fw parse sites read
- * the id as u16 at offset +4: the generic CSNE processor @0x4d264, its
- * preload @0x4d244, and the LOAD_PROGRAM/CREATE_PROCESS/PROCEDURE_CALL
- * pre-parse @0x5246c, all `ldrh wN, [xM, #4]` in selene). Wire is
- * little-endian; this module is arm64-only so host order is wire order.
+ * The command id is a u16 at header offset +4: three firmware parse sites read it
+ * there (an earlier note that said offset 0 was wrong). Wire is little-endian; this
+ * module is arm64-only so host order is wire order.
  *
- * The generic processor takes commands < 0x1b89 bytes (work-item size
- * bound @0x4d134-0x4d158) and writes completion state back into the
- * command block (strb @0x4d324 byte +6, str @0x4d3b0 qword +8) — the
- * ring slot doubles as the response area. PING/BUILDINFO/BOOT/
- * REG_FILE_LOAD/IPC_ENDPOINT_SET fall through the processor's id tree
- * to the default path (0x4e65c): carried without field parsing, so
- * their payloads beyond the header are opaque until the W1 live
+ * The generic processor takes commands below 0x1b89 bytes and writes completion state
+ * back into the command block (byte +6, qword +8), so the ring slot doubles as the
+ * response area. PING/BUILDINFO/BOOT/REG_FILE_LOAD/IPC_ENDPOINT_SET are carried
+ * without field parsing, so their payloads beyond the header are opaque until a live
  * exchange pins them. */
 struct ane_csne_hdr {
 	u32 rsvd0;	/* bytes 0..3: never read by the fw processor; 0 */

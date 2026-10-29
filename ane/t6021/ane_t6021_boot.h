@@ -3,29 +3,18 @@
  * ane_t6021_boot.h — T6021 legacy-boot contract units (pure, shared by
  * the kernel sequencer and the userspace regression).
  *
- * Byte anchors (KC kernelcache.release.mac14j sha256 8304156f…, selene
- * sha256 9f7915c4…; receipts under ane-linux-experiments/receipts/,
- * commits 3762aee + 12be074):
- *  - RVBAR fold: ANEHWDevice::ANE_Init 0x95e9850–0x95e9988 (K13
- *    0x93203b0–0x93204e0 identical). Read64 of eng+0x01050000; bit0
- *    set skips the write (live jw14m2 read 0x1). Otherwise write64
- *    ENTRY_BASE | (fw DVA & ADDR_MASK) — single u64 store
- *    (2026-09-20-h14-rvbar-width.json width_proof).
- *  - fw DVA = ANESharedMemorySurfaceParams("FWIM")+0x18, produced by
- *    dartMapMemoryDescriptor (vtable slot 0x8a8, genIOVMSegments) for
- *    the out-param installed at start+0x336c (mapper-callchain audit
- *    pass1–3). Linux correspondence: dma_alloc_coherent on the ane
- *    platform device is dart-ane0-translated (live iommu group 6,
- *    three apple,t6020-dart streams, DMA domain).
- *  - SCRATCH0/1 u64 split: low32 → 0x01840048 first, high32 →
- *    0x0184004c, dsb st before (legacy-init-publication receipt,
- *    accessor write32 width-proven at 0x9622d4c).
- *  - 0x174 init suballocation: header[0x00] u64 = fw DVA (legacy
- *    branch, dev+0x780 bit0 clear = observed AppleARMIODevice
- *    provider), [0x68] u32 = 64 count, template 256 B at
- *    [0x6C,0x16C) with template+0xC0 = 4 RESOLVED (Main raw anchors
- *    0x9612b78/7c/80 on the dev+0x998 template; conditional |=0x10
- *    separate, unqualified, not set).
+ * Contract anchors (receipts under ane-linux-experiments/receipts/):
+ *  - RVBAR fold: read64 of eng+0x01050000; bit0 set skips the write (live read 0x1).
+ *    Otherwise write64 ENTRY_BASE | (fw DVA & ADDR_MASK), a single u64 store.
+ *  - fw DVA = the DVA of the firmware image surface, mapped through the ANE DART.
+ *    Linux correspondence: dma_alloc_coherent on the ane platform device is
+ *    dart-ane0-translated (live iommu group 6, three apple,t6020-dart streams,
+ *    DMA domain).
+ *  - SCRATCH0/1 u64 split: low32 -> 0x01840048 first, high32 -> 0x0184004c, dsb st
+ *    before; the writes are 32 bits wide.
+ *  - 0x174 init suballocation: header[0x00] u64 = fw DVA, [0x68] u32 = 64 count,
+ *    template 256 B at [0x6C,0x16C) with template+0xC0 = 4; the conditional |=0x10
+ *    is separate, unqualified, not set.
  *
  * This header intentionally includes nothing. Kernel consumers have
  * <linux/types.h> already; userspace consumers typedef u8/u32/u64 and
@@ -35,7 +24,7 @@
 #ifndef __ANE_T6021_BOOT_H__
 #define __ANE_T6021_BOOT_H__
 
-/* RVBAR entry fold (ANE_Init 0x95e9868–0x95e988c). The mask clears
+/* RVBAR entry fold. The mask clears
  * bits 0–10, 48 and 55 — bit 11 IS retained (0xf800 keeps 0x800); the
  * base supplies bit0 and the fixed upper pattern. */
 #define ANE_T6021_RVBAR_ENTRY_BASE	0x0081000000000001ULL
@@ -45,8 +34,7 @@
  * h14g config selects eng+0x01400044). RUN = BIT(4). */
 #define ANE_T6021_CPU_RUN_RELEASE	0x10
 
-/* SCRATCH7 handshake words (InitializeRTBuddy / legacy ANE_Init
- * publication; selene ack writer 0x77c8). */
+/* SCRATCH7 handshake words. */
 /* SCRATCH0 request band (pass9-corrected, Main raw trace): post-READY
  * SCRATCH0 >= 0x21 REFUSES the boot preparation; below 0x21 proceeds
  * to the MAX/alloc path. */
@@ -55,8 +43,7 @@
 #define ANE_T6021_BOOT_WAKE_REQ		0xf7fbdff9U
 #define ANE_T6021_BOOT_ACK		0x08042006U
 
-/* Init suballocation geometry (ANE_Init 0x95ea710–0x95ea97c;
- * legacy-init-publication receipt). */
+/* Init suballocation geometry (legacy-init-publication receipt). */
 #define ANE_T6021_INIT_STRUCT_SIZE	0x174
 #define ANE_T6021_INIT_FW_DVA_OFF	0x00	/* u64, legacy branch */
 #define ANE_T6021_INIT_COUNT_OFF	0x68	/* u32 = 64 */

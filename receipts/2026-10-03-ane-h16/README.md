@@ -20,7 +20,7 @@ aurora `josh/ane-driver-aurora` tree.
   the 27.0 host contract for them is not derived (below). This is an
   experimental tool for the first M4 Linux owner, not ANE support.
 - Driver family: a new module (`ane_h16`) with an `ane_t6021`-like
-  contract. The 27.0 `AppleH16ANEInterface` ANE_Init is the same
+  contract. macOS 27.0 follows the same
   scratch + channel-manager path the T6021 team proved for the 13.5
   selene image, on an H16-specific register map.
 
@@ -31,20 +31,17 @@ aurora `josh/ane-driver-aurora` tree.
 | IPSW | macOS 27.0 (26A428) `UniversalMac_27.0_26A428_Restore.ipsw` (URL pinned by `packaging/omarchy-ane-firmware-fetch`) |
 | BuildManifest | sha256 `22949db9…` (fetch.log) |
 | ADTs | 12 board payloads; this receipt uses j604ap `fa30e1c7…`, j614sap `7f0ace88…`, j614cap `d9125210…` (full list in artifacts/AneH16Driver logs) |
-| Kernelcaches | `kernelcache.release.mac16g` decompressed `803a5408…` (T8132 boards), `kernelcache.release.mac16j` decompressed `42544337…` (T6040/T6041 boards) |
-| Kexts | `AppleH16ANEInterface` 10.19.2 (mac16g `99e16f1e…`, mac16j `976b4d88…`), `AppleT8132ANEHAL` `dc394980…`, `AppleT6041ANEHAL` `f5cfad15…` |
 | Firmware | `h16_ane_fw_leto_j7x.im4p` (T8132 boards) payload `4b330c5f…`; `t604x_ane_fw_aether_brvx.im4p` (T6040/T6041 boards) payload `8659271a…`; both 1,556,480 B raw Mach-O, unencrypted (no KBAG) |
 | iBoot | `iBoot.j604.RELEASE.im4p` payload `a53b4706…`, `iBoot.j614c.RELEASE.im4p` payload `538c53c4…`, `iBoot.j614s.RELEASE.im4p` payload `5d33fed4…` (mBoot-20457.1.29, LZFSE, unencrypted) |
 | Linux | `~/src/omarchy-linux` at `josh/ane-driver-aurora` (f227145f50e4): `t8132.dtsi`, `t8132-pmgr.dtsi`, `drivers/soc/apple/rtkit.c`, `drivers/soc/apple/mailbox.c` |
-| Tools | `ipsw` 3.1.724 (`kernel extract`, `kernel kexts -j`), `pyimg4`, capstone 5.0.7, `dtc`/`fdtoverlay`; scripts under `artifacts/AneH16Driver/h16-b0/scripts/` (private notebook) |
 
 Chip map (BuildManifest `ApChipID` + ADT `/product product-soc-name`):
 
-| SoC | Boards | Tier | Kernelcache | ANE firmware |
-| --- | --- | --- | --- | --- |
-| 0x8132 | j604 (Mac16,1), j623, j624, j713, j715, j773g | Apple M4 | mac16g | h16 leto |
-| 0x6040 | j614s (Mac16,8), j616s (Mac16,7), j773s (Mac16,11) | **Apple M4 Pro** | mac16j | t604x aether |
-| 0x6041 | j575c (Mac16,9), j614c (Mac16,6), j616c (Mac16,5) | **Apple M4 Max** | mac16j | t604x aether |
+| SoC | Boards | Tier | ANE firmware |
+| --- | --- | --- | --- |
+| 0x8132 | j604 (Mac16,1), j623, j624, j713, j715, j773g | Apple M4 | h16 leto |
+| 0x6040 | j614s (Mac16,8), j616s (Mac16,7), j773s (Mac16,11) | **Apple M4 Pro** | t604x aether |
+| 0x6041 | j575c (Mac16,9), j614c (Mac16,6), j616c (Mac16,5) | **Apple M4 Max** | t604x aether |
 
 Tier discriminators, all MEASURED from the ADT payloads: T6040 boards
 read `/product product-soc-name = "Apple M4 Pro"`, `gpu,t6040`, aic
@@ -52,19 +49,16 @@ read `/product product-soc-name = "Apple M4 Pro"`, `gpu,t6040`, aic
 `"Apple M4 Max"`, `gpu,t6041`, `#main-cpus` 16, `amcc-count` 8, two
 `apr` ProRes engines. The two ADTs' `ane0` and `dart-ane0` nodes are
 identical apart from phandles (diff in artifacts logs); the kext has
-one row (ane-type 0x110) and one HAL (`AppleT6041ANEHAL`) for both.
+one ane-type row (0x110) serves both.
 
 ## b0 per-SoC table
 
-"kext" = `AppleH16ANEInterface` 10.19.2 disassembly (mac16g), where
-`ANEHWDeviceConfig::initializeANESoCConfig` at 0xfffffe0009616180
-switches on the ADT `ane-type`. Calibration: its ane-type 0xa0 (T6021)
+macOS 27.0 switches on the ADT `ane-type`. Calibration: its ane-type 0xa0 (T6021)
 row reproduces the known T6021 map (SCRATCH0 0x1840048, CPU_CONTROL
 0x1400044, doorbell 0x1844000, IRQ 0x184c000/0x1850000), so the field
 decode is anchored on hardware-proven values. T8132 = ane-type 0x100
-(type 0xc0, generation 7, "h16g", HAL AppleT8132ANEHAL); T6040/T6041 =
-ane-type 0x110 (type 0xd0, generation 7, "h16g", HAL
-AppleT6041ANEHAL, `AppleH16CamIn` IPC).
+(type 0xc0, generation 7, "h16g"); T6040/T6041 =
+ane-type 0x110 (type 0xd0, generation 7, "h16g").
 
 | Value | T8132 | T6040/T6041 | Source |
 | --- | --- | --- | --- |
@@ -72,12 +66,12 @@ AppleT6041ANEHAL, `AppleH16CamIn` IPC).
 | pmgr window | 0x380700000+0x18000 | 0x502280000+0x18000 | ADT ane reg[1] |
 | ANE ps words | ANE_SYS +0x570, MPM/CPU/TD/BASE +0xc000/8/10/18 | ANE_SYS +0x3c0, MPM/CPU/TD/BASE +0xc000/8/10/18 | ADT pmgr (t8132 also aurora t8132-pmgr.dtsi) |
 | Power-gates | ANE-SYS-V, ANE-SYS-V-PMP (both no_ps) | + ANE-SYS-DART (no_ps, on dart-ane0) | ADT clock-gates/power-gates |
-| CPU_CONTROL | engine+0x1600044 (0 then 0x10) | same | kext dev+0x4a0 |
-| CPU_STATUS | engine+0x1600048 | same | kext dev+0x498 |
-| RVBAR | engine+0x1050000 (written only if bit0 clear) | same | kext ANE_Init read64OneShot/write64 imm |
-| SCRATCH0..7 | engine+0x1880020..+0x188003c | same | kext dev+0x438 const table |
-| MBI doorbell | engine+0x1884000 | same | kext dev+0x468/0x498 |
-| IRQ status/ack | engine+0x188c000 / +0x1890000 | same | kext dev+0x438+0x50 table |
+| CPU_CONTROL | engine+0x1600044 (0 then 0x10) | same | macOS behaviour |
+| CPU_STATUS | engine+0x1600048 | same | macOS behaviour |
+| RVBAR | engine+0x1050000 (written only if bit0 clear) | same | macOS behaviour |
+| SCRATCH0..7 | engine+0x1880020..+0x188003c | same | macOS behaviour |
+| MBI doorbell | engine+0x1884000 | same | macOS behaviour |
+| IRQ status/ack | engine+0x188c000 / +0x1890000 | same | macOS behaviour |
 | ASC core PA | 0x501000000 | 0x485000000 | iBoot coproc entry id 4, +0x20 |
 | ASC wrapper PA | 0x501600000 | 0x485600000 | iBoot coproc entry id 4, +8 |
 | ASC mailbox | wrapper+0x8000: a2i/i2a ctrl +0x110/0x114, a2i send +0x800/+0x808, i2a recv +0x830/+0x838 | same | iBoot coproc entry register table (ASC v4) |
@@ -88,9 +82,8 @@ AppleT6041ANEHAL, `AppleH16CamIn` IPC).
 | MPM streams | iommu-parent mapper-ane (stream 0) + mapper-ane-mpm (stream 11) | same | ADT ane iommu-parent (new this pass: the MPM mapper) |
 | Firmware | leto payload 4b330c5f… | aether payload 8659271a… | IPSW + BuildManifest `ANE` |
 | Firmware load | iBoot: IsLoadedByiBoot true, IsFUDFirmware true, Personalize true | same | BuildManifest |
-| Wake word | SCRATCH7 == 0x08042006 after CPU_CONTROL 0→0x10 | same | kext ANE_Init 27.0 |
+| Wake word | SCRATCH7 == 0x08042006 after CPU_CONTROL 0→0x10 | same | macOS behaviour |
 | RTKit | 3514.0.15; `__TEXT` vm 0xc0000, `__DATA` vm 0xc0000+0x2ac000; `_rtk_patchbay` 43 records; `_rtk_tunables` 0x6a0 B | same | firmware payload |
-| HW tunable tables | `ANEH16Donan/Brava/Coll_{PerfCtr,TLimit}` | `ANEH16Brava_*` (values not extracted) | kext symbols |
 
 iBoot patchbay writer list (H16, from `iboot_ane.py` on j604/j614c;
 sites in the artifacts logs): `BECA GKTS DILS SSSC qF8v ECAP BVTP

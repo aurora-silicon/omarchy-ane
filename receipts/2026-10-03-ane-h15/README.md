@@ -5,7 +5,7 @@ booted or loaded, and nothing was fetched from Apple. Branch `agent/ane-h15-b0` 
 `origin/main` `16cfa87`.
 
 Inputs: data that was already on disk. These are the AneAllSoc ADT and BuildManifest
-receipts that the M3 data files cite, `receipts/2026-10-02-ane-gen-h15`, the four M3 data
+receipts that the M3 data files cite, the four M3 data
 files, the `ane_t6021` sources, and the aurora tree that the data files cite (read-only).
 The output of the stopped AneH15Driver run (`artifacts/AneH15Driver/h15-b0`) was not used.
 
@@ -49,7 +49,6 @@ missing, so no code is written.
 | R2 | `packaging/dt/t602x-ane.dtsi` at `16cfa87` (lines 116-174) | `e48344f1f22fdce829c2125b9ae1222805f7b0ed023e4acc723e00fbb978cd87` |
 | R3 | `receipts/2026-09-30-t6021-stock-mailbox/README.md` at `16cfa87` (lines 101-190, 200-220) | `e35edf71f7344305c934c27b9d725359cd97748cf07ace57e2557e2c5ea0a96c` |
 | R4 | `docs/t6021-ane-bringup-findings.md` at `16cfa87` (§2, §3, §7, §20 lines 1120-1131 and 1250-1262) | `115fe2ef8e421a5e0c7f04147e7f3a5ccd05ca14461ce1023ee3fcbba5b60c1c` |
-| R5 | `receipts/2026-10-02-ane-gen-h15/README.md` at `16cfa87` (payload hashes, BuildManifest flags, AppleASCWrapV6 addendum) | `1d006a171017aa2be64b85a6b9602a8f212c168daf70e2adcf4092c30cec98bf` |
 | R6 | `tools/omarchy-ane-probe` at `16cfa87` | `4c9625bed91df17d09f93bd5e8f91a28193c5a5424265a4fdc8ffdd0daa4acbe` |
 | R7 | `packaging/omarchy-ane-firmware-fetch` at `16cfa87` (FETCH table, lines 47-53) | `f4f293e4593c9a35415b2f5d2df582ced30d366599a6b3337ef54316b5cab29f` |
 
@@ -67,10 +66,10 @@ arithmetic on A1 values (A3).
 | ADT ANE compatible (ASC wrapper version) | `ane,t8020`; no wrapper version named | `iop,ascwrap-v6` | `iop,ascwrap-v6` | `iop,ascwrap-v6` (j575d ane0 and ane1) | MEASURED | A1 |
 | ane-type | 160 | 176 | 192 | 224 | MEASURED | A1 |
 | BuildManifest chip id and boards | 0x6021 j414c j416c j475c | 0x8122 j433 j434 j504 j613 j615 | 0x6030 j514s j516s | 0x6031 j514c j516c; 0x6034 j514m j516m; 0x6032 j575d | MEASURED | A2 |
-| 27.0 IPSW ANE image | `t602x_ane0_fw_selene_rc4x` | `h15_ane_fw_themis_j51y`, payload 1605632 B, `19b6a499…` | `t603x_ane0_fw_erebus_ls5x`, `43da9d56…` | `t603x_ane0_fw_erebus_pc5x`, `ddac37c7…`; j575d also `t603x_ane1_fw_erebus_pc5x` | MEASURED | A2, R5 |
-| Image flags | not in these sources | IsLoadedByiBoot true, plain Mach-O, no KBAG | same | same | MEASURED | R5 |
+| 27.0 IPSW ANE image | `t602x_ane0_fw_selene_rc4x` | `h15_ane_fw_themis_j51y`, payload 1605632 B, `19b6a499…` | `t603x_ane0_fw_erebus_ls5x`, `43da9d56…` | `t603x_ane0_fw_erebus_pc5x`, `ddac37c7…`; j575d also `t603x_ane1_fw_erebus_pc5x` | MEASURED | A2 |
+| Image flags | not in these sources | IsLoadedByiBoot true, plain Mach-O, no KBAG | same | same | MEASURED | earlier private receipt |
 | Image the Linux boot runs | 13.5 stub image, pinned `a9c4b771…`, 0x4C5B28 B | the stub OS's image; stub version unknown | unknown | unknown | T6021 MEASURED; M3 missing | R4 §2, R7 |
-| macOS class for `iop,ascwrap-v6` | `H11ANEIn` binds `ane,t8020` | `AppleASCWrapV6` (IONameMatch `iop,ascwrap-v6`, read in H17 kernelcaches only) | same | same | INFERENCE for M3 | R5 addendum, `README.md:31` |
+| ASC class for `iop,ascwrap-v6` | `H11ANEIn` binds `ane,t8020` | a separate ASC wrapper class matches `iop,ascwrap-v6` (not seen on an M3) | same | same | INFERENCE for M3 | earlier private receipt |
 
 ### Windows, mailbox and interrupts
 
@@ -127,7 +126,7 @@ the old value.
   now holds all eight; reg[5..7] get neutral names because their roles are unknown.
 - `driver_family` cited the compiler oracle. It is now a null leaf whose reason holds this
   decision and its basis.
-- `receipts/2026-10-02-ane-gen-h15` says that T6030 and T8122 "collapse mpm/td/base into
+- An earlier receipt (now private) says that T6030 and T8122 "collapse mpm/td/base into
   sys-cpu", and lists 0x498 and 0x438 as their only power words. That is the kernel tree. The
   ADT lists MPM, CPU, TD and BASE on both (A1). Its mailbox row, which puts the doorbell at
   engine + 0x1050000, is superseded by the table above.
@@ -238,5 +237,4 @@ runs it once with a fall-back boot entry.
 
 - `data/ane-soc/t8122.json`, `t6030.json`, `t6031.json`, `t6034.json`: the corrections above.
 - `receipts/2026-10-03-ane-h15/README.md`: this file.
-- `receipts/2026-10-02-ane-gen-h15/README.md`: an addendum that points here.
 - `CHANGELOG.md`: one line.

@@ -48,8 +48,7 @@ lost. Cite the source repo and the commit SHA next to every number.
   enters with the stock x0-only `hv_start`. A 26/27 kernel does not. Its
   entry dispatches on x0, and the boot CPU needs x0 = 0, x1 = the boot_args
   pointer, x2 = a handoff struct (magic `0xd00f000000000000`, version >= 7,
-  bit 6 set). `tools/m2hv_entry_abi.py` supplies that, loaded through
-  `M2HV_PREMOD`. The earlier reading of a spin at the same spot was the
+  bit 6 set). A hypervisor script supplies that. The earlier reading of a spin at the same spot was the
   secondary-CPU path, taken because x0 was still the boot_args pointer.
 
 ## 3. Firmware memory map (proven)
@@ -177,23 +176,20 @@ ane-linux-experiments abb63dd, closure omarchy-ane ee14b27).
 
 ## 8. Tools and artifacts
 
-- `tools/m2hv_diff.py`: diffs an m1n1 hv MMIO trace against the Linux
-  baseline; prints the first missing write (`--selftest` built in).
 - 13.5 hv traces (three runs, up to 3075 writes): all power and DART
   bring-up, then an ISP power-down walk and no CPU_CONTROL, SCRATCH, RVBAR
-  or mailbox write. AneStaticStart proved why: macOS 13.5 starts the ASC
+  or mailbox write. The reason: macOS 13.5 starts the ASC
   lazily, only when a user client (the macOS ANE daemon or CoreML) powers it
   on, so a
   kernel-only guest never issues the start sequence. A longer kernel-only
   trace cannot capture the ASC start; reaching it needs a macOS 13.5
   userspace that opens the ANE (an ANE daemon or CoreML inference workload
-  in the guest). `tools/m2hv_replay-trace-135.txt` (beb39fa): all 151 macOS writes
-  to ANE engine/DART/pmgr registers from trace-135, with per-write flags
-  for ps-off/SET-window/hook and the Linux-same mark.
+  in the guest). All 151 macOS writes to ANE engine/DART/pmgr registers from the
+  13.5 trace are kept in private notes.
 - Every 13.5 hv run loses the proxy ACM 34-36 s after launch when booted
   against the stub, whose System volume has no root filesystem (the vendor installer's
-  `src/stub.py`), so XNU cannot mount root and panics. `tools/m2hv_catch_and_run.sh`
-  logs the console from the opened hv vuart (`serial=3`).
+  `src/stub.py`), so XNU cannot mount root and panics. The console is logged from the
+  opened hv vuart (`serial=3`).
 - v7 ramdisk route: a small test program (ad-hoc signed, opens the ANE
   service, holds 25 s) ran as the first user process. First contact reached the macOS
   signature check, which panicked with `"can't has cs_enforcement_disable"`.
@@ -202,7 +198,7 @@ ane-linux-experiments abb63dd, closure omarchy-ane ee14b27).
   `amfi_get_out_of_my_way=1`,
   `amfi_allow_any_signature=1`, `amfi_unrestricted_local_signing=1`. Default
   profile omits `debug=0x14e` and `wdt=-1` so panics reset the SoC and auto-recover
-  to Linux. Receipt: `receipts/2026-09-23-m2-hv-trace/2026-09-25-amfi-boot-args-analysis.md`.
+  to Linux. Receipt: private notes.
 - The 13.5 macOS images (kernel and ane0/ane1 firmware) are stored with
   SHA256SUMS in the fleet artifact store, not in git.
 
@@ -269,8 +265,7 @@ the VENC-down stall; with the leg up the core runs code. Vehicle:
 approach in 8756868, T6021-gated on `apple,t6021-ane`; ported from
 c9b2324, which was built on a side line and never landed on main).
 
-A mailbox audit on the pre-VENC boot state (`receipts/2026-09-23-m2-hv-trace/
-2026-09-24-mbox-carveout.md`, ~14:00 UTC, before the VENC leg): the I2A
+A mailbox audit on the pre-VENC boot state (private notes, ~14:00 UTC, before the VENC leg): the I2A
 outbox drains 0 words and holds EMPTY (out114 `0x000a0001`), the only I2A
 word is a stale type-0 `0x000a000000000000`, SCRATCH0-7 read zero, and the
 SEG0/SEG1 carveout reservations plus the iBoot image head are intact — with
@@ -657,34 +652,12 @@ baseline logging of the six locations plus opt-in `fw_start_core1_run` and
 `fw_start_wrapper_b80_unmask` (default off) to force the two hardware
 behaviours if a run ever needs them.
 
-## 18. macOS capture tool and the staged Linux tests (2026-09-25)
+## 18. macOS idle signature and the staged Linux tests (2026-09-25)
 
-The capture tool behind sections 16-17 is `tools/macos-regdump/` on
-omarchy-ane main (commits cee3dd1 through 210a1e3). The helper
-(`com.warren.ANERegDump`) is frozen at binary sha256 `932d3b9b...`; a staged
-copy ships with SHA256SUMS. Each rebuilt helper costs an Allow click plus a
-reboot, so the address table, pmgr base, island offsets, gate mask and poll
-budget are runtime data in `ranges.txt` (all numbers hex).
-
-The kernel side enforces the safety net whatever the file says
-(`ane_regdump_filter.h`, `ane_req_acceptable`):
-
-- a gate predicate needs ACTUAL bits [7:4] = 0xf and must reject the idle
-  words 0x300 and 0x0f000300;
-- every engine-window range is gated even if the file omits the flag;
-- a range touching engine+0x1010000 (CoreSight) is refused outright;
-- the engine+0x1400818/81c/820 event words and the mailbox RECV words are
-  never read (pop-on-read, section 14);
-- `poll_us` is capped at 10 s;
-- `start()` only registers the service; all work happens on the CLI call.
-
-Building it gave the macOS 27 idle signature: 0x300 per island and
+The macOS 27 idle signature of the ANE power islands is 0x300 per island and
 0x0f000300 for ane_cpu, where the 0xf is bits [27:24] (PS_AUTO), not ACTUAL.
-The 2 s poll catches the short ACTUAL-0xf windows; one workload sample still
-read idle. Known gap: the helper asks the ADT for node `ane0`, the live node is
-`ane0@84000000`, so ADT ranges never land. `capture.sh` saves the ADT
-properties and the boot args, and the fw-text/fw-data
-reads are ungated DRAM reads (the section 3 segment-ranges).
+A 2 s poll catches the short ACTUAL-0xf windows; one workload sample still
+read idle. The capture tool behind sections 16-17 is kept private.
 
 Linux test form, staged on omarchy-ane `agent/t6021-macos-ps-form` 265bb63.
 Result pending:

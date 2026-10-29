@@ -60,7 +60,7 @@ for soc in WANT:
                     f"ANEMinorVersion {i['minor_version']}, arch {i['arch']}, cores {i['cores']}, "
                     f"firmware_loaded {i['firmware_loaded']}"].append(r['sha12'])
             if m.get('driver'):
-                agg[f"AppleH11ANEInterface kext {m['driver'].get('kext_version')}"].append(r['sha12'])
+                agg[f"ANE driver {m['driver'].get('kext_version')}"].append(r['sha12'])
         if l:
             if not l.get('board'):
                 continue

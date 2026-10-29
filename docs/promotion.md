@@ -98,10 +98,8 @@ The macOS 27.0 ADTs give four shapes. The M3 family (H15) ANE is an ASC IOP
 (`iop,ascwrap-v6`). The M4 family (H16) keeps `ane,t8020`. The MacBook Neo,
 the M5 MacBook and T6050 (H17) use `ane,t8132exclave`, which the macOS kernel
 binds to the same `H11ANEIn` class as `ane,t8020`, so `ane_t6021` is the
-closer model for H16 and H17
-([receipts/2026-10-02-neo-ane](../receipts/2026-10-02-neo-ane/README.md)).
-The M6 Mac mini (T8152, H18) is an ASC IOP again, `iop-ane,ascwrap-v8`
-([receipts/2026-10-02-ane-gen-h18](../receipts/2026-10-02-ane-gen-h18/README.md)).
+closer model for H16 and H17.
+The M6 Mac mini (T8152, H18) is an ASC IOP again, `iop-ane,ascwrap-v8`.
 The experimental bring-up modules for these live in `ane/h15`, `ane/h16` and
 `ane/h18`; each directory's README-bringup.md says what its stages read,
 write and refuse.
