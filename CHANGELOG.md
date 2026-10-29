@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- docs: `docs/qwen-decode-packages.md` gets the 13-inch M1 rows at 1,024 positions (two sessions, 28.3 and 28.1 percent lower) and a 2,048-position row with the GPU held idle (13.5 percent lower), with the two 1,024-position package hashes.
 - docs: `ane/h15/README-bringup.md` gets two stop rules. On a 16-inch M3 Max (T6031) the machine went down during a CPU read of the firmware DATA on two boots (on the second, which logged each page, at page 232), so hash and dump scripts stop at page 231. A read-only probe for a volunteer's machine first reads only the ranges the driver itself uses, and a crash stops the run for a fix. The PWGATE run instructions on issue 176 were changed to match. The module itself never reads those pages.
 
 ## 0.5.6 (2026-10-29)
