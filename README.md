@@ -36,7 +36,7 @@ device-tree overlays and verification tools.
 | M2 | T8112 | not recorded | `apple,t8112-ane` | `ane_t6021` | opt-in, untested | `ane-t8112` + note | not tested |
 | M2 Pro | T6020 | not recorded | `apple,t6020-ane` | `ane_t6021` | on by default | none | fp16 execution verified |
 | M2 Max | T6021 | not recorded | `apple,t6021-ane` | `ane_t6021` | on by default | none | fp16 execution verified |
-| M2 Ultra | T6022 | not recorded | `apple,t6022-ane` | `ane_t6021` | on by default | none | row 316ea37e17f0; dkms |
+| M2 Ultra | T6022 | not recorded | `apple,t6022-ane` | `ane_t6021` | on by default (die 0 only) | none | row 316ea37e17f0; dkms; kernel 7.1.13 with the ANE DART power-domain change (#278) |
 
 The T8112 and T6022 note: after adding the key, run
 `sudo omarchy-ane-firmware-fetch` before `omarchy-ane-dt apply`. The M2 Pro
