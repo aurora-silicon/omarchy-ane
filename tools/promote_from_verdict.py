@@ -329,6 +329,9 @@ def next_version():
 
 PROMO_SUBJECT = re.compile(r"^(PROMOTE|REVERT): (\S+) ANE -> (default-on|opt-in) "
                            r"\(row ([0-9a-f,]+|none)(?:; ([a-z,]+))?\)$")
+# A promotion PR squash-merged by hand keeps GitHub's default subject (the PR title and its number); the
+# tool's own commit subject is then the first bullet of the body ("* PROMOTE: ...").
+PR_SUBJECT = re.compile(r"^(PROMOTE|REVERT): \S+ \([^)]*\) ANE -> (?:default-on|opt-in) \(#\d+\)$")
 
 
 def merged_promotions(since):
@@ -336,11 +339,14 @@ def merged_promotions(since):
     first: {sha, verdict, chip, to, rows, sources}. The release reports the
     tag range, not the run: an earlier run can merge one promotion and fail on
     the next, and the release that finally runs must cover both."""
-    log = sh("git", "log", "--format=%H %s", f"{since}..origin/main")
+    log = sh("git", "log", "--format=%H%x1f%s%x1f%b%x1e", f"{since}..origin/main")
     out = []
-    for line in log.splitlines():
-        sha, _, subject = line.partition(" ")
+    for rec in log.split("\x1e"):
+        sha, subject, body = (rec.strip("\n").split("\x1f") + ["", ""])[:3]
         m = PROMO_SUBJECT.match(subject)
+        if not m and PR_SUBJECT.match(subject):
+            m = next((PROMO_SUBJECT.match(l[2:]) for l in body.splitlines()
+                      if l.startswith("* ") and PROMO_SUBJECT.match(l[2:])), None)
         if m:
             out.append({"sha": sha, "verdict": m[1], "chip": m[2], "to": m[3],
                         "rows": m[4], "sources": m[5] or ""})

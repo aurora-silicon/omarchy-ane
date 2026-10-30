@@ -615,4 +615,23 @@ for name in ("aurora-plan", "aurora-pr"):
     assert "    permissions:\n      contents: read\n" in jobs[name], name
 print("promote_from_verdict test: the token reaches only the aurora-pr job, which builds nothing")
 
+
+# merged_promotions finds a promotion whether the tool's gate merged it (exact subject) or a person
+# squash-merged it (PR title and number, tool subject in the body), and ignores other commits.
+from importlib.machinery import SourceFileLoader
+from importlib.util import module_from_spec, spec_from_loader
+
+_spec = spec_from_loader("pfv", SourceFileLoader("pfv", str(repo / "tools/promote_from_verdict.py")))
+pfv = module_from_spec(_spec)
+_spec.loader.exec_module(pfv)
+_log = ("aaa\x1fPROMOTE: t6022 (M2 Ultra) ANE -> default-on (#297)\x1f* PROMOTE: t6022 ANE -> default-on (row 316ea37e17f0; dkms)\n\n* other\n\x1e\n"
+        "bbb\x1fPROMOTE: t8112 ANE -> default-on (row 1234abcd; intree)\x1f\x1e\n"
+        "ccc\x1fdocs: something (#12)\x1f* PROMOTE: t9999 ANE -> default-on (row dead)\n\x1e\n"
+        "ddd\x1fPROMOTE: t6020 (M2 Pro) ANE -> default-on (#9)\x1fno tool bullet here\n\x1e\n")
+pfv.sh = lambda *a, **k: _log
+_got = pfv.merged_promotions("v0.0.0")
+assert [(g["sha"], g["chip"], g["rows"], g["sources"]) for g in _got] == [
+    ("bbb", "t8112", "1234abcd", "intree"), ("aaa", "t6022", "316ea37e17f0", "dkms")], _got
+print("promote_from_verdict test: merged_promotions reads the gate subject and a hand squash merge, nothing else")
+
 print("promote_from_verdict test: ok")
