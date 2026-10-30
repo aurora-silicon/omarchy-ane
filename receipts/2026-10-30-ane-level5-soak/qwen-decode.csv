@@ -1,0 +1,9 @@
+level,arm,step_p50_median,logits
+STEP A records 5 step p50 median 0.1189 min 0.1187 max 0.1190
+LOGITS A 6b6d8898db6f9497 efb76b0839793e52 a79ae6a38e98b1ae b0315e4f3dadf935 d0b4381fa31bf525 
+STEP G records 5 step p50 median 0.0836 min 0.0835 max 0.0837
+LOGITS G 9076c89c55f2b8fa 3aa74a009129438f 23b6f22c8d3c0645 368974af649ae74c 73cbccd371e1ff66 
+STEP A records 5 step p50 median 0.1184 min 0.1182 max 0.1185
+LOGITS A 6b6d8898db6f9497 efb76b0839793e52 a79ae6a38e98b1ae b0315e4f3dadf935 d0b4381fa31bf525 
+STEP G records 5 step p50 median 0.0787 min 0.0786 max 0.0787
+LOGITS G 9076c89c55f2b8fa 3aa74a009129438f 23b6f22c8d3c0645 368974af649ae74c 73cbccd371e1ff66 

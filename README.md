@@ -149,8 +149,24 @@ Linux used to leave the M1 Max ANE at its lowest clock level. Since 0.5.2 the
 `ane` driver asks the platform's power manager for clock level 1 when the ANE
 partition comes up and releases it before the partition goes down. On one
 16-inch M1 Max this cut a full Qwen decode step from 0.2009 s to 0.1158 s
-(4.98 to 8.64 tokens per second) with bit-identical logits; level 2 added
-under 3 percent and the driver never writes a higher level.
+(4.98 to 8.64 tokens per second) with bit-identical logits.
+
+Since 0.5.7 the driver asks for level 5, the top of the power manager's six
+levels (300 to 1500 MHz), by default. The Parakeet encoder takes 289.7 ms at
+level 1, 240.6 ms at level 2 and 199.0 ms at level 5, bit-exact at every
+level. The Qwen decode step depends on the package. With the fp16 packages it
+does not follow the clock (0.1200 s at level 1, 0.1189 s at level 2, 0.1184 s
+at level 5). With the S1-GPTQ packages it does (0.1010 s, 0.0836 s, 0.0787 s).
+The logits are identical at every level. A 30 minute soak at level 5 ran
+9,000 encoder calls, all bit-exact, with block medians within 0.05 percent of
+each other and a highest sensor reading of 49 C
+([receipts/2026-10-30-ane-level5-soak](receipts/2026-10-30-ane-level5-soak/README.md)).
+Levels 3 and 4 were run for 5 minutes each, not soaked.
+
+The module parameter `ane.dvfs_level` opts down: `1` to `4` ask for that
+level, and `0` asks for nothing and leaves the boot level. Only the T6001
+overlays carry the clock windows, so the M1, M1 Pro, M2 Pro and M2 Max are
+unchanged.
 
 The request needs three extra device-tree resources on the ANE node (two
 `reg` windows and the PMS SRAM power domain). Only the T6001 overlay carries
