@@ -33,6 +33,19 @@ PATTERNS = [
 ]
 # Decided 2026-10-29: the tool that installs a Mac's own firmware keeps its two download addresses, in code only.
 ALLOWED = {"packaging/omarchy-ane-firmware-fetch"}
+# Decided 2026-10-30: captured program output and a run's own source copy are evidence and are never edited. Explicit list, not a glob:
+# a new capture that carries the words fails until it is added here on purpose.
+CAPTURED = {
+    "receipts/2026-09-24-t6021-pwgate/ane_t6021_fwload.c",
+    "receipts/2026-09-24-t6021-pwgate/ane_t6021_rtclient_main.c",
+    "receipts/2026-10-01-t6021-dart-kernel/logs/hw_reset.disasm.txt",
+    "receipts/2026-10-01-t6021-default-on-gate/logs/B/dmesg-ane.txt",
+    "receipts/2026-10-01-t6021-default-on-gate/logs/P/dmesg-ane.txt",
+    "receipts/2026-10-01-t6021-default-on-gate/logs/final/dmesg-ane.txt",
+    "receipts/2026-10-01-t6021-default-on-gate/logs/host/flip-m2-compile.txt",
+    "receipts/2026-10-01-t6021-default-on-gate/logs/host/host-tests-c2b7408.txt",
+}
+ALLOWED = ALLOWED | CAPTURED
 COMPILED = [(n, re.compile(p)) for n, p in PATTERNS]
 HERE = os.path.dirname(os.path.abspath(__file__))
 BASELINE = os.path.join(HERE, "macos_read_methods_baseline.json")

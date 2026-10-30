@@ -46,7 +46,7 @@ and m1n1 hv MMIO addresses are already absolute.
    after `ps_ane_sys` goes T=0, T=f, AUTO (events 2813-2815) and before
    `ps_ane_cpu` goes on (event 2842). All 26 written values pass the mask
    test above. Three of them carry bits outside their mask (eng+0x000 =
-   0x11, eng+0x108 = 0x11, eng+0x400 = 0xc0f10010), so reference run read those
+   0x11, eng+0x108 = 0x11, eng+0x400 = 0xc0f10010), so the reference run read those
    registers before it wrote them. The ADT value of reg[38] is still
    unconfirmed. From an m1n1 proxy: `u.adt["/arm-io/pmgr"].get_reg(38)`.
    Expected: 0x284000000, size at least 0xa04.

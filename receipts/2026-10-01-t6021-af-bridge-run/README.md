@@ -107,7 +107,7 @@ reset loop. There was no reset.
 On the S3 boot (`logs/s3-driver-afb.log`) all 26 readbacks equal the written
 values, the firmware boot reached DONE (`booted=1 fw_alive=1`), and the probe
 read **applied 26, NOT-applied 0** (`logs/s3-check.txt`). The 0x000, 0x108
-and 0x400 results (0x11, 0x11, 0xc0f10010) are exactly what reference run 13.5 writes
+and 0x400 results (0x11, 0x11, 0xc0f10010) are exactly what the reference run 13.5 writes
 in the hv trace. The power-on value of 0x400 is 0x00f00008.
 
 ### Timing and correctness

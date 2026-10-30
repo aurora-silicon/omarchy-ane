@@ -79,7 +79,7 @@ sets the bit.
   set4..set1, base, td and ane_cpu and closes PWGATE. The next open cold-boots
   the firmware (`ColdStarts` grows; `Resumes` stays 0).
 - Inside a session the firmware gates the compute islands between jobs. M2 idle
-  words under reference run 27: ane_sys and ane_cpu 0x0f000300, islands 0x300
+  words under the reference run 27: ane_sys and ane_cpu 0x0f000300, islands 0x300
   (findings.md:563-576).
 - The kext also has an idle sleep timer, a dynamic power-gate hysteresis timer,
   and `ANE_RestoreState`, which re-creates the programs of open clients after a

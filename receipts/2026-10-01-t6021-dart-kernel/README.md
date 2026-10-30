@@ -347,7 +347,7 @@ state from a write on a live DART, is false: the write at DART reset, with
 the TTBRs cleared and a full TLB flush before it and the streams and TTBR
 after it, gives the same fault. Reading (b) holds: 0x20c with the reference run
 value does not work with the page tables Linux gives the bulk DARTs, in any
-write order. [INFERENCE] reference run sets 0x20c together with the 0x300-0x310 DVA
+write order. [INFERENCE] the reference run sets 0x20c together with the 0x300-0x310 DVA
 window and puts the ANE buffers inside that window
 ([0x100_0000_0000, 0x400_0000_0000)); Linux BOs sit below 4 GiB with the
 window off. 0x20c can only be tested again together with E3 (a 42-bit DMA

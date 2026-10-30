@@ -1,4 +1,4 @@
-# disassembly of apple_dart_hw_reset from out/vmlinux (vmlinux sha256 b80dca84...)
+# aarch64-linux-gnu-objdump -d --no-show-raw-insn --disassemble=apple_dart_hw_reset out/vmlinux (vmlinux sha256 b80dca84...)
 ffff800080917f6c <apple_dart_hw_reset>:
 ffff800080917f6c:	paciasp
 ffff800080917f70:	stp	x29, x30, [sp, #-128]!

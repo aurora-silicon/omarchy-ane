@@ -131,13 +131,13 @@ MODULE_PARM_DESC(fw_cache_test,
 static bool fw_pwgate;
 module_param(fw_pwgate, bool, 0444);
 MODULE_PARM_DESC(fw_pwgate,
-		 "fw_cache_test only: driver PWGATE writes set+0x12cc=3, set+0x13cc=0 (0x28e08d2cc/0x28e08d3cc) before release; both restored to 0 after the poll.");
+		 "fw_cache_test only: kext PWGATE writes set+0x12cc=3, set+0x13cc=0 (0x28e08d2cc/0x28e08d3cc) before release; both restored to 0 after the poll.");
 MODULE_PARM_DESC(fw_start_state_report,
 		 "fw-start-debug: stage firmware + alias, dump ASC state (reads only), then clean unwind — no boot writes");
 
 /*
  * fw_start_table_mode: the pre-CPU engine table block
- * (eng+0xB38/0xB98/0xBF8 <- 0x01FF01FF, driver-sourced, run EVERY
+ * (eng+0xB38/0xB98/0xBF8 <- 0x01FF01FF, kext-sourced, run EVERY
  * EnableANEClocksAndPower per pass4/pass5). 0 = abort before any
  * write, 1 = write the table, 2 = skip it (the 2026-09-20-era
  * diagnostic; the B3 run proved RUN itself is wedge-free with the
@@ -417,7 +417,7 @@ static void ane_rtclient_csne_ping(struct ane_rtclient *ane)
 
 /*
  * Fenced Linux-context firmware start (fw_start=1). Evidence chain:
- *  - boot stage latches ANE RVBAR = entry | 1 (live reads 0x10000000001:
+ *  - iBoot latches ANE RVBAR = entry | 1 (live reads 0x10000000001:
  *    bit0 valid, entry bits = dart-ane0 vm-base 0x10000000000; ADT
  *    "pre-loaded" = 1). The kext law (ANE_Init, tbnz-skip) and this
  *    latch mean the driver NEVER writes RVBAR on this box.
@@ -853,7 +853,7 @@ static struct platform_driver ane_rtclient_driver = {
 	.probe = ane_rtclient_probe,
 	.remove = ane_rtclient_remove,
 };
-/* Driver PWGATE writes on the ane nub's set range (index 2, 0x28e08c000):
+/* Kext PWGATE writes on the ane nub's set range (index 2, 0x28e08c000):
  * set+0x12cc <- 3, set+0x13cc <- 0. Offsets are from the 0x28e080000
  * pmgr mapping below. */
 #define ANE_SET_PWGATE_A	0xd2cc

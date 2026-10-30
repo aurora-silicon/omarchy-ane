@@ -86,7 +86,7 @@ maps to an IPSW. The 27.0 image has another layout and would need its own pin.
 | Item | Why the IPSW lacks it | How to get it | Needs a T8112? |
 | --- | --- | --- | --- |
 | iBoot patch values: `RCOS` (chip revision) and the ASC tunables block | iBoot takes them from its own tables (T6021: 0x11 and 24 entries, receipts/2026-10-01-t602x-independent) | one preload capture on a T8112 with `tools/t8112-kit/collect-m1n1.py` (m1n1 proxy) | yes |
-| Firmware entry IOVA (RVBAR at handoff, engine +0x1050000) | boot stage latches it at boot; the IOVA is in the ane `segment-ranges`, which no platform device tree ADT has. Likely `vm-base` 0x800000000 [INFERENCE: T6021 latched its `vm-base` 0x10000000000] | the `segment-ranges` TEXT remap, which reference run `ioreg` also shows (`tools/t8112-kit/collect-reference_run.sh`), or the m1n1 kit | yes |
+| Firmware entry IOVA (RVBAR at handoff, engine +0x1050000) | boot stage latches it at boot; the IOVA is in the ane `segment-ranges`, which no platform device tree ADT has. Likely `vm-base` 0x800000000 [INFERENCE: T6021 latched its `vm-base` 0x10000000000] | the `segment-ranges` TEXT remap, which the reference run `ioreg` also shows (the collection script in `tools/t8112-kit`), or the m1n1 kit | yes |
 | The pmgr page the firmware writes | answered from the image: bia `SetPMUBaseAddress` stores 0x23b70c010 (`ANE_TD`), so the page is 0x23b70c000 (receipts/2026-10-01-t8112-kit) | — | no |
 | Mailbox send-empty interrupt | Apple data names none (T6021 uses unused AIC2 line 1833, a lab choice) | a lab choice of an unused AIC line, or a driver that does not need the mailbox (the 13.5 legacy transport never starts it) | no |
 
@@ -101,7 +101,7 @@ key `omarchy,opt-in = "ane-t8112"`, skip key `apple,t8112-ane`:
   a chain `ane_sys_cpu` ← `ps_ane_sys`, `ane_td` ← `ane_sys_cpu`, `ane_base` ←
   `ane_td`, `ane_set1` ← `ane_base`, …, `ane_set4` ← `ane_set3`. The chain makes
   genpd use the macOS order in both directions. Apple data gives a parent
-  only for 0xc008. `ANE_MPM` (0xc000) is left out, because reference run never
+  only for 0xc008. `ANE_MPM` (0xc000) is left out, because the reference run never
   writes it;
 - `ane@26a000000`: reg `engine`/`pmgr`/`set`, IRQ 520 `ane`, the three
   DARTs with stream 0, the seven power domains.

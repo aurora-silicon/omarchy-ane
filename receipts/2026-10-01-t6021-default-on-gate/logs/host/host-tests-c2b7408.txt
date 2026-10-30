@@ -19,6 +19,6 @@ stub macOS 13.5: fetching Firmware/ane/h14_ane_fw_bia_j4xx.im4p
 test_ane_firmware_fetch: ok
 rc=0
 $ h14_boot_regression
-PASS T8112 fuse 37ffffff fffffffe                 (decode = boot stage j413 0x40270)
-PASS T8112 fuse 12345678 9abcdef1                 (decode = boot stage j413 0x40270)
+PASS T8112 fuse 37ffffff fffffffe                 (decode = iBoot j413 0x40270)
+PASS T8112 fuse 12345678 9abcdef1                 (decode = iBoot j413 0x40270)
 PASSED: 127 checks, 0 failures

@@ -183,7 +183,7 @@ Pre-register it in the notebook. One owner.
    - dmesg has `ane_cpu ACTUAL` with the ON field and `PWGATE = 0x…` with
      bits 29:28 clear.
    - dmesg has `fwload: chip revision 0x… (fuse 0x23d2c8060: …)` and
-     `boot stage patches replayed (soc 0x8112 rev 0x… DATA 0x8000b4000 …)`
+     the fwload line that says the boot-stage patches were replayed
      (if RVBAR is latched at 0x800000000).
    - dmesg has `fwalias: entry …` and `pmu: DART map 0x23b70c000 …: 0`.
    - The BOOT-PHASE lines (READY, DONE, chman VALIDATED, CONFIG_GET

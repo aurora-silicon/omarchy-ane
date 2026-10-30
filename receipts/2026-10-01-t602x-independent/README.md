@@ -129,8 +129,8 @@ other agent's experiment on the box.
    default path.
 3. Boot B: `options ane_t6021 fw_alias_reserved=0` in
    `/etc/modprobe.d/ane_t6021-own-memory.conf`, then reboot. Pass: dmesg
-   has `fwload: own memory: boot stage patches replayed (soc 0x6021 rev 0x11 DATA
-   0x100000c4000 cpu 0x285000000 wrapper 0x285400000)` and `fwalias: entry
+   has the fwload line that says the boot-stage patches were replayed in own memory
+   and `fwalias: entry
    0x10000000000 <- 448 dart pages aliased`, then the same BOOT-PHASE lines as
    A (pollA READY, pollB DONE, chman table VALIDATED, LEGACY CONFIG_GET
    result=0), then the same gate set, bit-exact encoder and timing as in A.

@@ -13,7 +13,7 @@ The kit is [tools/t8112-kit](../../tools/t8112-kit/README.md).
 | Generated diffs | `git apply` clean on 9c1c932. The patched overlay compiles (dtc 1.7.2-g53373d13) and applies to `t8112-j413.dtb`: mailbox interrupts `0 520 4 0 1000 4`, ane `mboxes` = the mailbox phandle. `tools/h14_boot_regression.c` builds with the patched header: 112 checks pass |
 | `omarchy-ane-firmware-fetch` on a fake `apple,t8112` root, live CDN | installed `h14_ane_fw_bia_j4xx.macho`, 4938552 B, sha256 `af587dfa96b1e01d2b2e0f9f776e5dbefebb44c7968b86fff7d2b19c4cbef0dd`, 1.3 s |
 | `tools/test_t8112_kit.py`, `test_ane_firmware_fetch.py`, `test_ane_m2.py`, `test_ane_dt.py`, `test_ane_overlays.py` | ok |
-| `collect-reference_run.sh` | `bash -n` and shellcheck clean; run on Linux with stand-in `ioreg`, `sysctl`, `sw_vers`, `system_profiler`, `shasum` (the T6021 reference run 27 `segment-ranges` bytes): `ingest.py --reference_run` gives entry 0x10000000000; the serial number, hardware UUID and `unique-chip-id` lines are not in the tarball. Not run on reference run |
+| `collect-macos.sh` | `bash -n` and shellcheck clean; run on Linux with stand-in `ioreg`, `sysctl`, `sw_vers`, `system_profiler`, `shasum` (the T6021 `segment-ranges` bytes): `ingest.py --macos` gives the expected firmware entry address; the serial number, hardware UUID and `unique-chip-id` lines are not in the tarball. Not run on the reference run |
 | Device run | NOT RUN. No T8112 is in the lab |
 
 ## The pmgr page comes from the image

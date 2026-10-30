@@ -24,7 +24,7 @@ No address, interrupt, DART window, power-domain path, label or compatible in ou
 ## T6020 (M2 Pro)
 
 43 rows: 19 Linux with a device tree block (j414s 13, j416s 6; linux-asahi 7.1.13-3-1 and -3-2), 5 macOS with
-ANE nodes. reference run IORegistry addresses are arm-io relative; the physical address adds 0x200000000.
+ANE nodes. The reference run IORegistry addresses are arm-io relative; the physical address adds 0x200000000.
 
 | Value | Ours (source) | Community rows | Agree | Verdict |
 | --- | --- | --- | --- | --- |
