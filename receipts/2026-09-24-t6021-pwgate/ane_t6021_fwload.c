@@ -20,7 +20,7 @@
  *      RVBAR entry on the device's default DMA domain. Placement
  *      contract, from the private notes of 2026-09-20:
  *        - live RVBAR read64 = 0x10000000001 (bit0 latched, entry
- *          bits 0x10000000000 = dart-ane vm base); kext law
+ *          bits 0x10000000000 = dart-ane vm base); driver law
  *          (rvbar-lifecycle 6288b0b): bit0 set => the RVBAR write
  *          branch is skipped, so the ASC fetches AT the latched entry;
  *        - netconsole 2026-09-20T17:48:19: apple-dart 285800000.iommu

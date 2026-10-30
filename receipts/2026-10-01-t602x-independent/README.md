@@ -66,7 +66,7 @@ UNTESTED opt-ins).
 
 What stays SoC-specific: `RTK_soc` (from the compatible), and two values with
 no live source: the chip revision (m1n1 gives Linux no `chip-revision`; MIDR
-0x611f0380 encodes 0x10, not 0x11) and the ASC tunables (iBoot's own table;
+0x611f0380 encodes 0x10, not 0x11) and the ASC tunables (boot stage's own table;
 the IPSW ADT `ane0` has none). They are T6021 capture values. T6020 and T6022
 run the same image on the same `ane0` (13.5 ADTs), so the driver uses them
 there too. That is an assumption until a T6020 or T6022 runs it. No per-board
@@ -129,7 +129,7 @@ other agent's experiment on the box.
    default path.
 3. Boot B: `options ane_t6021 fw_alias_reserved=0` in
    `/etc/modprobe.d/ane_t6021-own-memory.conf`, then reboot. Pass: dmesg
-   has `fwload: own memory: iBoot patches replayed (soc 0x6021 rev 0x11 DATA
+   has `fwload: own memory: boot stage patches replayed (soc 0x6021 rev 0x11 DATA
    0x100000c4000 cpu 0x285000000 wrapper 0x285400000)` and `fwalias: entry
    0x10000000000 <- 448 dart pages aliased`, then the same BOOT-PHASE lines as
    A (pollA READY, pollB DONE, chman table VALIDATED, LEGACY CONFIG_GET

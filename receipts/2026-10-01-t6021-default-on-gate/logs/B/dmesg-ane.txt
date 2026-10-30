@@ -7,7 +7,7 @@
 [    3.263019] ane_t6021 284000000.ane: BOOT-PHASE engine reads ok: CPU_STATUS = 0x2a, RVBAR = 0000010000000001 (bit0=1)
 [    3.263022] ane_t6021 284000000.ane: BOOT-PHASE fwload stage+alias begin
 [    3.270476] ane_t6021 284000000.ane: fwload: apple/ane/t602x_ane0_fw_selene_rc4x.macho PRELOAD validated + DART-mapped: entry 0x0, iova 0x00000000ff800000 size 0x700000
-[    3.270481] ane_t6021 284000000.ane: fwload: own memory: iBoot patches replayed (soc 0x6021 rev 0x11 DATA 0x100000c4000 cpu 0x285000000 wrapper 0x285400000)
+[    3.270481] ane_t6021 284000000.ane: fwload: own memory: boot stage patches replayed (soc 0x6021 rev 0x11 DATA 0x100000c4000 cpu 0x285000000 wrapper 0x285400000)
 [    3.272682] ane_t6021 284000000.ane: fwalias: entry 0x10000000000 <- 448 dart pages aliased from fw 0x00000000ff800000 (first 0x0000010019224000, roundtrip OK)
 [    3.272689] ane_t6021 284000000.ane: pmu: DART map 0x28e084000 (IOVA == PA, 0x4000 bytes): 0
 [    3.272701] ane_t6021 284000000.ane: BOOT-PHASE dispatch (table_mode=2)

@@ -55,7 +55,7 @@ Boots B, P and final have these lines, and they are the expected lines for the r
 
 ```
 fwload: apple/ane/t602x_ane0_fw_selene_rc4x.macho PRELOAD validated + DART-mapped: entry 0x0, iova 0x00000000ff800000 size 0x700000
-fwload: own memory: iBoot patches replayed (soc 0x6021 rev 0x11 DATA 0x100000c4000 cpu 0x285000000 wrapper 0x285400000)
+fwload: own memory: boot stage patches replayed (soc 0x6021 rev 0x11 DATA 0x100000c4000 cpu 0x285000000 wrapper 0x285400000)
 fwalias: entry 0x10000000000 <- 448 dart pages aliased from fw 0x00000000ff800000 (first <PA, changes per boot>, roundtrip OK)
 pmu: DART map 0x28e084000 (IOVA == PA, 0x4000 bytes): 0
 BOOT-PHASE P4 pollA READY observed
