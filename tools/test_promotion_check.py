@@ -68,6 +68,12 @@ assert not broken(lambda o: o['dmesg'].append(dcp))
 assert not broken(lambda o: o['dmesg_faults'].append(dcp))
 assert not broken(lambda o: o['dmesg'].append('[ 2.0] apple-dart 581008000.iommu: DART fault'))
 assert not broken(lambda o: o['dmesg'].append('[ 2.0] systemd[1]: ane.service: failed'))
+# The kernel's notice that an out-of-tree module is unsigned names the module and says "failed",
+# but it is not a device fault: an unsigned dkms build logs it on every signature-capable kernel.
+taint = '[ 5.1] ane_t6021: module verification failed: signature and/or required key missing - tainting kernel'
+assert not broken(lambda o: o['dmesg_faults'].append(taint))
+assert not broken(lambda o: o['dmesg'].append(taint))
+assert broken(lambda o: o['dmesg_faults'].append('[ 5.2] ane_t6021: module verification failed: bad key'))
 
 # A clean installed row with no smoke attempt is not judged. Busy/explicitly
 # unattempted rows are also skipped, but not-ready or fault rows still fail.
@@ -266,4 +272,47 @@ assert pc.failures(injected('[ 910.1] apple-dart 2285820000.iommu: translation f
 assert pc.failures(injected('[ 910.2] apple-mailbox 2285408000.mailbox: fifo error', t6002_attempt))
 assert not pc.unclean(oa(injected('[ 911.0] apple-dart 2285900000.iommu: translation fault', t6002_attempt)))
 assert not pc.unclean(oa(injected('[ 911.1] apple-dart 581008000.iommu: DART fault', t6002_attempt)))
+
+# A row whose runtime block the collector dropped for its byte budget
+# ('runtime:over_budget', an Ultra row) is read from summary.ane_linux, which
+# carries the same check / module / smoke / fault fields. The die comes from
+# the bound device ("bound to <engine base>.ane"), never from a default.
+def fallback_row(n, soc=OPT, base='284000000', marked=True, bound=True):
+    r = row(n, soc=soc)
+    block = copy.deepcopy(oa(r))
+    lines = ['omarchy-ane-check: kernel 7.1.13', '  ok    ane_t6021 is loaded (version ae18911)']
+    if bound:
+        lines.append(f'  ok    ane_t6021 is bound to {base}.ane')
+    block['check']['lines'] = lines
+    block['driver_source'] = 'dkms'
+    r['summary']['ane_linux'] = block
+    r['summary']['ane_port_detail'] = {'devicetree': {}, 'truncated': ['runtime:over_budget'] if marked else []}
+    return r
+
+fb = fallback_row(31)
+assert pc.block(fb) is not None and pc.die_of(fb) == 0
+assert pc.failures(fb) == [], pc.failures(fb)
+assert pc.verdict([fb])[(OPT, 0)]['promote'], 'a passing truncated row promotes through ane_linux'
+# A failing ane_linux fails the same way the runtime block does.
+fb_bad = fallback_row(32)
+fb_bad['summary']['ane_linux']['smoke']['errors'] = 1
+assert pc.failures(fb_bad) and not pc.verdict([fb_bad])[(OPT, 0)]['promote']
+fb_fault = fallback_row(33)
+fb_fault['summary']['ane_linux']['dmesg_faults'].append('[ 9.0] apple-dart 285800000.iommu: DART fault: STT_FAULT')
+assert pc.failures(fb_fault)
+# No over_budget marker: ane_linux is not read (an older row without the runtime block stays unjudged).
+assert pc.block(fallback_row(34, marked=False)) is None
+assert (OPT, 0) not in pc.verdict([fallback_row(34, marked=False)])
+# No bound device line: the die is unknown, so the row is not judged.
+assert pc.block(fallback_row(35, bound=False)) is None
+# A die-1 engine base (+0x20_0000_0000) keys the row as die 1, never as a die-0 pass.
+fb1 = fallback_row(36, base='2284000000')
+assert pc.die_of(fb1) == 1
+v = pc.verdict([fb1])
+assert (OPT, 1) in v and (OPT, 0) not in v, v
+# When the runtime block is present it wins over ane_linux.
+both = copy.deepcopy(good)
+both['summary']['ane_linux'] = copy.deepcopy(oa(good))
+both['summary']['ane_linux']['smoke']['errors'] = 1
+assert pc.failures(both) == []
 print('test_promotion_check: ok')
