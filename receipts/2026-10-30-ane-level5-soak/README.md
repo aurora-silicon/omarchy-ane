@@ -15,8 +15,10 @@ Each block compared the output with the gold output.
 Ladder (`levels.csv`): the same encoder for 5 minutes at each of levels 3, 4 and 5 (6 blocks each), all bit-exact:
 216.93, 206.46 and 199.04 ms. Level 0, 1 and 2 on the same boot gave 438.75, 289.68 and 240.57 ms.
 
-Qwen decode (`qwen-decode.csv`): the two-arm decode cell at 1,024 positions, 5 prompts of 24 forced tokens, at levels 2 and 5.
+Qwen decode (`qwen-decode.csv`, `qwen-decode-levels-3-4.csv`, `qwen-decode-soak-level5.csv`): the two-arm decode cell at 1,024 positions, 5 prompts of 24 forced tokens, at levels 2 and 5, then at levels 3 and 4.
 The step time (median over prompts) with the fp16 packages was 0.1189 s at level 2 and 0.1184 s at level 5, against 0.1200 s at level 1.
-With the S1-GPTQ packages it was 0.0836 s and 0.0787 s, against 0.1010 s at level 1. The logits were identical to the level 1 run in every prompt. The decode did not run at levels 3 and 4. The level 1 values are the later of two arms; the first arms read 0.1226 s and 0.1035 s.
+With the S1-GPTQ packages it was 0.0836 s and 0.0787 s, against 0.1010 s at level 1. The logits were identical to the level 1 run in every prompt. At level 3 the steps were 0.1185 s (fp16) and 0.0790 s (S1-GPTQ), at level 4 0.1185 s and 0.0788 s, with the same logits.
+The decode soak ran the four-arm cell (fp16, S1-GPTQ, S1-GPTQ, fp16) at level 5 for 31 minutes: 0.1182, 0.0787, 0.0787 and 0.1183 s, the same logits in all four arms,
+a highest sensor reading of 50.8 C and no fault. The level 1 values are the later of two arms; the first arms read 0.1226 s and 0.1035 s.
 
 The machine had no other work on it during these runs.
