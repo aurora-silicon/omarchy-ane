@@ -109,7 +109,7 @@ MODULE_PARM_DESC(fw_alias_reserved,
 		 "Lab, T6021: map reserved SEG0 0x10000848000+0xc4000 at entry and "
 		 "SEG1 0x10001400000+0x438000 after it (probe refuses unless no-map "
 		 "/reserved-memory nodes cover both); 0 (default) = run the staged "
-		 "copy with iBoot's patches replayed (own memory, the only mode on "
+		 "copy with the boot stage's patches replayed (own memory, the only mode on "
 		 "T6020/T6022).");
 
 static bool ane_t6021_fw_alias_is_reserved(struct device *dev)
@@ -558,7 +558,7 @@ static int ane_t6021_fw_patch(struct ane_t6021 *ane, u8 *img)
 		return -EINVAL;
 	}
 	dev_dbg(ane->dev,
-		"fwload: own memory: iBoot patches replayed (soc %#x rev %#x DATA %#llx cpu %#llx wrapper %#llx)\n",
+		"fwload: own memory: boot stage patches replayed (soc %#x rev %#x DATA %#llx cpu %#llx wrapper %#llx)\n",
 		p.soc, p.soc_revision,
 		p.exec_base + soc->fw->segs[1].vmaddr, p.cpu_pa,
 		p.wrapper_pa);

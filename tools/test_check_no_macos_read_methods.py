@@ -83,6 +83,23 @@ expect("another packaging file may not", run(repo), 1, "omarchy-ane-other-tool")
 with open(os.path.join(repo, "packaging", "omarchy-ane-other-tool"), "w") as f:
     f.write("clean\n")
 commit(repo)
+# captured output is evidence and is never edited: the explicit list may carry the words, any other path may not
+cap = "receipts/2026-10-01-t6021-default-on-gate/logs/B/dmesg-ane.txt"
+other = "receipts/2026-10-01-t6021-default-on-gate/logs/B/dmesg-other.txt"
+os.makedirs(os.path.dirname(os.path.join(repo, cap)), exist_ok=True)
+line = "fwload: own memory: iBoot patches replayed (soc 0x6021 rev 0x11 DATA 0x100000c4000)\n"
+with open(os.path.join(repo, cap), "w") as f:
+    f.write(line)
+commit(repo)
+expect("a listed captured log may carry the words", run(repo), 0, "ok")
+with open(os.path.join(repo, other), "w") as f:
+    f.write(line)
+commit(repo)
+expect("an unlisted log in the same folder may not", run(repo), 1, "dmesg-other.txt")
+for name in (cap, other):
+    with open(os.path.join(repo, name), "w") as f:
+        f.write("clean\n")
+commit(repo)
 # baseline: an existing offender may keep its count, not gain
 with open(os.path.join(repo, "old.md"), "w") as f:
     f.write(BANNED["kernel address"][0] + "ordinary line\n")
@@ -121,4 +138,4 @@ if failures:
     print("FAIL")
     print("\n".join(failures))
     sys.exit(1)
-print("ok: check_no_macos_read_methods behaves on", sum(len(v) for v in BANNED.values()) + 16, "cases")
+print("ok: check_no_macos_read_methods behaves on", sum(len(v) for v in BANNED.values()) + 18, "cases")
