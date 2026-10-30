@@ -157,8 +157,8 @@ const struct ane_h15_soc ane_t6030_soc = {
 	.cpu_status  = 0x1400048,
 	.rvbar       = 0x1050000,
 	/* Measured by stage 2 on a 16-inch M3 Pro (J516S), PR 175 comment of 2026-10-23: RVBAR_LO 0x1,
-	 * RVBAR_HI 0x100. The same value the M2 Max macOS run, the M6 (T8152) and the T6031 row carry: the
-	 * firmware entry IOVA 0x10000000000 with bit 0 set, i.e. iBoot already wrote it. T8122 and T6034
+	 * RVBAR_HI 0x100. The same value the M2 Max run, the M6 (T8152) and the T6031 row carry: the
+	 * firmware entry IOVA 0x10000000000 with bit 0 set, i.e. the boot loader already wrote it. T8122 and T6034
 	 * have no stage 2 result yet, so their rvbar_expect stays 0 and stage=run refuses on them. */
 	.rvbar_expect = 0x0000010000000001ull,
 	.dart_off    = 0x1800000,	/* ADT S1: 0x309800000 - engine, data/ane-soc/t6030.json */
@@ -191,7 +191,7 @@ const struct ane_h15_soc ane_t6031_soc = {
 	.pmgr_size   = 0x10000,
 	/* PWGATE: ADT ane0 reg entry 5 of the macOS 27.0 device tree for
 	 * the J516C (0x292290000, 0x4000, next to the pmgr window).
-	 * macOS behaviour: the 0x199c word is cleared and
+	 * Shipped-system behaviour: the 0x199c word is cleared and
 	 * polled before the core is released. Never run on an M3; the
 	 * step is opt-in per run (pwgate_t6031). */
 	.pwgate_pa   = 0x292290000ull,

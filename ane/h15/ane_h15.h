@@ -129,7 +129,7 @@ struct ane_h15_soc {
 	u64 pmgr_pa;		/* pmgr window base address */
 	u32 pmgr_size;		/* pmgr window size */
 	u64 pwgate_pa;		/* PWGATE window base: the fifth reg entry of the ADT ane0 node in the
-				 * macOS 27.0 device tree (T6031, J516C: 0x292290000). 0 = no window
+				 * shipped system's 27.0 device tree (T6031, J516C: 0x292290000). 0 = no window
 				 * for this row: pwgate_t6031 is refused in probe. */
 	u32 pwgate_size;	/* PWGATE window size (T6031: 0x4000) */
 	const u32 *ps_off;	/* 5 pmgr-relative offsets: SYS MPM CPU TD BASE */

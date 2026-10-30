@@ -455,7 +455,7 @@ static int ane_h15_stage_status(struct ane_h15 *ane)
  *   (lines 104-109, 142-143 and 160-163). These are T6021 values. Their
  *   H15 roles are INFERENCE (see the b0 receipt).
  * - The two ADT windows (wrapper 0x6c000 bytes at engine + 0x1400000,
- *   RVBAR block 0x4000 bytes at engine + 0x1050000): the macOS 27.0 ADT
+ *   RVBAR block 0x4000 bytes at engine + 0x1050000): the shipped system's 27.0 ADT
  *   summary adt-27.0.txt, sha256
  *   04fe38b8ee009700f02e2c01e83bf608afab5e843f5878a83f162973a1ffdb84,
  *   as tabulated (A1, A3) in receipts/2026-10-03-ane-h15/README.md at
@@ -936,7 +936,7 @@ static int ane_h15_map_firmware(struct ane_h15 *ane)
  * 16cfa8720b80677dbcdf8fd1d04077a8b72768bf, omarchy-linux mailbox.c 57f8f6de, the M6 boot 235c8ff4).
  *
  * Why this is the next step. The T6030 stage 2 run (PR 175, J516S) read RVBAR 0x0000010000000001 and CPU_STATUS
- * 0x0030002a: iBoot already preloaded the firmware and wrote the entry address, and the core is stopped (m1n1
+ * 0x0030002a: the boot loader already preloaded the firmware and wrote the entry address, and the core is stopped (m1n1
  * R_CPU_STATUS: STOPPED bit 1 and IDLE bit 5 set, RUNNING bit 0 clear; bits 20 and 21 unknown on H15). The T8152
  * (M6) ANE0 is in the same state (CPU_STATUS 0xa, IORVBAR 0x10000000001). On the M6 the same RUN write took
  * CPU_STATUS from 0xa to 0x8 in under 11 ms: STOPPED clears, RUNNING (bit 0) does not read 1. So "started" is
@@ -965,7 +965,7 @@ static int ane_h15_map_firmware(struct ane_h15 *ane)
  * scratch_boot=1 it also writes the eight SCRATCH words, each only as 0 except SCRATCH6=1 (macOS's
  * helper zeroes all eight before it sets the wake bit, and its SCRATCH5 config value is unknown, so
  * SCRATCH5 receives 0 only); with pwgate_t6031 on a T6031 it also writes the one PWGATE word at
- * 0x199c (nothing else in that window). The order is the one macOS uses, never run on an M3. The ANE DART
+ * 0x199c (nothing else in that window). The order is the one the shipped system uses, never run on an M3. The ANE DART
  * nodes are disabled in the overlay and nothing here programs the DART: a core that cannot fetch its firmware
  * may simply sit started. That is a result, not a failure of this stage.
  */
@@ -1212,8 +1212,8 @@ static int ane_h15_rtk_poll_once(struct ane_h15 *ane, struct ane_h15_rtk *k)
  * and waits for the firmware to clear it. This stage does that, and with chan_cmds=1 sends PRINT_ENABLE and CONFIG_GET.
  *
  * Register offsets (the T6030 case, ane-type 0xc0, h15g): SCRATCH0..7 = engine + 0x1840050 .. + 0x184006c,
- * doorbell = engine + 0x1844000 (macOS writes (1 << bit) there), config size 0x380000. The interrupt pair is:
- * pending at engine + 0x184c000, acknowledge at engine + 0x1850000. macOS reads the pending word (0xffff when it
+ * doorbell = engine + 0x1844000 (the shipped system writes (1 << bit) there), config size 0x380000. The interrupt pair is:
+ * pending at engine + 0x184c000, acknowledge at engine + 0x1850000. The shipped system reads the pending word (0xffff when it
  * polls every channel instead), writes the value back to the acknowledge register, then dispatches per channel on
  * the bits it read. The M6 module services the same pair at engine + 0x18ac000 / + 0x18b0000; without the write
  * the firmware can wait for an acknowledge that never comes. Never read or written on an H15 part. The block
@@ -1539,7 +1539,7 @@ static int ane_h15_chan_step(struct ane_h15 *ane, const struct ane_h15_hs_buf *t
 	return 0;
 }
 
-/* The macOS handshake after READY: surfaces IPC (max(page, SCRATCH1 + 1) bytes) and HEAP (SCRATCH3 bytes), the 0x174 byte init block taken from a pool
+/* The shipped-system handshake after READY: surfaces IPC (max(page, SCRATCH1 + 1) bytes) and HEAP (SCRATCH3 bytes), the 0x174 byte init block taken from a pool
  * surface, then SCRATCH0 (low), SCRATCH1 (high), the wake word in SCRATCH7. Needs the core running with AP power ON acknowledged. Returns 0 only when the
  * firmware published a table address and the channel step worked. */
 static int ane_h15_chan_run(struct ane_h15 *ane, struct ane_h15_rtk *k)
@@ -1680,7 +1680,7 @@ static void ane_h15_rtk_session(struct ane_h15 *ane, struct ane_h15_rtk *k)
 
 /* ---- stage 5, pwgate_t6031: the PWGATE gate clear ----
  *
- * On a T6031 (ane-type 0xe0) macOS writes 0 to the 32 bit register at offset 0x199c of the
+ * On a T6031 (ane-type 0xe0) the shipped system writes 0 to the 32 bit register at offset 0x199c of the
  * PWGATE window, then polls it until bits 1:0 read 0, up to 0x1388 polls of 10 microseconds
  * each. The PWGATE window is the fifth reg entry of the ADT ane0 node in the macOS 27.0
  * device tree of the J516C: 0x292290000, 0x4000, next to the pmgr window at 0x292280000.
@@ -1756,10 +1756,10 @@ static int ane_h15_pwgate_open(struct ane_h15 *ane, char *suffix, size_t sz)
  * SCRATCH7=0 with a read back that must read 0 (anything else stops the run before CPU_CONTROL:
  * the register ignored the write and the stale word would be mistaken for the firmware's ready
  * signal in the poll), CPU_CONTROL 0 then 0x10 (RUN, plain writes, not the
- * read-modify-write), then poll SCRATCH7 every 1 ms for the ready word 0x08042006 macOS
+ * read-modify-write), then poll SCRATCH7 every 1 ms for the ready word 0x08042006 that the shipped system
  * waits for (it logs "No wake signal" on timeout). Never RVBAR, never the mailbox, never the
  * DART; SCRATCH5 receives 0 only. The stale-ready-word hypothesis: a SCRATCH7 that still holds
- * 0x08042006 from iBoot may send the firmware down the warm-boot path, where it idles at
+ * 0x08042006 from the boot loader may send the firmware down the warm-boot path, where it idles at
  * CPU_STATUS 0x300028. Zeroing it first is what this option tests. With pwgate_t6031 on a
  * T6031 macOS's PWGATE gate clear runs after the SCRATCH sequence and before the first
  * CPU_CONTROL write (pwgate_t6031 above); a poll timeout returns before RUN and run_common

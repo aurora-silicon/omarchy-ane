@@ -15,7 +15,7 @@
  *         DVFS_CMD := 0x80000001; level word := 0x2000000000000001
  *   down: DVFS_CMD := 0x80000010; level word := 0x2000000000000000; PS-REQ bit cleared;
  *         DVFS_CMD := 0x80000000; DVFS_ON := 0
- * DVFS_ON and DVFS_CMD live in the pmgr block macOS calls RegMap 113 (ADT reg[39], PA 0x285868000,
+ * DVFS_ON and DVFS_CMD live in the pmgr block named RegMap 113 in the shipped system (ADT reg[39], PA 0x285868000,
  * DVFS_ON at +0x2000, DVFS_CMD at +0xa00). The PS-REQ word and the level word live in the PMP PTD
  * window (read entities at +reg*16, update space at +0x10000 + reg*8; PS-REQ reg 0xf8, PS-ACK
  * reg 0x100, PMP-STATUS reg 1, ANE level reg 0x10c).

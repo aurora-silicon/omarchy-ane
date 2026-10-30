@@ -27,7 +27,7 @@
  *   copy the validated image into a DART-mapped coherent buffer at the
  *   same IOVAs the ADT names, write SCRATCH7=0, latch or write RVBAR,
  *   release the CPU (CPU_CONTROL 0 then 0x10) and poll SCRATCH7 for the
- *   wake word 0x08042006 (kext ANE_Init, macOS 27.0). If the firmware
+ *   wake word 0x08042006 (vendor driver ANE_Init, 27.0). If the firmware
  *   wakes, poll the ASC mailbox for an RTKit HELLO, answer it, ack
  *   EPMAP and STARTEP the system endpoints. Then stop: no channel-
  *   manager publication and no CSNE CONFIG_GET — the 27.0 host contract

@@ -113,13 +113,13 @@ template is `ane/h16/`.
   with `__module_get` (an `rmmod` would otherwise free the code under a running core).
   `run_scratch=1` (stage 5 only, off by default) adds a read-only dump of the eight SCRATCH words at engine + 0x1840050 to + 0x184006c: one line before RUN
   and one after the wait, `ane_h15 scratch before RUN: S0=... S7=...` and `ane_h15 scratch after the wait: ...`. It writes nothing. The offsets are the ones macOS uses for the T6030
-  and have not been read on an M3. On the M2 (T6021) macOS waits for `0x08042006` in SCRATCH7 after it starts the firmware (`ane/t6021/ane_t6021.h`); whether this firmware writes it is what the dump is for.
+  and have not been read on an M3. On the M2 (T6021) the shipped system waits for `0x08042006` in SCRATCH7 after it starts the firmware (`ane/t6021/ane_t6021.h`); whether this firmware writes it is what the dump is for.
   Clearing RUN does not stop a core that has started (see the stage 5 results below), so a run with a started core still ends in `core-not-stopped` and needs a reboot.
   `scratch_boot=1` (stage 5 only, off by default) replaces the read-modify-write with the order macOS
   boots the firmware in, as macOS does it, never run on an M3: write 0 to all eight SCRATCH words
   (macOS clears SCRATCH0 to SCRATCH7 first), then SCRATCH6=1, then SCRATCH7=0 and read it back, then
   CPU_CONTROL 0 and CPU_CONTROL 0x10 (RUN) as plain writes, then poll SCRATCH7 every 1 ms for the ready word
-  `0x08042006` for `sb_wait_ms` ms (10 to 5000, default 1000). macOS logs "No wake signal" when its wait
+  `0x08042006` for `sb_wait_ms` ms (10 to 5000, default 1000). The shipped system logs "No wake signal" when its wait
   times out; this module logs the first-seen time or `not seen`. The hypothesis under test (an inference,
   not measured): a SCRATCH7 that still holds the ready word from iBoot sends the firmware down the
   warm-boot path, where it idles at `0x300028`; zeroing all eight words first is what the run decides on.
@@ -133,7 +133,7 @@ template is `ane/h16/`.
   last action before the first CPU_CONTROL write, on top of either start order. macOS behaviour on a T6031: it writes 0 to the 32 bit register at
   offset 0x199c of a register window named PWGATE, then polls that word until bits 1:0 read 0
   (up to 0x1388 polls, 10 microseconds each). The window is the fifth reg entry of the ADT
-  ane0 node in the macOS 27.0 device tree: physical 0x292290000, size 0x4000, next to the
+  ane0 node in the shipped system's 27.0 device tree: physical 0x292290000, size 0x4000, next to the
   pmgr window at 0x292280000. The module maps that one window with ioremap for the step and
   unmaps it again on every exit path. No device tree entry changes. Value 1 reads the word
   and logs it; if bits 1:0 are nonzero it writes 0 once (`ane_h15 write PWGATE=0x0
@@ -178,7 +178,7 @@ template is `ane/h16/`.
 - `stage=7` or `stage=chan`: stage 6 (all its gates, `map_fw`, `fw_seg`) plus the macOS handshake after AP power ON and
   the channel step, behind `confirm_run=1`, `confirm_rtkit=1` AND `confirm_chan=1`; it needs `map_fw=1`. It maps the
   firmware into the ANE's default DMA domain instead of attaching an own one (the surfaces come from the DMA API).
-  Reads SCRATCH0..7 (engine + 0x1840050 .. + 0x184006c, the offsets macOS uses on the T6030): READY in SCRATCH7, SCRATCH0 below 0x21,
+  Reads SCRATCH0..7 (engine + 0x1840050 .. + 0x184006c, the offsets the shipped system uses on the T6030): READY in SCRATCH7, SCRATCH0 below 0x21,
   the IPC (max(page, SCRATCH1 + 1)) and HEAP (SCRATCH3) requests within limits, else nothing is written. Then allocates
   POOL (0x40000), IPC and HEAP surfaces, fills the 0x174 byte init block (the T6021/M6 layout, config size 0x380000), writes
   SCRATCH0 (pool low), SCRATCH1 (pool high), SCRATCH7 (wake 0xf7fbdff9), waits `hs_wait_ms` (10 to 5000, default 1000) for the
@@ -365,7 +365,8 @@ the dmesg back.
    `core-not-stopped`; that core stopped only after RTKit power messages (stage 6). A core that never
    ran firmware did not stop either (M6 with no firmware mapped: `0x8`, then `core-not-stopped`). So this
    result alone does not say whether the core ran; read CPU_STATUS (bit 0 RUNNING) and the mailbox lines. A T6030
-   run with one DART instance bound ended this way: `0x30002a` before RUN, `0x300028` after, bit 0 never set, no message, no DART fault line. `verdict=FAIL reason=preflight-not-as-iboot-left-it` means
+   run with one DART instance bound ended this way: `0x30002a` before RUN, `0x300028` after, bit 0 never set, no message, no DART fault line.
+   A `verdict=FAIL reason=preflight-not-as-iboot-left-it` means
    nothing was written. Send the whole `dmesg | grep ane_h15`.
 7. Remove the opt-in key and reboot before any other experiment.
 

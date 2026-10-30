@@ -1366,7 +1366,7 @@ static void ane_h18_dart_exc(struct ane_h18 *ane, const char *when)
 }
 
 /* Read only: ENABLE_STREAMS, TCR, TTBR, the first two words of the exception bitmap and the records of streams 0, 10, 11, 13 and 15 of DART instance k (0 to 3), the
- * layout macOS reads per instance. +0x704 is not read: the fork's own comment says it is outside the gen3 capture list. Needs the instance mapped. */
+ * layout the shipped system reads per instance. +0x704 is not read: the fork's own comment says it is outside the gen3 capture list. Needs the instance mapped. */
 static void ane_h18_dart_inst(struct ane_h18 *ane, unsigned int k, const char *when)
 {
 	static const u32 regs[] = { 0xc00, 0x1000, 0x1400, 0x4000, 0x4004 };
@@ -1392,7 +1392,7 @@ static void ane_h18_dart_inst(struct ane_h18 *ane, unsigned int k, const char *w
 	}
 }
 
-/* PREMAP_BUFFER (0x20d), as macOS sends it at init for the inference request pool: a 0x3490 byte command, type 2, one request of 0x3898 bytes in a surface of the
+/* PREMAP_BUFFER (0x20d), as the shipped system sends it at init for the inference request pool: a 0x3490 byte command, type 2, one request of 0x3898 bytes in a surface of the
  * DART's page size. Source of the layout: macOS behaviour on build 26A434 (mac18g), recorded in the M6
  * engine DMA lab note, section 4, sha256 eac93039f9c3f62883f83c2b563dda7b47e0d3b19e2fca2bd450527f0d8d6f60.
  * The pool is count x 0x3898 bytes rounded to the DART page.
@@ -1851,7 +1851,7 @@ static int ane_h18_chan_step(struct ane_h18 *ane, const struct ane_h18_hs_buf *t
 }
 
 
-/* The macOS handshake after READY, on the T8152: surfaces IPC (max(page, SCRATCH1 + 1) bytes) and HEAP (SCRATCH3 bytes), the 0x174 byte
+/* The shipped-system handshake after READY, on the T8152: surfaces IPC (max(page, SCRATCH1 + 1) bytes) and HEAP (SCRATCH3 bytes), the 0x174 byte
  * init block taken from a pool surface, then SCRATCH0 (low), SCRATCH1 (high), the wake word in SCRATCH7. Values macOS does not give (the config size,
  * the template word) are zero or the T6021 value, logged with the block. Returns 0 only when the firmware published a table address.
  * Needs the core running with AP power ON acknowledged. */

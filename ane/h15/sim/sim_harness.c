@@ -1419,7 +1419,7 @@ static void pos_run(void)
 static void pos_run_scratch(void)
 {
 	const struct ane_h15_soc *s = &ane_t6030_soc;
-	const u32 off = 0x1840050u;	/* ANE_H15_SCRATCH_OFF, macOS's T6030 case */
+	const u32 off = 0x1840050u;	/* ANE_H15_SCRATCH_OFF, the T6030 case */
 	unsigned int rstage;
 	char verdict[32], reason[128];
 	int i, first, k, n_touch, before_first = 0, ret;
@@ -1467,7 +1467,7 @@ static void pos_run_scratch(void)
 static void pos_run_scratch_boot(void)
 {
 	const struct ane_h15_soc *s = &ane_t6030_soc;
-	const u32 off = 0x1840050u;	/* ANE_H15_SCRATCH_OFF, macOS's T6030 case */
+	const u32 off = 0x1840050u;	/* ANE_H15_SCRATCH_OFF, the T6030 case */
 	unsigned int rstage;
 	char verdict[32], reason[128], name[128];
 	int i, n, first, ret, before = fails;

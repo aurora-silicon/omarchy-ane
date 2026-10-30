@@ -107,7 +107,7 @@
 #include "uapi/drm/ane_accel.h" /* quoted so the in-tree UAPI wins */
 
 /* Doorbell (IPI) block, engine + 0x1844000: set +0, pending +0x8000,
- * ack +0xc000 (kext aneInterruptHandler reads +0x184c000 and writes
+ * ack +0xc000 (the vendor driver's aneInterruptHandler reads +0x184c000 and writes
  * +0x1850000 with no SoC branch, receipts/2026-10-01-t8112-ane). */
 #define ANE_IPI_OFF			0x1844000
 
@@ -1889,7 +1889,7 @@ static int ane_t6021_prog_load_ioctl(struct drm_device *drm, void *data,
 }
 
 /* Firmware perf mode: CSNE_CMD_CH_PROPERTY_WRITE (0x1f), channel 0,
- * property 0x10aa, value 1. macOS sends it once during power-on (H13
+ * property 0x10aa, value 1. The shipped system sends it once during power-on (H13
  * kext evidence in the omarchy-ane perf-mode receipt); the selene 13.5
  * fw routes it to CAneEngineExeLoop::setPerfMode. It is a runtime
  * switch (write 1 to /sys/module/ane_t6021/parameters/fw_perf_mode) so
