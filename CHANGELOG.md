@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- docs: the README and the level 5 receipt now give the Qwen decode at levels 3 and 4 and a 31 minute decode soak at level 5: the S1-GPTQ step reaches its floor at level 3 (0.0790 s, then 0.0788 and 0.0787 s), the fp16 step does not follow the clock, and the logits are identical at every level.
+
 ## 0.5.7 (2026-10-30)
 
 - T6022 (M2 Ultra) ANE on by default. (row 316ea37e17f0; dkms; die 0 only; kernel 7.1.13 with the ANE DART power-domain change (#278))

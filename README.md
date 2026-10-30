@@ -156,15 +156,18 @@ In the next release the driver asks for level 5, the top of the power manager's
 six levels (300 to 1500 MHz), by default. The Parakeet encoder takes 289.7 ms at
 level 1, 240.6 ms at level 2 and 199.0 ms at level 5, bit-exact at every
 level. The Qwen decode step depends on the package. With the fp16 packages it
-does not follow the clock (0.1200 s at level 1, 0.1189 s at level 2, 0.1184 s
-at level 5). With the S1-GPTQ packages it does (0.1010 s, 0.0836 s, 0.0787 s).
+does not follow the clock (0.1200 s at level 1, then 0.1189, 0.1185, 0.1185
+and 0.1184 s at levels 2 to 5). With the S1-GPTQ packages it does, up to level 3
+(0.1010 s at level 1, then 0.0836, 0.0790, 0.0788 and 0.0787 s at levels 2 to 5).
 The level 1 values are the later of two arms; the first arms read 0.1226 s and
-0.1035 s. The decode ran at levels 1, 2 and 5 only, and its logits are identical
-at those three. A 30 minute soak at level 5 ran
-9,000 encoder calls, all bit-exact, with block medians within 0.05 percent of
-each other and a highest sensor reading of 49 C
+0.1035 s. The decode logits are identical at every level. A 30 minute soak at
+level 5 ran 9,000 encoder calls, all bit-exact, with block medians within 0.05
+percent of each other and a highest sensor reading of 49 C. A 31 minute decode
+soak at level 5 (four arms) held the step time and the logits, with a highest
+sensor reading of 51 C
 ([receipts/2026-10-30-ane-level5-soak](receipts/2026-10-30-ane-level5-soak/README.md)).
-Levels 3 and 4 were run for 5 minutes each, not soaked.
+Levels 3 and 4 ran for 5 minutes each on the encoder, and once on the decode,
+not soaked.
 
 The module parameter `ane.dvfs_level` opts down: `1` to `4` ask for that
 level, and `0` asks for nothing and leaves the boot level. Only the T6001
