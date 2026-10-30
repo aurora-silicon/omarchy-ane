@@ -7,7 +7,7 @@
  *     (1.07 -> 0.65 ms) and a full Qwen decode step by 42 percent (0.2009 -> 0.1158 s,
  *     4.98 -> 8.64 tokens per second); the logits are bit-identical at every level;
  *   - level 2 adds under 3 percent (the program is then memory-bound), levels above
- *     2 were never written, so this file requests level 1 only.
+ *     2 were written by the first version. The default became level 5 on 2026-10-30 after a 30 minute soak (see the dvfs_level parameter below).
  *
  * What the PMP wants, in the order macOS writes it (a macOS 26.6.2 trace of three ANE power cycles),
  * and in the order the receipt's runs used with the ANE already powered:
@@ -41,6 +41,7 @@
 #include <linux/device.h>
 #include <linux/io.h>
 #include <linux/iopoll.h>
+#include <linux/moduleparam.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
 
@@ -63,15 +64,29 @@
 #define ANE_DVFS_MAX_TIMEOUTS	3
 #define PTD_LEVEL_WORD		0x2000000000000000ULL
 
-#define ANE_DVFS_LEVEL		1
+#define ANE_DVFS_LEVEL_MAX	5
+#define ANE_DVFS_LEVEL_DEFAULT	5
 #define ANE_DVFS_WINDOW_SIZE	0x4000
 #define ANE_PTD_WINDOW_SIZE	0x20000
 #define ANE_DVFS_STEP_US	1000
+
+static const char *const dvfs_level_state[ANE_DVFS_LEVEL_MAX + 1] = {
+	"level-0", "level-1", "level-2", "level-3", "level-4", "level-5",
+};
 
 static u64 ptd_read(struct ane_device *ane, u32 reg)
 {
 	return readq(ane->dvfs.ptd + (u64)reg * 16);
 }
+
+/*
+ * The level asked for at each power-up: 5 by default (the 30 minute soak of 2026-10-30 ran 9,000 Parakeet encoder calls at level 5,
+ * bit-exact, 199.0 ms per call, 49 C at the end), 4 to 1 or 0 to opt down. 0 asks for nothing and leaves the boot level.
+ * Values above ANE_DVFS_LEVEL_MAX are clamped.
+ */
+static unsigned int dvfs_level = ANE_DVFS_LEVEL_DEFAULT;
+module_param(dvfs_level, uint, 0644);
+MODULE_PARM_DESC(dvfs_level, "ANE clock level asked for at power-up on the 16-inch M1 Max: 0 (the boot level, no request), 1 to 5 (default 5); read at each power-up");
 
 static void ptd_write(struct ane_device *ane, u32 reg, u64 val)
 {
@@ -94,7 +109,7 @@ static void ane_dvfs_release(struct ane_device *ane, bool level_set, bool psreq_
 	struct ane_dvfs *d = &ane->dvfs;
 
 	if (level_set) {
-		dvfs_cmd(ane, ANE_DVFS_LEVEL, 0);
+		dvfs_cmd(ane, d->level, 0);
 		dvfs_step();
 		ptd_write(ane, PTD_REG_ANE_LEVEL, PTD_LEVEL_WORD);
 		dvfs_step();
@@ -113,10 +128,15 @@ void ane_dvfs_up(struct ane_device *ane)
 {
 	struct ane_dvfs *d = &ane->dvfs;
 	u64 req, ack, lvl;
+	unsigned int level = min(READ_ONCE(dvfs_level), (unsigned int)ANE_DVFS_LEVEL_MAX);
 	int err;
 
 	if (!d->dvfs || !d->ptd || d->active)
 		return;
+	if (!level) {
+		d->state = "level-0-by-parameter";
+		return;
+	}
 	if (d->ack_timeouts >= ANE_DVFS_MAX_TIMEOUTS) {
 		d->state = "disabled-after-ps-ack-timeouts";
 		return;
@@ -166,13 +186,14 @@ void ane_dvfs_up(struct ane_device *ane)
 		ane_dvfs_release(ane, false, true);
 		return;
 	}
-	dvfs_cmd(ane, 0, ANE_DVFS_LEVEL);
+	dvfs_cmd(ane, 0, level);
 	dvfs_step();
-	ptd_write(ane, PTD_REG_ANE_LEVEL, PTD_LEVEL_WORD | ANE_DVFS_LEVEL);
+	ptd_write(ane, PTD_REG_ANE_LEVEL, PTD_LEVEL_WORD | level);
 
+	d->level = level;
 	d->active = true;
-	d->state = "level-1";
-	dev_dbg(ane->dev, "ANE level %d requested (DVFS_CMD reads 0x%08x)\n", ANE_DVFS_LEVEL,
+	d->state = dvfs_level_state[level];
+	dev_dbg(ane->dev, "ANE level %u requested (DVFS_CMD reads 0x%08x)\n", level,
 		readl(d->dvfs + DVFS_CMD_OFF));
 }
 
