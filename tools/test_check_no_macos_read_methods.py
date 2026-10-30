@@ -24,6 +24,9 @@ BANNED = {
     "Apple symbol": ["com.apple.driver.Foo is loaded\n", "AppleH16ANEInterface::start is called first\n", "AppleH11ANEInterface starts it\n", "AppleASCWrapV8 owns it\n",
                      "AppleA7IOP handles it\n", "AppleT6020PMGR::apply sets it\n", "AppleANELoadBalancer picks one\n", "ApplePMGR::send does it\n",
                      "AppleDART programs it\n", "AppleH16CamIn carries IPC\n"],
+    "macOS-sourced value": ["macOS writes 0 to register 0x199c first\n", "the window is in the macOS 27.0 device tree: physical 0x292290000\n",
+                            "ASC = 0x1600000  # kext 0x1600044 control\n", "0x20c  iBoot tables\n", "Apple's driver sets 0x400 and then 0x10\n",
+                            "the restore image holds 0x8000 bytes\n", "the kernelcache entry is at 0x4000\n"],
     "decode wording": ["a static decode of the driver shows the order\n", "an offline decode of the kext\n", "decoded from the kext\n",
                        "decoded statically from the kernelcache\n", "reverse engineered the macOS driver\n", "reverse-engineering the kext\n", "decoded from the kernel extension\n"],
 }
@@ -40,7 +43,7 @@ def make_repo():
     shutil.copy(CHECK, os.path.join(repo, "tools"))
     subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
     with open(os.path.join(repo, "clean.md"), "w") as f:
-        f.write("The core stops before its first status write. Register 0x199c is the gate word.\n")
+        f.write("The core stops before its first status write. Register 0x199c is the gate word.\nObserved macOS behaviour: it clears the gate word first (0x10 is the run bit).\n")
     commit(repo)
     return repo
 
