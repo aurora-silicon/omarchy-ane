@@ -39,6 +39,16 @@ One passing community row promotes an untested chip. A passing row has:
 - 20 smoke calls (`add-fixture`) that match the golden bit for bit,
 - no ANE, ANE-DART or ANE-mailbox fault.
 
+The collector drops the runtime section of a row when it is over its byte
+budget (the row says `runtime:over_budget`; an Ultra's many DARTs can do it).
+The checker then reads the same facts from the row's `ane_linux` section, and
+takes the die from the engine base in the check output ("bound to
+284000000.ane" is die 0, a base of 0x20_0000_0000 or more is die 1). A row
+that lost its runtime section and has no bound-device line is not judged. The
+kernel's notice that an out-of-tree module is unsigned ("module verification
+failed: signature and/or required key missing - tainting kernel") is not a
+fault line.
+
 A row from a machine without omarchy-ane installed is not judged and counts
 neither for nor against promotion. If an opt-in chip has both passing and
 failing rows, the result is `CONFLICT`; it does not promote until the failing
