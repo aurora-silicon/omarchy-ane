@@ -181,7 +181,7 @@ MODULE_PARM_DESC(run_scratch,
 static bool scratch_boot;
 module_param(scratch_boot, bool, 0444);
 MODULE_PARM_DESC(scratch_boot,
-		 "Stage=run (5) only: start the core in macOS's cold-boot order instead of the read-modify-write: write 0 to SCRATCH0..7, then SCRATCH6=1, SCRATCH7=0 (read back), then CPU_CONTROL 0 and 0x10, then poll SCRATCH7 for the ready word 0x08042006. Never RVBAR, the mailbox or the DART; SCRATCH5 only ever receives 0. Off by default. Decoded from macOS, never run on an M3.");
+		 "Stage=run (5) only: start the core in the recorded cold-boot order instead of the read-modify-write: write 0 to SCRATCH0..7, then SCRATCH6=1, SCRATCH7=0 (read back), then CPU_CONTROL 0 and 0x10, then poll SCRATCH7 for the ready word 0x08042006. Never RVBAR, the mailbox or the DART; SCRATCH5 only ever receives 0. Off by default. Recorded behaviour, never run on an M3.");
 
 static unsigned int sb_wait_ms = 1000;
 module_param(sb_wait_ms, uint, 0444);
@@ -196,7 +196,7 @@ module_param_named(kb_wait_ms, sb_wait_ms, uint, 0);
 static unsigned int pwgate_t6031;
 module_param(pwgate_t6031, uint, 0444);
 MODULE_PARM_DESC(pwgate_t6031,
-		 "Stage=run (5) only, T6031 only: macOS's PWGATE step before the first CPU_CONTROL write. 0 off (default, byte-identical). 1: read the word at PWGATE+0x199c, log it; if bits 1:0 are nonzero write 0 once and poll up to 5000 times (10 us each) until they read 0; if already 0 write nothing. 2: like 1 but always write 0 first (the unconditional macOS order). Other values refuse in probe. Decoded from macOS, never run on an M3.");
+		 "Stage=run (5) only, T6031 only: the recorded PWGATE step before the first CPU_CONTROL write. 0 off (default, byte-identical). 1: read the word at PWGATE+0x199c, log it; if bits 1:0 are nonzero write 0 once and poll up to 5000 times (10 us each) until they read 0; if already 0 write nothing. 2: like 1 but always write 0 first (the unconditional recorded order). Other values refuse in probe. Recorded behaviour, never run on an M3.");
 
 static char *fw_path;
 module_param(fw_path, charp, 0444);

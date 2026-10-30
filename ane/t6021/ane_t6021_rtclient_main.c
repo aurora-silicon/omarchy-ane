@@ -118,7 +118,7 @@
 static bool pwgate_open;
 module_param(pwgate_open, bool, 0444);
 MODULE_PARM_DESC(pwgate_open,
-		 "T8112 only: when PWGATE reads exactly 0x30000000, write 0 to it once and wait up to 100 ms for bits 29:28 to clear, as the macOS kext does; otherwise refuse (default 0: never write)");
+		 "T8112 only: when PWGATE reads exactly 0x30000000, write 0 to it once and wait up to 100 ms for bits 29:28 to clear, as the vendor driver does; otherwise refuse (default 0: never write)");
 
 /* Boot-time module parameters — defaults are the proven add-path
  * parameter list (boot 3ab812a3 / load-run.sh), except fw_alias_reserved,
@@ -160,7 +160,7 @@ MODULE_PARM_DESC(start_app_eps,
 static bool scratch3_ack = true;
 module_param(scratch3_ack, bool, 0444);
 MODULE_PARM_DESC(scratch3_ack,
-		 "After DONE, write SCRATCH3 = 0x08042006 (selene 0x7edc, kext 0x95eaee4). Default on; 0 withholds.");
+		 "After DONE, write SCRATCH3 = 0x08042006 (selene 0x7edc, vendor driver 0x95eaee4). Default on; 0 withholds.");
 
 static bool legacy_only = true;
 module_param(legacy_only, bool, 0444);
