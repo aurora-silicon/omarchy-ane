@@ -17,6 +17,6 @@ Ladder (`levels.csv`): the same encoder for 5 minutes at each of levels 3, 4 and
 
 Qwen decode (`qwen-decode.csv`): the two-arm decode cell at 1,024 positions, 5 prompts of 24 forced tokens, at levels 2 and 5.
 The step time (median over prompts) with the fp16 packages was 0.1189 s at level 2 and 0.1184 s at level 5, against 0.1200 s at level 1.
-With the S1-GPTQ packages it was 0.0836 s and 0.0787 s, against 0.1010 s at level 1. The logits were identical to the level 1 run in every prompt.
+With the S1-GPTQ packages it was 0.0836 s and 0.0787 s, against 0.1010 s at level 1. The logits were identical to the level 1 run in every prompt. The decode did not run at levels 3 and 4. The level 1 values are the later of two arms; the first arms read 0.1226 s and 0.1035 s.
 
 The machine had no other work on it during these runs.

@@ -6,6 +6,7 @@ One program, one input, two operating systems on the same machine. The program i
 |---|---|---|---|---|
 | 13-inch M1 | 138.65 ms | 111.56 ms | 1.24 times | 80.5 percent |
 | 16-inch M1 Max | 289.60 ms | 137.39 ms | 2.11 times | 47.4 percent |
+| 16-inch M1 Max, clock level 5 (the default in the next release) | 199.04 ms | 137.39 ms | 1.45 times | 69.0 percent |
 
 The Linux numbers are medians of 20 calls through `omarchy-ane-run`, with the ANE busy time and the wall time equal. The 13-inch value is the median of five cell medians (138.804, 138.652, 138.441, 138.649 and 138.710 ms), taken on 29 October with the desktop session stopped: the log of each cell lists no process holding the GPU device before or after. Other 13-inch cells taken with the desktop up read 138.23 to 139.36 ms. The 16-inch value is one cell of 20 calls with the PMP loaded.
 
