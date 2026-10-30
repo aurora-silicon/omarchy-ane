@@ -17,6 +17,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import re
 import tempfile
 
 sys.dont_write_bytecode = True
@@ -85,7 +86,12 @@ for chip in sorted(_chips):
     p = run(base, chip, to, "--check")  # writes nothing
     assert p.returncode == 0 and tree(base) == after, (chip, p.stderr)
 
-    p = run(base, chip, back, "--apply")
+    # a chip promoted with a note carries it in the dts line; the way back to default-on needs the same note
+    note = None
+    if back == "default-on":
+        m = re.search(r"Overlay state: on by default \((.+)\)\.", before[f"packaging/dt/{chip}-ane.dts"].decode())
+        note = m.group(1) if m else None
+    p = run(base, chip, back, "--apply", note)
     assert p.returncode == 0, (chip, p.stderr)
     rt = tree(base)
     residue = {k for k in rt if rt[k] != before.get(k)} | {k for k in before if k not in rt}
@@ -124,22 +130,27 @@ print(f"promote_chip test: {chip} --note writes the Evidence cell and state line
 # The canonical lists do not depend on flip order: two chips promoted in
 # either order (the v0.4.3 release path: one PR merged, one refused, then the
 # second) land the same lists, and the reverts restore the start byte for byte.
-first, second = UNTESTED[:2]
-a, b = make_tree(), make_tree()
-start = {k: v for k, v in tree(a).items() if k != "CHANGELOG.md"}
-for root, chips in ((a, (first, second)), (b, (second, first))):
-    for c in chips:
-        p = run(root, c, "default-on", "--apply")
-        assert p.returncode == 0, p.stderr
-lists = ("packaging/omarchy-ane-check", "packaging/dt/overlays", "packaging/omarchy-ane-dt")
-assert [(a / f).read_bytes() for f in lists] == [(b / f).read_bytes() for f in lists], (first, second)
-for root, chips in ((a, (first, second)), (b, (second, first))):
-    for c in chips:
-        p = run(root, c, "opt-in", "--apply")
-        assert p.returncode == 0, p.stderr
-    after = {k: v for k, v in tree(root).items() if k != "CHANGELOG.md"}
-    assert after == start, (chips, sorted(k for k in after if start.get(k) != after[k]))
-print(f"promote_chip test: {first}+{second} order-independent, reverts restore")
+# Promoting two chips leaves the UNTESTED arm of omarchy-ane-check with at least one, so the order
+# check needs three untested chips; with fewer, the tool refuses the second flip by design.
+if len(UNTESTED) >= 3:
+    first, second = UNTESTED[:2]
+    a, b = make_tree(), make_tree()
+    start = {k: v for k, v in tree(a).items() if k != "CHANGELOG.md"}
+    for root, chips in ((a, (first, second)), (b, (second, first))):
+        for c in chips:
+            p = run(root, c, "default-on", "--apply")
+            assert p.returncode == 0, p.stderr
+    lists = ("packaging/omarchy-ane-check", "packaging/dt/overlays", "packaging/omarchy-ane-dt")
+    assert [(a / f).read_bytes() for f in lists] == [(b / f).read_bytes() for f in lists], (first, second)
+    for root, chips in ((a, (first, second)), (b, (second, first))):
+        for c in chips:
+            p = run(root, c, "opt-in", "--apply")
+            assert p.returncode == 0, p.stderr
+        after = {k: v for k, v in tree(root).items() if k != "CHANGELOG.md"}
+        assert after == start, (chips, sorted(k for k in after if start.get(k) != after[k]))
+    print(f"promote_chip test: {first}+{second} order-independent, reverts restore")
+else:
+    print(f"promote_chip test: order check skipped, {len(UNTESTED)} untested chips left")
 
 # The full pytest host suite on a flipped tree runs in the promotion gate
 # (dt-overlays CI stays hermetic); here: the flip-sensitive offline suites per

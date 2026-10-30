@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- T6022 (M2 Ultra) ANE on by default, die 0 only. The one passing row (316ea37e17f0, dkms) ran on a 7.1.13 kernel with the ANE DART power-domain change from #278. Die 1 has no row yet.
+- T6022 (M2 Ultra) ANE on by default. (row 316ea37e17f0; dkms; die 0 only; kernel 7.1.13 with the ANE DART power-domain change (#278))
 - docs: `docs/parakeet-encoder-pairs.md` is new. It puts the whole Parakeet encoder on Linux next to the same cell on macOS, on the same Mac: the 13-inch M1 at 80.5 percent of the macOS throughput and the 16-inch M1 Max at 47.4 percent, with what the numbers do and do not show.
 - docs: `docs/qwen-decode-packages.md` gets the 16-inch M1 Max rows at 1,024 positions on one boot: clock level 0 (22.0 percent lower with the 8-bit package) and clock level 1 (15.7 percent lower), with the level 0 to level 1 factors (1.73 and 1.60).
 - docs: `docs/qwen-decode-packages.md` gets the 13-inch M1 rows at 1,024 positions (two sessions, 28.3 and 28.1 percent lower) and a third 2,048-position session (13.4 percent lower), with the two 1,024-position package hashes.

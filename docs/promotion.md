@@ -19,7 +19,7 @@ no ANE driver. A row without the field counts as `dkms`.
 
 1. Install `omarchy-ane-dkms`.
 2. Add the chip's opt-in key from the README table to
-   `/etc/omarchy-mac-boot/dtb-overlays.opt-in`. For T6022 and T8112, run
+   `/etc/omarchy-mac-boot/dtb-overlays.opt-in`. For T8112, run
    `sudo omarchy-ane-firmware-fetch` first.
 3. `sudo omarchy-ane-dt apply`, then reboot.
 4. From an [omarchy-mlx](https://github.com/joshuaswarren/omarchy-mlx)
