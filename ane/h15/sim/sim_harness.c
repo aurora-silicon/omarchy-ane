@@ -52,6 +52,20 @@ const unsigned int ane_h15_n_facts = ARRAY_SIZE(ane_h15_facts);
 #else
 #include "../ane_h15_soc.c"
 #endif
+/* The run-time overlay glue is tested by sim/sim_overlay.c with its own fake tree; here the module's init and exit are never run. */
+int ane_h15_register(struct platform_driver *drv, const char *opt, bool apply)
+{
+	(void)drv;
+	(void)opt;
+	(void)apply;
+	return 0;
+}
+
+void ane_h15_unregister(struct platform_driver *drv)
+{
+	(void)drv;
+}
+
 #include "../ane_h15_main.c"
 
 /* ---- shim storage ---- */

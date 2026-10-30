@@ -283,6 +283,27 @@ owner copies `t6031-ane-experimental.dts`, swaps
 `0xe0`. The four-row module (`ane_h15_of_match[]`) is already
 prepared to bind either compatible.
 
+### Run-time overlay: `apply_overlay=1` (no boot-image change)
+
+A test boot that cannot carry a device-tree change (a lab boot takes its tree from the boot image on the Mac) has no
+`apple,t6030-ane` or `apple,t6031-ane` node, so the driver is never probed and the module logs only the kernel's taint line.
+`apply_overlay=1` gives the module its own node. It needs `optin=t6030` or `optin=t6031`, and a kernel built with
+`CONFIG_OF_OVERLAY`:
+
+    insmod ane/h15/ane_h15.ko optin=t6031 apply_overlay=1 stage=5 confirm_run=1 map_fw=1 fw_seg=TEXTPA:SIZE,DATAPA:SIZE
+
+In this order, and only after every check passes: it publishes the few labels the overlay refers to in `/__symbols__`,
+gives a target node that has no phandle one, applies the compiled DART-variant overlay with `of_overlay_fdt_apply`, and then
+registers the driver so the normal probe runs. The overlay is the one in `t603x-ane-dart-experimental.dts` with only its
+empty label-minting fragments removed (`gen-runtime-overlay.py` writes `ane_h15_overlay_data.h`; `make sim-overlay` fails if
+the committed header is not what it writes). It refuses, touching nothing, when the optin key has no overlay, the machine is
+not that chip, or a node the overlay refers to is missing. It does nothing when the tree already has the ANE node. Unloading
+removes it. Nothing is written to a boot image or to disk.
+
+Not yet measured on hardware: whether the four T6030 power-controller nodes the overlay adds under the running power
+manager get their devices created at run time, which the first run's log will show. Off by default; the parameter list in
+`modinfo` is unchanged for every existing command.
+
 The shipped **data-only** overlays in `packaging/dt/`:
 
 - `packaging/dt/t8122-ane-dataonly.dts`
