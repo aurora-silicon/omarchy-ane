@@ -1292,6 +1292,22 @@ static void ane_h15_ipi_poll(struct ane_h15 *ane)
 	}
 }
 
+/* Stage 5 only, once after the wait and before RUN is cleared: the final CPU_STATUS and both mailbox CTRL words on one
+ * line. Read only, all inside the ADT-published wrapper window; each address is logged by ane_h15_read_word before its
+ * read. The interrupt-pending word (+0x184c000) is deliberately NOT read here: it lies outside both published windows
+ * and stays refused by ane_h15_read_ok(); stage 7 reads it only behind its table check. With no mailbox message this
+ * line still says whether the core left STOPPED and whether either mailbox side filled. */
+static void ane_h15_post_wait_status(struct ane_h15 *ane)
+{
+	u32 st = 0, a2i = 0, i2a = 0;
+
+	if (ane_h15_read_word(ane, "CPU_STATUS", ane->soc->cpu_status, &st) ||
+	    ane_h15_read_word(ane, "MBOX_A2I_CTRL", ane->soc->mbox + 0x110, &a2i) ||
+	    ane_h15_read_word(ane, "MBOX_I2A_CTRL", ane->soc->mbox + 0x114, &i2a))
+		return;
+	dev_info(ane->dev, "ane_h15 post-wait cpu_status=%#x a2i_ctrl=%#x i2a_ctrl=%#x\n", st, a2i, i2a);
+}
+
 /* Stage 5, run_scratch=1: the eight SCRATCH words on one line, read only. */
 static void ane_h15_scr_dump(struct ane_h15 *ane, const char *when)
 {
@@ -2014,6 +2030,8 @@ static int ane_h15_run_common(struct ane_h15 *ane, unsigned int stg)
 			msgs++;
 		}
 	}
+	if (stg == 5)
+		ane_h15_post_wait_status(ane);
 	if (stg == 5 && (run_scratch || kboot))
 		ane_h15_scr_dump(ane, "after the wait");
 	/* Stop the core the macOS way: clear RUN, then bit 5, each from a fresh read. */
