@@ -153,6 +153,22 @@ class ScoreTests(unittest.TestCase):
         r = scorer.score(Path(self.tmp.name))
         self.assertEqual(r["branch"], "UNSCORED")
 
+    def test_a_module_that_only_logged_the_taint_notice_never_probed(self):
+        fx = Part2Fixture(self.tmp.name, pwgate=None, result_line=False)
+        (fx.dir / "ane_h15-dmesg.txt").write_text("[  110.446966] ane_h15: loading out-of-tree module taints kernel.\n")
+        r = scorer.score(fx.dir)
+        self.assertEqual(r["branch"], "UNSCORED")
+        self.assertTrue(r["never_probed"])
+        self.assertIn("never ran", r["why"])
+        self.assertIn("device-tree node", r["why"])
+        self.assertIn("unchanged data says nothing", r["why"])
+
+    def test_a_module_that_logged_anything_else_is_not_called_never_probed(self):
+        fx = Part2Fixture(self.tmp.name, result_line=False)
+        r = scorer.score(fx.dir)
+        self.assertEqual(r["branch"], "UNSCORED")
+        self.assertNotIn("never_probed", r)
+
     def test_the_last_result_line_wins_when_the_module_logged_two(self):
         fx = Part2Fixture(self.tmp.name, changed=(5,))
         log = fx.dir / "ane_h15-dmesg.txt"

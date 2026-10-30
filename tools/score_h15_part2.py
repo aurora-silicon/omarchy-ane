@@ -72,6 +72,16 @@ def classify_data(out, info):
     return {"branch": "C", "why": f"data unchanged, no message, pwgate {info['pwgate']}", "next": NEXT["C"], **info}
 
 
+def no_result(dmesg):
+    """The module logged no RESULT line: say whether it ever ran at all."""
+    if [line for line in dmesg.splitlines() if "ane_h15" in line and "taints kernel" not in line]:
+        return unscored("no RESULT line from the module")
+    return unscored("the module loaded but never ran: its only kernel line is the taint notice, so probe() was never "
+                    "called and no device-tree node matched; unchanged data says nothing about the firmware", never_probed=True,
+                    next="Put the ANE device-tree node on the boot (the opt-in overlay; the DART variant for map_fw=1), make the job "
+                         "refuse before loading when the node is absent, then run part 2 again.")
+
+
 def score(out):
     out = Path(out)
     try:
@@ -83,7 +93,7 @@ def score(out):
         return {"branch": "E", "why": "the wrapper never reached its end line", "next": NEXT["E"]}
     results = RESULT.findall(dmesg)
     if not results:
-        return unscored("no RESULT line from the module")
+        return no_result(dmesg)
     verdict, reason = results[-1]
     reason = reason.strip()
     if verdict == "REFUSED":
