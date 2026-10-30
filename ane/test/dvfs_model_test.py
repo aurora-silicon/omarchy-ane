@@ -36,6 +36,10 @@ extern int files, create_err;
 #define dev_dbg(d, ...) ((void)0)
 #define sysfs_emit(b, ...) 0
 #define ssize_t long
+#define module_param(n, t, p)
+#define MODULE_PARM_DESC(n, d)
+#define READ_ONCE(x) (x)
+#define min(a, b) ((a) < (b) ? (a) : (b))
 extern int log_n;
 extern char log_buf[8192];
 void fake_usleep(void);
@@ -59,7 +63,7 @@ void *fake_iomap(struct device_node *np, int idx);
 #define read_poll_timeout(op, val, cond, sleep_us, timeout_us, sleep_before_read, args...) \
 	({ int __i, __r = -ETIMEDOUT; for (__i = 0; __i < 5; __i++) { (val) = op(args); if (cond) { __r = 0; break; } } __r; })
 """
-for n in ("delay", "device", "io", "iopoll", "of", "of_address"):
+for n in ("delay", "device", "io", "iopoll", "moduleparam", "of", "of_address"):
     with open(T + "/inc/linux/%s.h" % n, "w") as f:
         f.write('#include "../common.h"\n')
 with open(T + "/inc/common.h", "w") as f:
@@ -70,7 +74,7 @@ with open(T + "/ane.h", "w") as f:
 #include "inc/common.h"
 struct ane_device {
 	struct device *dev;
-	struct ane_dvfs { void __iomem *dvfs; void __iomem *ptd; bool active; unsigned int ack_timeouts; const char *state; } dvfs;
+	struct ane_dvfs { void __iomem *dvfs; void __iomem *ptd; bool active; unsigned int level; unsigned int ack_timeouts; const char *state; } dvfs;
 };
 int ane_dvfs_init(struct ane_device *ane);
 void ane_dvfs_exit(struct ane_device *ane);
@@ -133,6 +137,7 @@ static int fails;
 
 static void fresh(void)
 {
+	dvfs_level = 1;	/* the older cases below are the level 1 sequence; level 5 (the default) has its own cases at the end */
 	mem_n = 0; log_n = 0; log_buf[0] = 0; ack_mode = 1; no_regs = 0; perturb_cmd = perturb_psreq = 0; files = maps = create_err = 0;
 	memset(&ane, 0, sizeof(ane));
 	ane.dev = &dev0;
@@ -150,6 +155,7 @@ int main(void)
 	static const char *const dn = "W32 285868a00 80000010\nW64 28e3d0860 2000000000000000\nW64 28e3d07c0 0000000060003000\nW32 285868a00 80000000\nW32 28586a000 00000000\n";
 	char want[1024];
 
+	EXPECT(dvfs_level == 5, "the module parameter defaults to level 5");
 	np0.x = 0;
 	dev0.x = 0;
 	/* 1: the full cycle, twice */
@@ -242,6 +248,18 @@ int main(void)
 			p++;
 		}
 	}
+	/* 8: the default level 5: up writes 0x80000005 and the level word 5, down undoes 0x50; 9 is clamped to 5; 0 asks for nothing */
+	fresh(); dvfs_level = 5;
+	ane_dvfs_up(&ane);
+	EXPECT(strstr(log_buf, "W32 285868a00 80000005\nW64 28e3d0860 2000000000000005\n") && ane.dvfs.active && !strcmp(ane.dvfs.state, "level-5"), "level 5: up words and state");
+	ane_dvfs_down(&ane);
+	EXPECT(strstr(log_buf, "W32 285868a00 80000050\nW64 28e3d0860 2000000000000000\n") != NULL, "level 5: the release undoes the level that was requested");
+	fresh(); dvfs_level = 9;
+	ane_dvfs_up(&ane);
+	EXPECT(strstr(log_buf, "80000005") && !strstr(log_buf, "80000009") && !strcmp(ane.dvfs.state, "level-5"), "a value above the maximum is clamped to 5");
+	fresh(); dvfs_level = 0;
+	ane_dvfs_up(&ane);
+	EXPECT(log_n == 0 && !ane.dvfs.active && !strcmp(ane.dvfs.state, "level-0-by-parameter"), "level 0 by parameter: nothing written");
 	printf(fails ? "RESULT: %d FAILURES\n" : "RESULT: all checks passed\n", fails);
 	return fails != 0;
 }
