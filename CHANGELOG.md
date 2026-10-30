@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- T6022 (M2 Ultra) ANE on by default. (row 316ea37e17f0; dkms; die 0 only; kernel 7.1.13 with the ANE DART power-domain change (#278))
 - ane: on the 16-inch M1 Max (T6001) the driver now asks for ANE clock level 5, the top of the power manager's six levels, at power-up instead of level 1. The Parakeet encoder takes 199.0 ms instead of 289.7 ms, bit-exact; a 30 minute soak of 9,000 calls held every block within 0.05 percent and 49 C at the end. The Qwen decode step with the S1-GPTQ packages falls from 0.1010 s to 0.0787 s; with the fp16 packages it does not change (0.1200 s to 0.1184 s). The module parameter `ane.dvfs_level` opts down (`1` to `4`, or `0` for no request). Only the T6001 overlays carry the clock windows, so the M1, M1 Pro, M2 Pro and M2 Max are unchanged. Receipt: `receipts/2026-10-30-ane-level5-soak`.
 - docs: `docs/parakeet-encoder-pairs.md` is new. It puts the whole Parakeet encoder on Linux next to the same cell on macOS, on the same Mac: the 13-inch M1 at 80.5 percent of the macOS throughput and the 16-inch M1 Max at 47.4 percent, with what the numbers do and do not show.
 - docs: `docs/qwen-decode-packages.md` gets the 16-inch M1 Max rows at 1,024 positions on one boot: clock level 0 (22.0 percent lower with the 8-bit package) and clock level 1 (15.7 percent lower), with the level 0 to level 1 factors (1.73 and 1.60).

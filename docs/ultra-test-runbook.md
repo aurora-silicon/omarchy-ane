@@ -107,9 +107,9 @@ Verdict:
   retry: the die-1 ps word layout is the open measurement, and the ACTUAL
   log from the first attempt is exactly what we need.
 
-## T6022 (M2 Ultra): same shape, firmware boot unproven
+## T6022 (M2 Ultra): die 0 runs, die 1 unproven
 
-Die 0 uses key `ane-t6022`; die 1 would use `ane-t6022-die1`, which ships
+Die 0 is on by default (one passing row, 316ea37e17f0); die 1 would use `ane-t6022-die1`, which ships
 **data-only** today: nothing installs or applies it, by design. The die-1
 firmware image (`t602x_ane1_fw_selene_rc4x`, firmware list `Ap,ANE1`) has no
 recorded SHA-256 (docs/ultra-die1.md §9, fact 2), `omarchy-ane-firmware-fetch`

@@ -9,13 +9,14 @@ device-tree overlays and verification tools.
 
 ## Support at a glance
 
-- Enabled by default: M1, M1 Pro, M1 Max, M2 Pro, M2 Max. The overlay
+- Enabled by default: M1, M1 Pro, M1 Max, M2 Pro, M2 Max, M2 Ultra (die 0
+  only; one passing row). The overlay
   applies at install and the driver binds at boot. Each of these chips has run
   exact fp16 execution on real hardware. Enabled by default still requires a
   system that can apply the overlay (omarchy-mac-boot overlay support, or the
   kernel's own device tree already carrying the node) and, on the M2 family,
   the firmware fetch; the install section covers both.
-- Opt in, untested: M1 Ultra (die 0), plain M2, M2 Ultra (die 0). A driver
+- Opt in, untested: M1 Ultra (die 0), plain M2. A driver
   and a cited overlay exist; nobody has run them on that silicon. You add one
   opt-in key.
 - No packaged driver for M3 and later. Experimental bring-up modules for the
@@ -36,9 +37,9 @@ device-tree overlays and verification tools.
 | M2 | T8112 | not recorded | `apple,t8112-ane` | `ane_t6021` | opt-in, untested | `ane-t8112` + note | not tested |
 | M2 Pro | T6020 | not recorded | `apple,t6020-ane` | `ane_t6021` | on by default | none | fp16 execution verified |
 | M2 Max | T6021 | not recorded | `apple,t6021-ane` | `ane_t6021` | on by default | none | fp16 execution verified |
-| M2 Ultra | T6022 | not recorded | `apple,t6022-ane` | `ane_t6021` | opt-in, untested (die 0) | `ane-t6022` + note | not tested |
+| M2 Ultra | T6022 | not recorded | `apple,t6022-ane` | `ane_t6021` | on by default | none | row 316ea37e17f0; dkms; die 0 only; kernel 7.1.13 with the ANE DART power-domain change (#278) |
 
-The T8112 and T6022 note: after adding the key, run
+The T8112 note: after adding the key, run
 `sudo omarchy-ane-firmware-fetch` before `omarchy-ane-dt apply`. The M2 Pro
 and M2 Max fetch firmware automatically at install.
 
