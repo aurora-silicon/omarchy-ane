@@ -1402,6 +1402,42 @@ static void pos_run_case(const char *tag, u32 ctrl, int msgs_left, bool nostart,
 	chk(sim_n_iomap == 2 && sim_n_iounmap == 2 && sim_module_gets == 0, name);
 }
 
+/* stage 5, M3 next unit: after the wait, before RUN is cleared, log the final CPU_STATUS and both mailbox CTRL words on
+ * one line. Read only, inside the ADT-published wrapper window. The interrupt-pending word (engine +0x184c000) is OUTSIDE
+ * both published windows, so stage 5 must still NOT read it; stage 7 reads it only behind its table check. */
+static void pos_run_postwait(void)
+{
+	const struct ane_h15_soc *s = &ane_t6030_soc;
+	const u32 pend_off = 0x184c000u, ack_off = 0x1850000u;
+	int i, a2i_reads = 0, a2i_last = -1, clear_idx = -1, writes = 0, ret;
+
+	run_setup(s, "apple,t6030-ane", 0x0);
+	eng_set(s, pend_off, 0x4);
+	ret = probe_now();
+	chk(ret == 0, "RP1 stage 5 with a pending word set: probe returns 0");
+	chk(events_in(s->engine_pa + pend_off, 4, 0) == 0 && events_in(s->engine_pa + ack_off, 4, 0) == 0,
+	    "RP2 the pending and acknowledge words stay outside the stage-5 read allowlist (never touched)");
+	chk(log_count("ane_h15 post-wait cpu_status=") == 1 && log_count("post-wait cpu_status=") == 1 &&
+	    log_count("a2i_ctrl=") >= 1 && log_count("i2a_ctrl=") >= 1,
+	    "RP3 one post-wait line carries CPU_STATUS and both mailbox CTRL words");
+	for (i = 0; i < sim_n_events && i < SIM_MAX_EVENTS; i++) {
+		if (!sim_events[i].write && sim_events[i].pa == s->engine_pa + s->mbox + 0x110) {
+			a2i_reads++;
+			a2i_last = i;
+		}
+		if (sim_events[i].write && sim_events[i].pa == s->engine_pa + s->cpu_control) {
+			writes++;
+			if (writes == 2)
+				clear_idx = i;
+		}
+	}
+	chk(a2i_reads == 2 && a2i_last >= 0 && clear_idx >= 0 && a2i_last < clear_idx,
+	    "RP4 the A2I CTRL word is read once in the preflight and once after the wait, before RUN is cleared");
+	chk(events_in(0, ~0ULL, 1) == writes && writes == 2 && sim_bus_faults == 0,
+	    "RP5 the only writes are still the two CPU_CONTROL values");
+	ane_h15_remove(&pdev);
+}
+
 static void pos_run(void)
 {
 	static const u32 w0[] = { 0x10, 0x0 };
@@ -3034,6 +3070,7 @@ int main(int argc, char **argv)
 		pos_multi_pd();
 		pos_stage2();
 		pos_run();
+		pos_run_postwait();
 		pos_run_scratch();
 		pos_run_scratch_boot();
 		pos_run_pwgate();
