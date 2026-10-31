@@ -145,7 +145,8 @@ class NativeBenchGates(unittest.TestCase):
                  patch.object(bench.subprocess,'Popen',return_value=failed) as run:
                 with self.assertRaises(OSError):
                     bench.native_benchmark(root,root,{'x':np.zeros((1,1),dtype=np.float16)},root/'libane.so',1,10)
-                self.assertTrue(run.call_args.kwargs['start_new_session'])
+                self.assertNotIn('start_new_session',run.call_args.kwargs)
+                self.assertEqual(run.call_args.args[0][:2],['/bin/sh','-c'])
                 failed.kill.assert_not_called()
                 self.assertEqual((receipt/'stderr.log').read_text(),'runner refused')
                 self.assertTrue((receipt/'x.fp16').is_file())

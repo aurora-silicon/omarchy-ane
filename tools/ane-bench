@@ -50,8 +50,11 @@ def native_benchmark(root, compiler, inputs, library, iterations, deadline):
         path = temporary/(name+'.fp16'); path.write_bytes(value.tobytes())
         command += ['--input',f'{name}={path}']
     command += ['--output',f'probabilities={temporary/"probabilities.fp16"}']
-    process = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE,
-                               text=True,start_new_session=True)
+    # Ignore terminal SIGINT in the existing owner, while keeping it in the
+    # controller's process group for lease/timeout cleanup. Positional argv
+    # avoids shell interpolation of model paths or inputs.
+    command = ["/bin/sh", "-c", 'trap "" INT; exec "$@"', "ane-bench-native", *command]
+    process = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
     interrupted = None
     while True:
         try:

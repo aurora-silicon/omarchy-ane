@@ -40,7 +40,8 @@ At [mil-hwx-compiler](https://github.com/joshuaswarren/mil-hwx-compiler), commit
   A caller supplies native and CPU callbacks using the same inputs and model
   weights. No new hardware execution code is introduced.
 - The existing Python binding exports that helper as `ane.Fallback`; optional
-  `ane.OnnxCPU` holds an ONNX Runtime CPU session. Legacy `ane.model` is unchanged.
+  `ane.OnnxCPU` holds an ONNX Runtime CPU session. Existing `ane.model.predict`
+  now raises native transfer/execution errors so they can trigger fallback.
 - A small `ane_query_caps` accessor through libane's existing enumeration, so
   the H13 benchmark runner is selected only for ABI 1/chip 13. The added GET_CAPS
   definition matches the public Aurora Linux UAPI, where size is an output field.
