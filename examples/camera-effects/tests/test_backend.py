@@ -121,3 +121,34 @@ def test_dormant_native_never_probes_device(monkeypatch):
     from aurora_camera_effects.native import NativeGraph
     monkeypatch.setattr(C,'CDLL',lambda *args:pytest.fail('unqualified package probed a device'))
     with pytest.raises(OSError,match='no qualified'):NativeGraph(ROOT/'models/selfie',{'native_targets':[]},'unused')
+
+
+def test_explicit_cpu_never_constructs_a_native_owner():
+    def forbidden():
+        raise AssertionError('CPU selection must not query a native owner')
+    model=Model('selfie',native_factory=forbidden,engine='cpu')
+    try:
+        assert model.runtime.native is None
+        assert model.runtime.native_failure is None
+        _,call=model(np.zeros((1,3,256,256),np.float32))
+        assert call.backend==0
+    finally:
+        model.close()
+
+
+def test_explicit_ane_refuses_unavailable_graph():
+    with pytest.raises(RuntimeError,match='requested ANE'):
+        Model('selfie',native_factory=lambda:None,engine='ane')
+    with pytest.raises(ValueError,match='no GPU consumer'):
+        Model('selfie',engine='gpu')
+
+
+def test_bridge_selection_uses_process_only_engine(monkeypatch):
+    import aurora_camera_effects.backend as backend
+    captured={}
+    def factory(*args,**kwargs):
+        captured.update(kwargs)
+    monkeypatch.setattr(backend,'Backend',factory)
+    monkeypatch.setenv('AURORA_CAMERA_ENGINE','cpu')
+    backend.create(64,32,1,False,1,6,1.5,0,'',601,False)
+    assert captured['engine']=='cpu'
