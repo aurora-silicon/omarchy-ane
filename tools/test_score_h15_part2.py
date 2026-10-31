@@ -120,7 +120,9 @@ class ScoreTests(unittest.TestCase):
     def test_post_wait_line_is_reported_when_the_module_has_it(self):
         fx = Part2Fixture(self.tmp.name, pwgate="pwgate=opened word=0x1")
         log = fx.dir / "ane_h15-dmesg.txt"
-        log.write_text(log.read_text() + f"{PREFIX}ane_h15 post-wait cpu_status=0x22 a2i_ctrl=0x20001 i2a_ctrl=0x20001\n")
+        lines = log.read_text().splitlines()
+        lines.insert(-1, f"{PREFIX}ane_h15 post-wait cpu_status=0x22 a2i_ctrl=0x20001 i2a_ctrl=0x20001")
+        log.write_text("\n".join(lines) + "\n")
         r = scorer.score(fx.dir)
         self.assertEqual(r["post_wait"], {"cpu_status": "0x22", "a2i_ctrl": "0x20001", "i2a_ctrl": "0x20001"})
 
@@ -280,6 +282,33 @@ class ReviewRegressions(unittest.TestCase):
         out = self.cli()
         self.assertEqual(out.returncode, 2, out.stdout)
         self.assertTrue(out.stdout.startswith("branch UNSCORED:"), out.stdout)
+
+    def test_later_register_reads_do_not_belong_to_an_earlier_result(self):
+        Part2Fixture(self.root, messages=1)
+        log = self.root / "ane_h15-dmesg.txt"
+        with log.open("a") as stream:
+            stream.write(f"{PREFIX}ane_h15 read CPU_STATUS pa=0x3c9400048 off=0x1400048\n")
+            stream.write(f"{PREFIX}ane_h15 post-wait cpu_status=0x2a a2i_ctrl=0x20001 i2a_ctrl=0x20001\n")
+        self.assertEqual(scorer.score(self.root)["branch"], "UNSCORED")
+
+    def test_an_earlier_wrapper_end_cannot_close_a_new_invocation(self):
+        Part2Fixture(self.root, messages=1)
+        with (self.root / "wrapper.log").open("a") as stream:
+            stream.write("h15 part2 wrapper start 2026-10-31T01:02:00Z boot_id=aaaaaaaa uname=lab\n")
+        self.assertEqual(scorer.score(self.root)["branch"], "E")
+
+    def test_compare_count_rejects_a_numeric_prefix_of_an_invalid_token(self):
+        Part2Fixture(self.root)
+        (self.root / "compare.txt").write_text("pages before 232, after 232, differing 0broken\n")
+        self.assertEqual(scorer.score(self.root)["branch"], "UNSCORED")
+
+    def test_duplicate_indices_cannot_hide_a_conflicting_hash(self):
+        Part2Fixture(self.root)
+        log = self.root / "data-after.txt"
+        first = log.read_text().splitlines()[0]
+        with log.open("a") as stream:
+            stream.write("0 different-hash\n" + first + "\n")
+        self.assertEqual(scorer.score(self.root)["branch"], "UNSCORED")
 
 
 if __name__ == '__main__':

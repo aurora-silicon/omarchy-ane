@@ -28,6 +28,7 @@ NEXT = {
 }
 RESULT = re.compile(r"ane_h15 RESULT stage=5 soc=\S+ verdict=(\S+) reason=(.*)")
 END = re.compile(r"h15 part2 wrapper end .* insmod_rc=(\d+) second_hash_rc=(\d+)")
+START = re.compile(r"^h15 part2 wrapper start .*$", re.MULTILINE)
 SUMMARY = re.compile(r"run started_seen=[^\n]*?\bmessages=(\d+)")
 MESSAGE = re.compile(r"ane_h15 msg\d+ raw0=")
 REBOOT = "The core did not stop, so the module is pinned and the machine needs a reboot before the next run. "
@@ -47,6 +48,8 @@ def pages(path):
         if len(fields) != 2:
             raise ValueError(f"{path.name}: {line.strip()!r} is not a page index and a hash")
         index = int(fields[0])
+        if index in out:
+            raise ValueError(f"{path.name}: duplicate page index {index}")
         out[index] = fields[1]
     return out
 
@@ -63,10 +66,10 @@ def gate_state(log):
     return None
 
 
-def log_facts(own, trail, reason):
+def log_facts(own, reason):
     """What the module logged for this run, without judging it."""
     info = {"pwgate": gate_state(own), "reboot_required": "core-not-stopped" in reason}
-    post = re.search(r"post-wait cpu_status=(\S+) a2i_ctrl=(\S+) i2a_ctrl=(\S+)", trail)
+    post = re.search(r"post-wait cpu_status=(\S+) a2i_ctrl=(\S+) i2a_ctrl=(\S+)", own)
     if post:
         info["post_wait"] = dict(zip(("cpu_status", "a2i_ctrl", "i2a_ctrl"), post.groups()))
     return info
@@ -78,7 +81,7 @@ def compare_count(out):
     compare = out / "compare.txt"
     if not compare.exists():
         return None
-    listed = re.search(r"differing (\d+)", compare.read_text())
+    listed = re.fullmatch(r"pages before \d+, after \d+, differing (\d+)", compare.read_text().partition("\n")[0])
     if not listed:
         raise ValueError("compare.txt states no differing page count")
     return int(listed.group(1))
@@ -133,8 +136,9 @@ def run_facts(dmesg, results):
     if len(results) > 1:
         own = own[results[-2].end():]
     tail = dmesg[chosen.end():]
-    if SUMMARY.search(tail) or MESSAGE.search(tail):
-        raise ValueError("the capture contains a later run without its RESULT")
+    if any("ane_h15" in line and "firmware started: do NOT unload; reboot to park the ANE" not in line
+           for line in tail.splitlines()):
+        raise ValueError("the capture contains later module activity without its RESULT")
     summaries = list(SUMMARY.finditer(own))
     if len(summaries) > 1:
         raise ValueError("the last RESULT cannot be attributed to a single run")
@@ -143,9 +147,16 @@ def run_facts(dmesg, results):
     if logged != messages:
         raise ValueError("the log's message lines and its run summary disagree")
     verdict, reason = chosen.group(1), chosen.group(2).strip()
-    info = log_facts(own, own + tail, reason)
+    info = log_facts(own, reason)
     info["messages"] = messages
     return verdict, reason, info
+
+
+def wrapper_end(wrapper):
+    starts = list(START.finditer(wrapper))
+    if not starts:
+        return None
+    return END.search(wrapper, starts[-1].end())
 
 
 def score(out):
@@ -155,7 +166,7 @@ def score(out):
         dmesg = (out / "ane_h15-dmesg.txt").read_text()
     except OSError as error:
         return unscored(f"missing input: {error.filename}")
-    ended = END.search(wrapper)
+    ended = wrapper_end(wrapper)
     if not ended:
         return {"branch": "E", "why": "the wrapper never reached its end line", "next": NEXT["E"]}
     results = list(RESULT.finditer(dmesg))
