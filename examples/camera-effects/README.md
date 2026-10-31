@@ -85,3 +85,17 @@ The exporter reads the committed, hash-identified source models; it does not
 fetch a converted model or call Apple's compiler. Conversion dependencies are
 build-only. Do not infer native support from successful MIL export or isolated
 operator probes. See `LICENCE-AUDIT.md`, `VALIDATION.md` and `LEAD-TEST-PLAN.md`.
+
+## Private-prefix installs and explicit engine choice
+
+The Python backend also finds `libane_python.so` beside the installed
+`aurora-camera-effects` directory, so a private `PREFIX`/`LIBDIR` works without
+writing `/usr/lib`. The existing shared fallback runtime remains the owner.
+
+`AURORA_CAMERA_ENGINE=cpu` selects the CPU graph for this process only, without
+constructing/querying a native graph owner. `auto` is the default and retains
+normal native admission and same-weight CPU fallback. `ane` requires successful
+native graph construction; an unavailable graph fails backend creation with a
+diagnostic. No GPU consumer is implemented. Backend creation prints the selected
+engine per model. This selector does not qualify a graph, change ownership checks
+or alter any device state; it is intended for explicit demo sessions.

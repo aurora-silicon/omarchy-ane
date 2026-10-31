@@ -3,6 +3,7 @@
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import sys
 import time
@@ -19,9 +20,11 @@ ROOT=Path(__file__).resolve().parents[1]
 REPO=ROOT.parents[1]
 sys.path.insert(0,str(REPO/'bindings/python/python'))
 from ane import Fallback
-LIBRARY=REPO/'bindings/python/dylib/libane_python.so'
-if not LIBRARY.is_file():
-    LIBRARY=Path('/usr/lib/libane_python.so')
+# Source builds, private prefixes and distro libdirs share the same runtime.
+_LIBRARIES=(REPO/'bindings/python/dylib/libane_python.so',
+            Path(__file__).resolve().parents[2]/'libane_python.so',
+            Path('/usr/lib64/libane_python.so'),Path('/usr/lib/libane_python.so'))
+LIBRARY=next((path for path in _LIBRARIES if path.is_file()),_LIBRARIES[-1])
 
 
 def verified(root, name):
@@ -40,7 +43,9 @@ def verified(root, name):
 
 
 class Model:
-    def __init__(self, name, root=ROOT/'models', library=LIBRARY, native_factory=None):
+    def __init__(self, name, root=ROOT/'models', library=LIBRARY, native_factory=None, *, engine='auto'):
+        if engine not in ('auto','cpu','ane'):
+            raise ValueError('camera effects engine must be auto, cpu or ane; no GPU consumer is installed')
         self.closed=False
         self.root=Path(root)/name
         self.metadata=verified(self.root,name)
@@ -58,7 +63,12 @@ class Model:
             from .native import NativeGraph
             self.native=native_factory() if native_factory else NativeGraph(self.root,self.metadata,library)
             return lambda x: self.validate(self.native(x))
-        self.runtime=Fallback(self.cpu,library=library,native_factory=load)
+        self.runtime=Fallback(self.cpu,library=library,native_factory=load if engine!='cpu' else None)
+        if engine=='ane' and self.runtime.native is None:
+            self.close()
+            raise RuntimeError('requested ANE camera graph is unavailable')
+        print(f'camera-effects: engine: {"ane" if self.runtime.native is not None else "cpu"} ({name})',
+              file=sys.stderr,flush=True)
 
     def validate(self, outputs):
         if len(outputs)!=len(self.shapes):
@@ -95,7 +105,7 @@ class Model:
 class Backend:
     def __init__(self, width, height, background='off', framing=False,
                  minimum=1., maximum=1., default=1., zoom=0., replacement='',
-                 matrix=601, full=False, *, model_root=ROOT/'models', library=LIBRARY):
+                 matrix=601, full=False, *, model_root=ROOT/'models', library=LIBRARY, engine='auto'):
         if type(width)!=int or type(height)!=int or width<2 or height<2 or width>4096 or height>2160 or (width|height)&1:
             raise ValueError('expected even NV12 dimensions up to 4096x2160')
         if background not in ('off','blur','replace') or matrix not in (601,709):
@@ -103,10 +113,10 @@ class Backend:
         self.width,self.height=width,height
         self.background,self.framing=background,bool(framing)
         self.matrix,self.full=matrix,bool(full)
-        self.segmenter=Model('selfie',model_root,library) if background!='off' else None
+        self.segmenter=Model('selfie',model_root,library,engine=engine) if background!='off' else None
         self.detector=None
         try:
-            self.detector=Model('yunet',model_root,library) if framing else None
+            self.detector=Model('yunet',model_root,library,engine=engine) if framing else None
             self.framer=Framer(minimum,maximum,default,zoom) if framing else None
             self.replacement=None
             if background=='replace':
@@ -180,4 +190,5 @@ class Backend:
 def create(width, height, background, framing, minimum, maximum, default, zoom,
            replacement, matrix, full):
     return Backend(width,height,('off','blur','replace')[background],bool(framing),
-                   minimum,maximum,default,zoom,replacement,matrix,bool(full))
+                   minimum,maximum,default,zoom,replacement,matrix,bool(full),
+                   engine=os.environ.get('AURORA_CAMERA_ENGINE','auto'))
