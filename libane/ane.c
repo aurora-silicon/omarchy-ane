@@ -637,7 +637,7 @@ static inline void ane_model_free(struct ane_nn *nn)
 static struct ane_nn *ane_init_common(const char *path, int dev_id,
 				      uint32_t tile_shift,
 				      const struct ane_m2_port_spec *ports,
-				      uint32_t port_count)
+				      uint32_t port_count, uint32_t target)
 {
 	struct ane_nn *nn;
 	int abi_major = 0;
@@ -666,6 +666,21 @@ static struct ane_nn *ane_init_common(const char *path, int dev_id,
 		return NULL;
 	}
 	timing_end("device_open", t, 0);
+	if (target) {
+		struct drm_ane_get_caps caps = {0};
+		int err = ioctl(nn->fd, DRM_IOCTL_ANE_GET_CAPS, &caps);
+
+		/* ABI 2 alone is not proof of H14: future families may share it.
+		 * Check this fd, not an earlier query with a reopen race. */
+		if (err < 0 || caps.size < 16 || caps.chip_family != target ||
+		    caps.abi_version != (uint32_t)abi_major ||
+		    caps.abi_version != (target == 13 ? 1u : 2u)) {
+			ane_device_close(nn);
+			free(nn);
+			errno = ENOTSUP;
+			return NULL;
+		}
+	}
 
 	/* ABI 2 (T6021): sections + program/procedure on the accel node; the
 	 * M1 channel machinery does not apply. */
@@ -712,7 +727,16 @@ static struct ane_nn *ane_init_common(const char *path, int dev_id,
 struct ane_nn *__ane_init_shift(const char *path, int dev_id,
 				uint32_t tile_shift)
 {
-	return ane_init_common(path, dev_id, tile_shift, NULL, 0);
+	return ane_init_common(path, dev_id, tile_shift, NULL, 0, 0);
+}
+
+struct ane_nn *ane_init_target(const char *path, int dev_id, uint32_t target)
+{
+	if (!path || (target != 13 && target != 14)) {
+		errno = EINVAL;
+		return NULL;
+	}
+	return ane_init_common(path, dev_id, TILE_SHIFT_DEFAULT, NULL, 0, target);
 }
 
 struct ane_nn *ane_m2_init_ports(const char *path,
@@ -720,7 +744,7 @@ struct ane_nn *ane_m2_init_ports(const char *path,
 				 uint32_t port_count, int dev_id)
 {
 	return ane_init_common(path, dev_id, TILE_SHIFT_DEFAULT, ports,
-			       port_count);
+			       port_count, 0);
 }
 
 struct ane_nn *__ane_init(const char *path, int dev_id)
@@ -855,6 +879,29 @@ uint64_t __ane_dst_size(struct ane_nn *nn, const uint32_t idx)
 	}
 	INDEX_CHECK(ane_dst_count(nn), idx, 0);
 	return tile_size(nn, dst_bdx(nn, idx));
+}
+
+int ane_send_checked(struct ane_nn *nn, const void *from, uint64_t size,
+		     uint32_t idx)
+{
+	if (!nn || !from || idx >= TILE_COUNT || !size ||
+	    size != __ane_src_size(nn, idx))
+		return -EINVAL;
+	if (nn->m2)
+		return ane_m2_send(nn, from, idx);
+	__ane_send(nn, (void *)from, idx);
+	return 0;
+}
+
+int ane_read_checked(struct ane_nn *nn, void *to, uint64_t size, uint32_t idx)
+{
+	if (!nn || !to || idx >= TILE_COUNT || !size ||
+	    size != __ane_dst_size(nn, idx))
+		return -EINVAL;
+	if (nn->m2)
+		return ane_m2_read(nn, to, idx);
+	__ane_read(nn, to, idx);
+	return 0;
 }
 
 /* The M2 port model, not the ANEC header, counts the M2 io: the header

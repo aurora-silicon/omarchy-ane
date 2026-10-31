@@ -118,6 +118,17 @@ struct ane_nn {
 /* Capability query through the existing libane device enumeration. No load
  * or submission. Unknown/legacy GET_CAPS returns negative errno. */
 int ane_query_caps(int dev_id, uint32_t *abi_version, uint32_t *chip_family);
+/* Resident graph owners pass the validated package target (13 or 14).
+ * GET_CAPS is checked on the actual load fd before any allocation/load ioctl.
+ * Unknown, legacy or mismatched capabilities fail closed with errno set.
+ * The returned ordinary libane handle stays resident until ane_free(). */
+struct ane_nn *ane_init_target(const char *path, int dev_id, uint32_t target);
+/* Physical fp16 surfaces: exact allocation size, never dense tensor bytes.
+ * Checked transfers return zero or negative errno, including ABI-2 errors.
+ * Owners must retire the whole graph on any failed transfer or execution. */
+int ane_send_checked(struct ane_nn *nn, const void *from, uint64_t size,
+		     uint32_t idx);
+int ane_read_checked(struct ane_nn *nn, void *to, uint64_t size, uint32_t idx);
 struct ane_nn *__ane_init(const char *path, int dev_id);
 #define ane_init(path) (__ane_init(path, 0))
 

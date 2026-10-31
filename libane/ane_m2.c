@@ -2005,6 +2005,14 @@ int ane_m2_program_build(const void *anec, uint64_t anec_size,
 		model->io_count++;
 	}
 
+	/* Apply the same bound-slot check as the explicit-port builder after
+	 * the default path has finalized refs and scratch. Reference derivation
+	 * alone examines low offsets; it cannot validate a nonzero high word. */
+	err = check_bound_slots(desc, tasks, ntasks, model, krn_size);
+	if (err) {
+		return err;
+	}
+
 	/* Kernel/constant section: the raw constant region, sized by the
 	 * header (0x80 B for the clip fold, 128 KiB for matvec weights). */
 	kern = sec_alloc(secs, ANE_M2_SEC_KERNEL, krn_size);

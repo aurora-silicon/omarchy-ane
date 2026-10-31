@@ -1194,6 +1194,111 @@ static void run_caps(void)
 	n_fake_fds = 0;
 }
 
+static void run_default_bounds(const char *path)
+{
+    FILE *file = fopen(path, "rb");
+    uint8_t *data;
+    long size;
+    struct ane_m2_model model;
+    struct ane_m2_sections secs;
+    unsigned before = next_handle;
+
+    check(file != NULL, "bounds fixture opens");
+    if (!file)
+        return;
+    fseek(file, 0, SEEK_END);
+    size = ftell(file);
+    rewind(file);
+    data = malloc(size > 0 ? (size_t)size : 1);
+    if (!data || size <= 0x10ec || fread(data, 1, size, file) != (size_t)size) {
+        check(0, "bounds fixture read");
+        free(data);
+        fclose(file);
+        return;
+    }
+    fclose(file);
+    check(!ane_m2_program_build(data, size, &model, &secs), "bounds baseline builds");
+    ane_m2_sections_free(&secs);
+    /* Source fixture add, base 1adf2ee: Src1BaseAddr high/low words in
+     * its dense BAR-ref record. Both must fit the selected I/O buffer. */
+    data[0x10e8] = 1;
+    check(ane_m2_program_build(data, size, &model, &secs) < 0,
+          "default builder rejects BAR high word");
+    ane_m2_sections_free(&secs);
+    data[0x10e8] = 0;
+    memset(data + 0x10e4, 0xff, 4);
+    check(ane_m2_program_build(data, size, &model, &secs) < 0,
+          "default builder rejects out-of-range BAR low word");
+    ane_m2_sections_free(&secs);
+    check(next_handle == before, "bad BAR refs allocate no device BOs");
+    free(data);
+}
+
+static void run_target(const char *path)
+{
+    struct ane_nn *nn;
+    uint32_t target, before, h, opens;
+    void *input, *output;
+    uint64_t src, dst;
+
+    for (target = 13; target <= 14; target++) {
+        fake_reset();
+        abi_major = target == 13 ? 1 : 2;
+        caps_chip = target == 13 ? 14 : 13;
+        before = next_handle;
+        nn = ane_init_target(path, 0, target);
+        check(!nn && errno == ENOTSUP && next_handle == before,
+              "target mismatch refuses before BO allocation");
+        caps_chip = 16;
+        nn = ane_init_target(path, 0, target);
+        check(!nn && next_handle == before, "future generation refuses before BO allocation");
+        caps_chip = 0;
+        caps_missing = 1;
+        nn = ane_init_target(path, 0, target);
+        check(!nn && next_handle == before, "missing GET_CAPS refuses before BO allocation");
+        caps_missing = 0;
+        caps_size = 4;
+        nn = ane_init_target(path, 0, target);
+        check(!nn && next_handle == before, "short GET_CAPS refuses before BO allocation");
+        caps_size = 32;
+        opens = n_fake_fds;
+        nn = ane_init_target(path, 0, target);
+        check(n_fake_fds == opens + 1, "caps and load use a single fd");
+        check(nn != NULL, "matching target loads existing backend");
+        if (!nn)
+            continue;
+        src = __ane_src_size(nn, 0);
+        dst = __ane_dst_size(nn, 0);
+        input = calloc(1, src);
+        output = malloc(dst);
+        check(input && output && src && dst, "resident buffers allocated");
+        if (input && output) {
+            check(ane_send_checked(nn, input, src - 1, 0) == -EINVAL,
+                  "short physical input refused");
+            check(ane_read_checked(nn, output, dst + 1, 0) == -EINVAL,
+                  "oversized physical output refused");
+            check(ane_send_checked(nn, input, src, TILE_COUNT) == -EINVAL,
+                  "invalid role refused");
+            before = next_handle;
+            for (h = 0; h < 4; h++) {
+                check(!ane_send_checked(nn, input, src, 0), "resident input transfer");
+                check(!ane_exec(nn), "resident execute");
+                check(!ane_read_checked(nn, output, dst, 0), "resident output transfer");
+            }
+            check(next_handle == before, "resident calls allocate no new BOs");
+        }
+        free(input);
+        free(output);
+        ane_free(nn);
+        for (h = 1; h <= next_handle; h++)
+            check(!live[h], "resident close releases every owned BO");
+    }
+    check(ane_send_checked(NULL, NULL, 0, 0) == -EINVAL, "null transfer refused");
+    check(!ane_init_target(path, 0, 16) && errno == EINVAL, "unknown target refused");
+    n_fake_fds = 0;
+    fake_reset();
+}
+
 int main(int argc, char **argv)
 {
 	const char *dir = argc > 1 ? argv[1] : "../fixtures/h14-anec";
@@ -1206,6 +1311,8 @@ int main(int argc, char **argv)
 	dup2(STDOUT_FILENO, STDERR_FILENO);
 	run_caps();
 	snprintf(path, sizeof(path), "%s/add/program-0.anec", dir);
+	run_default_bounds(path);
+	run_target(path);
 	run_case("ABI 2: load, exec and free", ANE_ABI_M2_MAJOR, path, 0);
 	run_case("ABI 2: first BO mmap fails", ANE_ABI_M2_MAJOR, path, 1);
 	run_case("ABI 2: third BO mmap fails", ANE_ABI_M2_MAJOR, path, 3);
