@@ -1,8 +1,12 @@
 Host: Darwin/arm64 build host.
-Camera backend suite: 23 passed in 26.59s.
+Camera backend suite: 23 passed in 8.45s on the final source (earlier runs: 9.03s and 26.59s).
 The macOS test library contains the actual libane fallback policy C source,
 exported under its Python binding symbols; it has no device functions.
 The new H13 rewrite/gate/layout tests alone: 13 passed in 2.07s.
 Fresh model download: all original and converted artifact SHA-256 checks pass.
 Still preview: blur + framing produced a PNG; off removed the preview cache.
 No camera/audio or ANE device was opened. These are not Linux/device receipts.
+Fresh h13/setup.sh: Python 3.12 environment, verified downloads and both bundle builds pass.
+Auto preview with unqualified bundles chose CPU for both models; off removed its output.
+Fresh setup on compiler PR #5 base f7879f1 emits all 118 ANEC programs and all 88 host ONNX partitions byte-identically to the parity-tested 72e1d99 baseline.
+Installed-layout preview with the bundled Python binding and no libane shared library: CPU blur/framing and off pass.

@@ -18,6 +18,8 @@ install: all
 	install libaurora-camera-effects.so $(DESTDIR)$(LIBDIR)/aurora-camera-denoise/
 	install -m644 camera_effects.h $(DESTDIR)$(PREFIX)/include/
 	cp -r aurora_camera_effects models $(DESTDIR)$(PYTHON_DIR)/
+	install -d $(DESTDIR)$(PYTHON_DIR)/ane
+	install -m644 ../../bindings/python/python/ane/*.py $(DESTDIR)$(PYTHON_DIR)/ane/
 	cp -r h13 $(DESTDIR)$(PYTHON_DIR)/
 	install try-camera-h13 fetch-models.py $(DESTDIR)$(PYTHON_DIR)/
 	install -m644 README.md NOTICES.md LICENCE-AUDIT.md TRY.md LEAD-RUN.md requirements-runtime.txt requirements-h13.txt $(DESTDIR)$(PYTHON_DIR)/

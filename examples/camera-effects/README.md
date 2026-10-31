@@ -99,3 +99,5 @@ Weights and generated programs are downloaded/built at install and ignored by
 Git. Run `python fetch-models.py` before using a fresh checkout, including the
 existing export scripts. The pinned PR #3 exports and original source weights
 are SHA-256 checked. See [../../docs/ANE-GAPS.md](../../docs/ANE-GAPS.md).
+The install target also ships the shared pure-Python fallback binding beside
+the backend, so a CPU-only installation does not require a libane shared object.

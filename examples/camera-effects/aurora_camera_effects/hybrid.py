@@ -126,8 +126,8 @@ class HybridGraph:
                             self.records.append(prepared)
                             stages.append((program,prepared))
                     self.steps.append((step,stages))
-        except BaseException:
-            self.close()
+        except BaseException as error:
+            self.close(primary=error)
             raise
         uses={}
         for step,_ in self.steps:
@@ -199,13 +199,13 @@ class HybridGraph:
                     values.pop(name,None)
         return [values[n] for n in self.plan['outputs']]
 
-    def close(self):
+    def close(self, primary=None):
         self.closed=True
         try:
             if self.records:
-                self.runner._close_all(self.records,None)
-                self.records.clear()
+                self.runner._close_all(self.records,primary)
         finally:
+            self.records.clear()
             # Stream teardown releases the host partitions and their weights,
             # including when shared graph-owner cleanup raises an error.
             self.steps.clear()

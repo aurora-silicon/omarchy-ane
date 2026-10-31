@@ -1,7 +1,7 @@
 # Camera H13 coverage
 
 Compiler: mil-hwx-compiler PR #5 head
-`72e1d99c6f51eaf97ad61280936d42dbb0b6a1ae`. No compiler op encoder changed. A separate reader-only compatibility PR is required to validate channel-changing convolution packages; it preserves existing ANEC task, span, layout and allocation checks.
+`72e1d99c6f51eaf97ad61280936d42dbb0b6a1ae`. No compiler op encoder changed. [Reader-only compatibility PR #9](https://github.com/aurora-silicon/mil-hwx-compiler/pull/9) is required to validate channel-changing convolution packages; it preserves existing ANEC task, span, layout and allocation checks.
 All numbers below were measured on a Darwin/arm64 build host using CPU
 simulation. No M1 Pro, M2 or other ANE execution was performed by this worker.
 
@@ -63,7 +63,7 @@ Validation receipts:
 Every compiled island is compared with its original ONNX operation on all
 30 images, with fp16 input and `abs <= .002 + .002*abs(reference)`. This checks
 the mathematical rewrite and boundary rounding, not emitted task execution.
-The shared graph owner validates task packages and bindings on device setup.
+The shared graph owner validates task packages and bindings on device setup. With reader PR #9, all 118 stage packages pass those structural checks and NCHW surface round trips offline. A fresh setup on PR #5 base `f7879f1` emits all 118 ANEC programs and all 88 host ONNX partitions byte-identically to the parity-tested baseline; see [the equivalence receipt](receipts/camera-h13/fresh-setup-equivalence.json).
 
 For masks, every image also passes confidence MAE <= .005 and binary pixel
 disagreement <= .005; measured maxima are 0.0007564 and 0.001236 respectively

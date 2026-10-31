@@ -11,7 +11,7 @@ M1 Pro, Fedora 44 aarch64, from `examples/camera-effects` in this branch:
 bash h13/setup.sh /path/to/mil-hwx-compiler/build/mil-hwxc
 ```
 
-The recorded offline bundles use PR #5 revision `72e1d99c6f51eaf97ad61280936d42dbb0b6a1ae`. Use the reader compatibility branch `fu-camera-h13-reader` on PR #5 when running them: the original reader misclassifies channel-changing conv as elementwise. No new compiler op encoder is required by this branch. The build
+The recorded offline bundles use PR #5 revision `72e1d99c6f51eaf97ad61280936d42dbb0b6a1ae`. Use the [reader compatibility PR #9](https://github.com/aurora-silicon/mil-hwx-compiler/pull/9), branch `fu-camera-h13-reader` on PR #5 when running them: the original reader misclassifies channel-changing conv as elementwise. No new compiler op encoder is required by this branch. The build
 command is `make -j6 build/mil-hwxc` on its supported build host. The worker's
 macOS-built compiler emits platform-independent H13 packages; it is not a Linux
 runtime binary. Build libane and its Python binding natively on Fedora:

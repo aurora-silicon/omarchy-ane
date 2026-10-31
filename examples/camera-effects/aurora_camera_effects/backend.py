@@ -49,6 +49,7 @@ class CPUOnly:
     def __init__(self, cpu):
         self.cpu=cpu
         self.calls=self.total_ns=self.failed_calls=0
+        self.last_ns=self.min_ns=self.max_ns=0
 
     def run(self, x):
         start=time.monotonic_ns()
@@ -62,11 +63,16 @@ class CPUOnly:
         call.reason=1
         self.calls+=1
         self.total_ns+=call.latency_ns
+        self.last_ns=call.latency_ns
+        self.min_ns=min(self.min_ns or call.latency_ns,call.latency_ns)
+        self.max_ns=max(self.max_ns,call.latency_ns)
         return result,call
 
     def stats(self):
         return dict(calls=self.calls,native_calls=0,cpu_calls=self.calls,failed_calls=self.failed_calls,
-                    total_ns=self.total_ns,native_ready=0,reason=1)
+                    total_ns=self.total_ns,last_ns=self.last_ns,min_ns=self.min_ns,max_ns=self.max_ns,
+                    native_ready=0,reason=1,native_error=0,
+                    calls_per_second=self.calls*1e9/self.total_ns if self.total_ns else 0)
 
 
 class Model:
