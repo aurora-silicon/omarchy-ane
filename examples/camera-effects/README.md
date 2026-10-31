@@ -27,19 +27,21 @@ convention; other matrices are refused. Background composition operates on
 native Y and interleaved UV planes, preserving source colorimetry and foreground
 pixels. The mask uses fast guided upsampling: local coefficients are fit at
 256×256, then evaluated against full-resolution luma. Blur is a separable
-Gaussian; replacement uses a user-supplied image loaded once per stream.
+Gaussian evaluated at reduced size for wide kernels; replacement uses a
+user-supplied image loaded once per stream.
 
 YuNet sees aspect-preserving, padded BGR. The face union determines a crop with
 head/shoulder margin. A 0.4-second exponential smoother, a dead zone and a
 one-second face-loss hold prevent rapid jumps; loss then returns toward the
 center/default zoom. NV12 crop coordinates are even and the crop is resized to
 the negotiated output size. This is digital framing; no lens dewarping or Apple
-algorithm/model is included. The board config owns zoom bounds/defaults, while
-the user controls framing and optional manual zoom separately per stream.
+algorithm/model is included. Board data supplies stock zoom bounds/defaults;
+validated user configuration can explicitly enable framing and select its range
+on any board. Effects remain off until selected separately per stream.
 
 All Python, model creation and inference run on the filter's worker. Four-slot
-owned queues bound memory and discard overloaded inputs. Only complete output
-frames are published, with original timestamps; results older than 200 ms are
+owned queues bound memory and select the newest queued input under load. Only
+complete output frames are published, with original timestamps; results older than 200 ms are
 dropped. No old mask is placed on a new image. Effects-off bypasses the worker.
 Backend initialization/inference failure passes the original frame and logs a
 diagnostic. Blur/replacement are visual effects, not a privacy boundary.

@@ -43,16 +43,22 @@ host test is not device qualification.
 
 ## Framing board contract
 
-- J616s must advertise capability and min/default/max 1.0/1.5/6.0 from the board
-  file. It starts off. Enable automatic framing with `camera.framing=true`,
+- With no user override, J616s must advertise capability and min/default/max
+  1.0/1.5/6.0 from the board file. It starts off. Enable automatic framing with `camera.framing=true`,
   `camera.zoom=0.0`. Verify smooth panning, zoom-in/out, multiple-face union,
   one-second face-loss hold and return to default. This is an open digital crop,
   not a claim of macOS lens correction or exact framing composition.
 - Exercise manual zoom 1.0, 1.5 and 6.0; reject values outside the board range or
   nonfinite values atomically. Even NV12 coordinates must stay in the sensor.
-- J700/Neo and unknown boards have no framing block. A mixed transaction that
-  requests framing must be rejected without partially enabling replacement or
-  changing another control. Blur remains a separate supported user choice.
+- J700/Neo and unknown boards have no framing capability by default. Without
+  explicit configuration, a mixed transaction requesting framing must be rejected
+  without partially enabling replacement or another control. Blur is independent.
+- Test explicit opt-in on any board using `framing-supported = true` and
+  validated `framing-zoom-min`/`-max`/`-default` values in the user `denoise.conf`
+  `[denoise]` section. Send SIGHUP to the selected instance; advertised capability
+  and bounds must update without enabling an effect. Then enable framing per
+  stream, accept zoom within the configured range and atomically reject values
+  outside it. An invalid config reload must preserve the prior valid config.
 
 ## Overload and failure acceptance
 
