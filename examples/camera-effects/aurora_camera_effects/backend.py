@@ -62,6 +62,8 @@ class Model:
         def load():
             from .native import NativeGraph
             self.native=native_factory() if native_factory else NativeGraph(self.root,self.metadata,library)
+            if self.native is None:
+                return None
             return lambda x: self.validate(self.native(x))
         self.runtime=Fallback(self.cpu,library=library,native_factory=load if engine!='cpu' else None)
         if engine=='ane' and self.runtime.native is None:
