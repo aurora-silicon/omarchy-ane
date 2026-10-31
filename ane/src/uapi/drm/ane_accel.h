@@ -26,6 +26,16 @@ extern "C" {
 #define ANE_M2_MAX_SECTIONS	16
 #define ANE_M2_MAX_BINDS	64
 
+/* Public Aurora kernel UAPI at aurora-silicon/linux
+ * 04a63b11701363386e3691b7ffa7e64eef477fa7. size is output. */
+#define DRM_ANE_GET_CAPS 0x00
+struct drm_ane_get_caps {
+	__u32 flags, size, abi_version, chip_family;
+	__u32 section_size, bind_size, exec_io_size, pad;
+};
+#define DRM_IOCTL_ANE_GET_CAPS \
+	DRM_IOWR(DRM_COMMAND_BASE + DRM_ANE_GET_CAPS, struct drm_ane_get_caps)
+
 #define DRM_ANE_BO_INIT 0x1
 #define DRM_ANE_BO_FREE 0x2
 #define DRM_ANE_SUBMIT	0x3

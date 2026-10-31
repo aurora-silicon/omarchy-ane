@@ -311,3 +311,10 @@ The table is generated from `data/ane-soc/` and the data-only overlays.
 | T8150 | H18 | 5 | no |
 | T8152 | H18 | 1 | yes |
 <!-- END DATA-ONLY TABLE -->
+
+## CPU fallback and the MobileNetV1 baseline
+
+The existing libane archive and Python binding now offer an optional CPU fallback
+helper. [Integration, existing-stack inventory and M1 Pro benchmark commands](docs/CPU-FALLBACK-BENCH.md)
+cover `ane.Fallback`, `ane.OnnxCPU`, the seed-1 MobileNet exporter and `tools/ane-bench`.
+Native graph execution continues to use the existing published runner.
