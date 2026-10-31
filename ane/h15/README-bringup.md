@@ -298,11 +298,16 @@ registers the driver so the normal probe runs. The overlay is the one in `t603x-
 empty label-minting fragments removed (`gen-runtime-overlay.py` writes `ane_h15_overlay_data.h`; `make sim-overlay` fails if
 the committed header is not what it writes). It refuses, touching nothing, when the optin key has no overlay, the machine is
 not that chip, or a node the overlay refers to is missing. It does nothing when the tree already has the ANE node. Unloading
-removes it. Nothing is written to a boot image or to disk.
+removes the overlay and its labels. Minted target phandles remain in the live tree after removal.
+Nothing is written to a boot image or to disk.
+If overlay application returns an error with a changeset ID, the module removes that changeset before reverting its labels.
 
-Not yet measured on hardware: whether the four T6030 power-controller nodes the overlay adds under the running power
-manager get their devices created at run time, which the first run's log will show. Off by default; the parameter list in
-`modinfo` is unchanged for every existing command.
+On a 16-inch M3 Pro MacBook Pro, the runtime overlay created the ANE node and all five power domains reported ACTUAL `0xf`.
+Stage 5 observed zero SCRATCH words before and after RUN, zero mailbox messages, and `FAIL reason=core-not-stopped`.
+This does not establish inference.
+A test on an M3 Max MacBook Pro lost the kernel and recovered without saved test output.
+No console capture survived, so the failure location is unknown.
+The parameter remains off by default.
 
 The shipped **data-only** overlays in `packaging/dt/`:
 

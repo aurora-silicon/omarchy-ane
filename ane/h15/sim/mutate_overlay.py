@@ -21,6 +21,7 @@ MUTANTS = {
     "skip-collision-check": ("strcmp(cur, o->syms[i].path)", "false"),
     "no-revert-on-overlay-failure": ("\t\t\tof_changeset_revert(&ane_ovl.cs);\n\t\t\tof_changeset_destroy(&ane_ovl.cs);\n\t\t\tane_ovl.symbols = false;\n\t\t} else {",
                                      "\t\t} else {"),
+    "no-partial-overlay-remove": ("int cleanup = of_overlay_remove(&ane_ovl.id);", "int cleanup = 0;"),
     "no-overlay-remove-on-unload": ("if (ane_ovl.overlay) {", "if (false) {"),
     "no-symbols-revert-on-unload": ("\tif (ane_ovl.symbols) {\n\t\tof_changeset_revert(&ane_ovl.cs);\n\t\tof_changeset_destroy(&ane_ovl.cs);\n\t\tane_ovl.symbols = false;\n\t}\n}\n\nint ane_h15_register",
                                     "}\n\nint ane_h15_register"),

@@ -136,7 +136,7 @@ static int ane_h15_publish_symbols(const struct ane_h15_ovl *o)
 	return 0;
 }
 
-/* Step 2: a target without a phandle gets the next free one. */
+/* Minted phandles remain after removal because live-tree references may retain them. */
 static void ane_h15_assign_phandles(const struct ane_h15_ovl *o, struct device_node **targets)
 {
 	phandle next = ane_h15_max_phandle() + 1;
@@ -192,6 +192,12 @@ static int ane_h15_overlay_apply(const char *optin)
 		ret = of_overlay_fdt_apply(o->blob, o->size, &ane_ovl.id, NULL);
 		if (ret) {
 			pr_err(OVL "the kernel refused the overlay: %d\n", ret);
+			if (ane_ovl.id) {
+				int cleanup = of_overlay_remove(&ane_ovl.id);
+
+				if (cleanup)
+					pr_err(OVL "could not remove the failed overlay: %d\n", cleanup);
+			}
 			of_changeset_revert(&ane_ovl.cs);
 			of_changeset_destroy(&ane_ovl.cs);
 			ane_ovl.symbols = false;

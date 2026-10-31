@@ -26,6 +26,7 @@ static struct device_node tree[24];
 static int ntree;
 static const char *machine;
 static int sim_cs_apply_rc, sim_cs_prop_rc, sim_ovl_rc, sim_drv_rc;
+static bool sim_ovl_partial, sim_ovl_active;
 static const void *ovl_blob;
 static u32 ovl_size;
 
@@ -187,15 +188,19 @@ int of_overlay_fdt_apply(const void *blob, u32 size, int *id, const struct devic
 	ev_add("overlay-apply");
 	ovl_blob = blob;
 	ovl_size = size;
-	if (sim_ovl_rc)
-		return sim_ovl_rc;
-	*id = 7;
-	return 0;
+	*id = 0;
+	if (!sim_ovl_rc || sim_ovl_partial) {
+		*id = 7;
+		sim_ovl_active = true;
+	}
+	return sim_ovl_rc;
 }
 
 int of_overlay_remove(int *id)
 {
 	ev_add("overlay-remove %d", *id);
+	sim_ovl_active = false;
+	*id = 0;
 	return 0;
 }
 
@@ -235,6 +240,7 @@ static void reset(void)
 	ntree = nev = nmsg = 0;
 	machine = NULL;
 	sim_cs_apply_rc = sim_cs_prop_rc = sim_ovl_rc = sim_drv_rc = 0;
+	sim_ovl_partial = sim_ovl_active = false;
 	ovl_blob = NULL;
 	ovl_size = 0;
 	add_node("/", NULL, 1);
@@ -406,6 +412,15 @@ static void test_failures(void)
 	chk(ane_h15_register(&drv, "t6031", true) == -EINVAL && count_prefix("driver") == 0 && idx("cs-revert") > idx("overlay-apply") && count_prefix("cs-destroy") == 1,
 	    "F4 the kernel refuses the overlay: the symbols changeset is reverted, the driver not registered");
 	chk(!ane_ovl.symbols && !ane_ovl.overlay && said("kernel refused the overlay"), "F5 nothing is recorded as applied and the log says why");
+	chk(count_prefix("overlay-remove") == 0, "F8 invalid overlay without an ID needs no removal");
+	reset();
+	t6031_tree();
+	sim_ovl_rc = -EIO;
+	sim_ovl_partial = true;
+	chk(ane_h15_register(&drv, "t6031", true) == -EIO && !sim_ovl_active && count_prefix("driver") == 0,
+	    "F9 a post-apply error leaves no overlay devices or registered driver");
+	chk(idx("overlay-remove 7") > idx("overlay-apply") && idx("cs-revert") > idx("overlay-remove 7"),
+	    "F10 a partially applied overlay is removed before its symbol labels");
 	reset();
 	t6031_tree();
 	sim_drv_rc = -EBUSY;
