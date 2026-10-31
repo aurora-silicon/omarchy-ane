@@ -318,3 +318,9 @@ The existing libane archive and Python binding now offer an optional CPU fallbac
 helper. [Integration, existing-stack inventory and M1 Pro benchmark commands](docs/CPU-FALLBACK-BENCH.md)
 cover `ane.Fallback`, `ane.OnnxCPU`, the seed-1 MobileNet exporter and `tools/ane-bench`.
 Native graph execution continues to use the existing published runner.
+
+The [camera model backend example](examples/camera-denoise/README.md) adds an
+original MIT luma UNet, open-data training and MIL/ONNX exports, a provisional
+video-filter backend vtable, and host quality/latency checks through libane's
+fallback helper. Native model compilation and device qualification remain
+explicit requirements; this example does not add a camera source or filter node.

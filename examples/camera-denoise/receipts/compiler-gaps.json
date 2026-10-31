@@ -1,0 +1,1379 @@
+[
+  {
+    "name": "full-model",
+    "mil": "model.mil",
+    "target": "H13",
+    "rc": 65,
+    "diagnostic": "56:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/model.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/full-model"
+    ]
+  },
+  {
+    "name": "enc",
+    "op": "conv",
+    "inputs": {
+      "x": [
+        1,
+        1,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/enc.mil",
+    "target": "H13",
+    "rc": 65,
+    "diagnostic": "12:5: error [h13.conv-outside-envelope]: H13 conv needs a decoded geometry: an fp16 rank-4 input and result with a batch of one (or the encoder's rank-3 spell, which lowers only through the W-major surface it binds as), a constant [Cout, Cin/groups, kh, kw] weight, unit dilations, and a kernel, stride, group count and surface pair inside the oracle parity envelope. Padding lowers as decoded: pad_type 'same' or 'valid' with zero pads, the rank-3 custom spell whose pads equal one of those two, and the rank-4 custom spell whose declared pads reproduce the declared output where a template row covers the surface pair (the W-padded rel-pos padconv k1x1 g8, pad [0,0,1,0], lowers as its own two-task capture). Refused on named gaps: rank-3 spellings with no W-major row (the checked-in n2048 capture is H-major, whose surface the rank-3 tensor does not bind as), custom pads with no covering row, and the stride-2 multi-tap forms whose sections carry transformed halfwords (see receipts/2026-09-17-encoder-padconv-respell and receipts/2026-09-17-encoder-conv-lowering)\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/enc.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/enc"
+    ]
+  },
+  {
+    "name": "skip",
+    "op": "relu",
+    "inputs": {
+      "enc": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/skip.mil",
+    "target": "H13",
+    "rc": 0,
+    "diagnostic": "",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/skip.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/skip"
+    ]
+  },
+  {
+    "name": "down",
+    "op": "conv",
+    "inputs": {
+      "skip": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      32,
+      32
+    ],
+    "mil": "probes/down.mil",
+    "target": "H13",
+    "rc": 65,
+    "diagnostic": "12:5: error [h13.conv-outside-envelope]: H13 conv needs a decoded geometry: an fp16 rank-4 input and result with a batch of one (or the encoder's rank-3 spell, which lowers only through the W-major surface it binds as), a constant [Cout, Cin/groups, kh, kw] weight, unit dilations, and a kernel, stride, group count and surface pair inside the oracle parity envelope. Padding lowers as decoded: pad_type 'same' or 'valid' with zero pads, the rank-3 custom spell whose pads equal one of those two, and the rank-4 custom spell whose declared pads reproduce the declared output where a template row covers the surface pair (the W-padded rel-pos padconv k1x1 g8, pad [0,0,1,0], lowers as its own two-task capture). Refused on named gaps: rank-3 spellings with no W-major row (the checked-in n2048 capture is H-major, whose surface the rank-3 tensor does not bind as), custom pads with no covering row, and the stride-2 multi-tap forms whose sections carry transformed halfwords (see receipts/2026-09-17-encoder-padconv-respell and receipts/2026-09-17-encoder-conv-lowering)\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/down.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/down"
+    ]
+  },
+  {
+    "name": "down_relu",
+    "op": "relu",
+    "inputs": {
+      "down": [
+        1,
+        8,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      8,
+      32,
+      32
+    ],
+    "mil": "probes/down_relu.mil",
+    "target": "H13",
+    "rc": 0,
+    "diagnostic": "",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/down_relu.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/down_relu"
+    ]
+  },
+  {
+    "name": "mid",
+    "op": "conv",
+    "inputs": {
+      "down_relu": [
+        1,
+        8,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      8,
+      32,
+      32
+    ],
+    "mil": "probes/mid.mil",
+    "target": "H13",
+    "rc": 65,
+    "diagnostic": "12:5: error [h13.conv-outside-envelope]: H13 conv needs a decoded geometry: an fp16 rank-4 input and result with a batch of one (or the encoder's rank-3 spell, which lowers only through the W-major surface it binds as), a constant [Cout, Cin/groups, kh, kw] weight, unit dilations, and a kernel, stride, group count and surface pair inside the oracle parity envelope. Padding lowers as decoded: pad_type 'same' or 'valid' with zero pads, the rank-3 custom spell whose pads equal one of those two, and the rank-4 custom spell whose declared pads reproduce the declared output where a template row covers the surface pair (the W-padded rel-pos padconv k1x1 g8, pad [0,0,1,0], lowers as its own two-task capture). Refused on named gaps: rank-3 spellings with no W-major row (the checked-in n2048 capture is H-major, whose surface the rank-3 tensor does not bind as), custom pads with no covering row, and the stride-2 multi-tap forms whose sections carry transformed halfwords (see receipts/2026-09-17-encoder-padconv-respell and receipts/2026-09-17-encoder-conv-lowering)\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/mid.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/mid"
+    ]
+  },
+  {
+    "name": "low",
+    "op": "relu",
+    "inputs": {
+      "mid": [
+        1,
+        8,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      8,
+      32,
+      32
+    ],
+    "mil": "probes/low.mil",
+    "target": "H13",
+    "rc": 0,
+    "diagnostic": "",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/low.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/low"
+    ]
+  },
+  {
+    "name": "up",
+    "op": "upsample_nearest_neighbor",
+    "inputs": {
+      "low": [
+        1,
+        8,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/up.mil",
+    "target": "H13",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.unsupported-program]: H13 has no source-qualified encoder for 'upsample_nearest_neighbor'\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/up.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/up"
+    ]
+  },
+  {
+    "name": "merged",
+    "op": "add",
+    "inputs": {
+      "up": [
+        1,
+        8,
+        64,
+        64
+      ],
+      "skip": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/merged.mil",
+    "target": "H13",
+    "rc": 0,
+    "diagnostic": "",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/merged.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/merged"
+    ]
+  },
+  {
+    "name": "dec",
+    "op": "conv",
+    "inputs": {
+      "merged": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/dec.mil",
+    "target": "H13",
+    "rc": 65,
+    "diagnostic": "12:5: error [h13.conv-outside-envelope]: H13 conv needs a decoded geometry: an fp16 rank-4 input and result with a batch of one (or the encoder's rank-3 spell, which lowers only through the W-major surface it binds as), a constant [Cout, Cin/groups, kh, kw] weight, unit dilations, and a kernel, stride, group count and surface pair inside the oracle parity envelope. Padding lowers as decoded: pad_type 'same' or 'valid' with zero pads, the rank-3 custom spell whose pads equal one of those two, and the rank-4 custom spell whose declared pads reproduce the declared output where a template row covers the surface pair (the W-padded rel-pos padconv k1x1 g8, pad [0,0,1,0], lowers as its own two-task capture). Refused on named gaps: rank-3 spellings with no W-major row (the checked-in n2048 capture is H-major, whose surface the rank-3 tensor does not bind as), custom pads with no covering row, and the stride-2 multi-tap forms whose sections carry transformed halfwords (see receipts/2026-09-17-encoder-padconv-respell and receipts/2026-09-17-encoder-conv-lowering)\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/dec.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/dec"
+    ]
+  },
+  {
+    "name": "decoded",
+    "op": "relu",
+    "inputs": {
+      "dec": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/decoded.mil",
+    "target": "H13",
+    "rc": 0,
+    "diagnostic": "",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/decoded.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/decoded"
+    ]
+  },
+  {
+    "name": "head",
+    "op": "conv",
+    "inputs": {
+      "decoded": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      1,
+      64,
+      64
+    ],
+    "mil": "probes/head.mil",
+    "target": "H13",
+    "rc": 65,
+    "diagnostic": "12:5: error [h13.conv-outside-envelope]: H13 conv needs a decoded geometry: an fp16 rank-4 input and result with a batch of one (or the encoder's rank-3 spell, which lowers only through the W-major surface it binds as), a constant [Cout, Cin/groups, kh, kw] weight, unit dilations, and a kernel, stride, group count and surface pair inside the oracle parity envelope. Padding lowers as decoded: pad_type 'same' or 'valid' with zero pads, the rank-3 custom spell whose pads equal one of those two, and the rank-4 custom spell whose declared pads reproduce the declared output where a template row covers the surface pair (the W-padded rel-pos padconv k1x1 g8, pad [0,0,1,0], lowers as its own two-task capture). Refused on named gaps: rank-3 spellings with no W-major row (the checked-in n2048 capture is H-major, whose surface the rank-3 tensor does not bind as), custom pads with no covering row, and the stride-2 multi-tap forms whose sections carry transformed halfwords (see receipts/2026-09-17-encoder-padconv-respell and receipts/2026-09-17-encoder-conv-lowering)\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/head.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/head"
+    ]
+  },
+  {
+    "name": "restored",
+    "op": "sub",
+    "inputs": {
+      "x": [
+        1,
+        1,
+        64,
+        64
+      ],
+      "head": [
+        1,
+        1,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      1,
+      64,
+      64
+    ],
+    "mil": "probes/restored.mil",
+    "target": "H13",
+    "rc": 0,
+    "diagnostic": "",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/restored.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/restored"
+    ]
+  },
+  {
+    "name": "denoised",
+    "op": "clip",
+    "inputs": {
+      "restored": [
+        1,
+        1,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      1,
+      64,
+      64
+    ],
+    "mil": "probes/denoised.mil",
+    "target": "H13",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/denoised.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H13",
+      "--output",
+      "${MODEL_ROOT}/compiled/H13/denoised"
+    ]
+  },
+  {
+    "name": "full-model",
+    "mil": "model.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "12:5: error [h14.conv-outside-envelope]: H14 conv needs a decoded geometry: an fp16 rank-4 input and result with a batch of one, a constant weight, unit dilations, zero explicit padding, supported padding, and a shape inside the oracle parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/model.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/full-model"
+    ]
+  },
+  {
+    "name": "enc",
+    "op": "conv",
+    "inputs": {
+      "x": [
+        1,
+        1,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/enc.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "12:5: error [h14.conv-outside-envelope]: H14 conv needs a decoded geometry: an fp16 rank-4 input and result with a batch of one, a constant weight, unit dilations, zero explicit padding, supported padding, and a shape inside the oracle parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/enc.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/enc"
+    ]
+  },
+  {
+    "name": "skip",
+    "op": "relu",
+    "inputs": {
+      "enc": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/skip.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "6:5: error [h14.outside-parity-envelope]: H14 supports only the decoded fp16 elementwise, scalar-constant, and unary parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/skip.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/skip"
+    ]
+  },
+  {
+    "name": "down",
+    "op": "conv",
+    "inputs": {
+      "skip": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      32,
+      32
+    ],
+    "mil": "probes/down.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "12:5: error [h14.conv-outside-envelope]: H14 conv needs a decoded geometry: an fp16 rank-4 input and result with a batch of one, a constant weight, unit dilations, zero explicit padding, supported padding, and a shape inside the oracle parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/down.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/down"
+    ]
+  },
+  {
+    "name": "down_relu",
+    "op": "relu",
+    "inputs": {
+      "down": [
+        1,
+        8,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      8,
+      32,
+      32
+    ],
+    "mil": "probes/down_relu.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "6:5: error [h14.outside-parity-envelope]: H14 supports only the decoded fp16 elementwise, scalar-constant, and unary parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/down_relu.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/down_relu"
+    ]
+  },
+  {
+    "name": "mid",
+    "op": "conv",
+    "inputs": {
+      "down_relu": [
+        1,
+        8,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      8,
+      32,
+      32
+    ],
+    "mil": "probes/mid.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "12:5: error [h14.conv-outside-envelope]: H14 conv needs a decoded geometry: an fp16 rank-4 input and result with a batch of one, a constant weight, unit dilations, zero explicit padding, supported padding, and a shape inside the oracle parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/mid.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/mid"
+    ]
+  },
+  {
+    "name": "low",
+    "op": "relu",
+    "inputs": {
+      "mid": [
+        1,
+        8,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      8,
+      32,
+      32
+    ],
+    "mil": "probes/low.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "6:5: error [h14.outside-parity-envelope]: H14 supports only the decoded fp16 elementwise, scalar-constant, and unary parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/low.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/low"
+    ]
+  },
+  {
+    "name": "up",
+    "op": "upsample_nearest_neighbor",
+    "inputs": {
+      "low": [
+        1,
+        8,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/up.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "7:5: error [h14.outside-parity-envelope]: H14 supports only the decoded fp16 elementwise, scalar-constant, and unary parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/up.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/up"
+    ]
+  },
+  {
+    "name": "merged",
+    "op": "add",
+    "inputs": {
+      "up": [
+        1,
+        8,
+        64,
+        64
+      ],
+      "skip": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/merged.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "6:5: error [h14.outside-parity-envelope]: H14 supports only the decoded fp16 elementwise, scalar-constant, and unary parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/merged.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/merged"
+    ]
+  },
+  {
+    "name": "dec",
+    "op": "conv",
+    "inputs": {
+      "merged": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/dec.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "12:5: error [h14.conv-outside-envelope]: H14 conv needs a decoded geometry: an fp16 rank-4 input and result with a batch of one, a constant weight, unit dilations, zero explicit padding, supported padding, and a shape inside the oracle parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/dec.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/dec"
+    ]
+  },
+  {
+    "name": "decoded",
+    "op": "relu",
+    "inputs": {
+      "dec": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/decoded.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "6:5: error [h14.outside-parity-envelope]: H14 supports only the decoded fp16 elementwise, scalar-constant, and unary parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/decoded.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/decoded"
+    ]
+  },
+  {
+    "name": "head",
+    "op": "conv",
+    "inputs": {
+      "decoded": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      1,
+      64,
+      64
+    ],
+    "mil": "probes/head.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "12:5: error [h14.conv-outside-envelope]: H14 conv needs a decoded geometry: an fp16 rank-4 input and result with a batch of one, a constant weight, unit dilations, zero explicit padding, supported padding, and a shape inside the oracle parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/head.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/head"
+    ]
+  },
+  {
+    "name": "restored",
+    "op": "sub",
+    "inputs": {
+      "x": [
+        1,
+        1,
+        64,
+        64
+      ],
+      "head": [
+        1,
+        1,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      1,
+      64,
+      64
+    ],
+    "mil": "probes/restored.mil",
+    "target": "H14",
+    "rc": 0,
+    "diagnostic": "",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/restored.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/restored"
+    ]
+  },
+  {
+    "name": "denoised",
+    "op": "clip",
+    "inputs": {
+      "restored": [
+        1,
+        1,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      1,
+      64,
+      64
+    ],
+    "mil": "probes/denoised.mil",
+    "target": "H14",
+    "rc": 65,
+    "diagnostic": "7:5: error [h14.outside-parity-envelope]: H14 supports only the decoded fp16 elementwise, scalar-constant, and unary parity envelope\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/denoised.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H14",
+      "--output",
+      "${MODEL_ROOT}/compiled/H14/denoised"
+    ]
+  },
+  {
+    "name": "full-model",
+    "mil": "model.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "34:5: error [h16g.legalize.unsupported-operation]: H16G has no decoded primitive for 'upsample_nearest_neighbor'\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/model.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/full-model"
+    ]
+  },
+  {
+    "name": "enc",
+    "op": "conv",
+    "inputs": {
+      "x": [
+        1,
+        1,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/enc.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "5:5: error [h16g.encode.illegal-depthwise-form]: depthwise 3x3 geometry or attributes have no decoded H16G schedule\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/enc.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/enc"
+    ]
+  },
+  {
+    "name": "skip",
+    "op": "relu",
+    "inputs": {
+      "enc": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/skip.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "6:5: error [h16g.encode.illegal-binary-alu-form]: binary ALU requires two inputs, one output, and one hardware task\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/skip.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/skip"
+    ]
+  },
+  {
+    "name": "down",
+    "op": "conv",
+    "inputs": {
+      "skip": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      32,
+      32
+    ],
+    "mil": "probes/down.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "5:5: error [h16g.encode.illegal-regular-conv-form]: regular Conv geometry or attributes have no decoded H16G schedule\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/down.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/down"
+    ]
+  },
+  {
+    "name": "down_relu",
+    "op": "relu",
+    "inputs": {
+      "down": [
+        1,
+        8,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      8,
+      32,
+      32
+    ],
+    "mil": "probes/down_relu.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "6:5: error [h16g.encode.illegal-binary-alu-form]: binary ALU requires two inputs, one output, and one hardware task\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/down_relu.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/down_relu"
+    ]
+  },
+  {
+    "name": "mid",
+    "op": "conv",
+    "inputs": {
+      "down_relu": [
+        1,
+        8,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      8,
+      32,
+      32
+    ],
+    "mil": "probes/mid.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "5:5: error [h16g.encode.illegal-regular-conv-form]: regular Conv geometry or attributes have no decoded H16G schedule\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/mid.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/mid"
+    ]
+  },
+  {
+    "name": "low",
+    "op": "relu",
+    "inputs": {
+      "mid": [
+        1,
+        8,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      8,
+      32,
+      32
+    ],
+    "mil": "probes/low.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "6:5: error [h16g.encode.illegal-binary-alu-form]: binary ALU requires two inputs, one output, and one hardware task\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/low.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/low"
+    ]
+  },
+  {
+    "name": "up",
+    "op": "upsample_nearest_neighbor",
+    "inputs": {
+      "low": [
+        1,
+        8,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/up.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "7:5: error [h16g.legalize.unsupported-operation]: H16G has no decoded primitive for 'upsample_nearest_neighbor'\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/up.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/up"
+    ]
+  },
+  {
+    "name": "merged",
+    "op": "add",
+    "inputs": {
+      "up": [
+        1,
+        8,
+        64,
+        64
+      ],
+      "skip": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/merged.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "6:5: error [h16g.encode.illegal-binary-alu-form]: binary ALU operation or geometry has no decoded H16G packet\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/merged.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/merged"
+    ]
+  },
+  {
+    "name": "dec",
+    "op": "conv",
+    "inputs": {
+      "merged": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/dec.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "5:5: error [h16g.encode.illegal-regular-conv-form]: regular Conv geometry or attributes have no decoded H16G schedule\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/dec.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/dec"
+    ]
+  },
+  {
+    "name": "decoded",
+    "op": "relu",
+    "inputs": {
+      "dec": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      8,
+      64,
+      64
+    ],
+    "mil": "probes/decoded.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "6:5: error [h16g.encode.illegal-binary-alu-form]: binary ALU requires two inputs, one output, and one hardware task\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/decoded.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/decoded"
+    ]
+  },
+  {
+    "name": "head",
+    "op": "conv",
+    "inputs": {
+      "decoded": [
+        1,
+        8,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      1,
+      64,
+      64
+    ],
+    "mil": "probes/head.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "5:5: error [h16g.encode.illegal-fp16-conv-form]: Conv1x1 geometry or attributes have no decoded H16G schedule\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/head.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/head"
+    ]
+  },
+  {
+    "name": "restored",
+    "op": "sub",
+    "inputs": {
+      "x": [
+        1,
+        1,
+        64,
+        64
+      ],
+      "head": [
+        1,
+        1,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      1,
+      64,
+      64
+    ],
+    "mil": "probes/restored.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "6:5: error [h16g.encode.illegal-binary-alu-form]: binary ALU operation or geometry has no decoded H16G packet\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/restored.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/restored"
+    ]
+  },
+  {
+    "name": "denoised",
+    "op": "clip",
+    "inputs": {
+      "restored": [
+        1,
+        1,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      1,
+      64,
+      64
+    ],
+    "mil": "probes/denoised.mil",
+    "target": "H16G",
+    "rc": 65,
+    "diagnostic": "7:5: error [h16g.legalize.unsupported-operation]: H16G has no decoded primitive for 'clip'\n",
+    "command": [
+      "mil-hwxc",
+      "--mil",
+      "${MODEL_ROOT}/probes/denoised.mil",
+      "--model-root",
+      "${MODEL_ROOT}",
+      "--target",
+      "H16G",
+      "--output",
+      "${MODEL_ROOT}/compiled/H16G/denoised"
+    ]
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "reference": "compiler h13_reference.evaluate",
+  "cases": [
+    {
+      "max_abs_error": 0.00048828125
+    },
+    {
+      "max_abs_error": 0.00048828125
+    }
+  ],
+  "atol": 0.002,
+  "rtol": 0.002
+}
