@@ -63,7 +63,7 @@ Fresh ONNX, MIL and weight files were byte-identical to both released models.
 
 The [full-size-blur host baseline](receipts/host-full-size-blur-baseline.json)
 uses a shared Intel i9-13900K Linux x86_64 build host, two ORT threads and one
-OpenCV thread, three warm-up frames and 30 timed frames per case. CPU is process
+OpenCV thread, three warm-up frames and 30 timed frames per case. CPU is mean process
 time per frame; wall is median time, in milliseconds. These measurements precede
 the reduced-size blur optimisation; current-source host timing is pending.
 
