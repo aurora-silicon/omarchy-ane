@@ -39,7 +39,11 @@ sizes/counts before transfer, prepares all programs once, composes fresh fp16
 intermediates per call, and retires every handle on failure. H13 keeps its
 existing v2 package validation. Initial H14 graph validation admits per-operation
 `h14-oracle-parity` elementwise packages only. The libane H14 loader still uses
-its existing section, BAR and buffer checks. See that compiler's
+its existing section and buffer machinery. Its default section builder now
+applies the same full BAR-offset bound check as the explicit-port builder,
+including high words. The graph validator additionally requires exact source
+template descriptor and constant bytes to bound DMA geometry; arbitrary known
+register addresses alone do not establish safe strides. See that compiler's
 `docs/ane/resident-linux.md` for its exact supported scope and caller lifecycle.
 
 Use the existing `ane_fallback_run` or Python `ane.Fallback` around the complete

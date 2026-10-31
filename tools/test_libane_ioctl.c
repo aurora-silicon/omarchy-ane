@@ -1194,6 +1194,46 @@ static void run_caps(void)
 	n_fake_fds = 0;
 }
 
+static void run_default_bounds(const char *path)
+{
+    FILE *file = fopen(path, "rb");
+    uint8_t *data;
+    long size;
+    struct ane_m2_model model;
+    struct ane_m2_sections secs;
+    unsigned before = next_handle;
+
+    check(file != NULL, "bounds fixture opens");
+    if (!file)
+        return;
+    fseek(file, 0, SEEK_END);
+    size = ftell(file);
+    rewind(file);
+    data = malloc(size > 0 ? (size_t)size : 1);
+    if (!data || size <= 0x10ec || fread(data, 1, size, file) != (size_t)size) {
+        check(0, "bounds fixture read");
+        free(data);
+        fclose(file);
+        return;
+    }
+    fclose(file);
+    check(!ane_m2_program_build(data, size, &model, &secs), "bounds baseline builds");
+    ane_m2_sections_free(&secs);
+    /* Source fixture add, base 1adf2ee: Src1BaseAddr high/low words in
+     * its dense BAR-ref record. Both must fit the selected I/O buffer. */
+    data[0x10e8] = 1;
+    check(ane_m2_program_build(data, size, &model, &secs) < 0,
+          "default builder rejects BAR high word");
+    ane_m2_sections_free(&secs);
+    data[0x10e8] = 0;
+    memset(data + 0x10e4, 0xff, 4);
+    check(ane_m2_program_build(data, size, &model, &secs) < 0,
+          "default builder rejects out-of-range BAR low word");
+    ane_m2_sections_free(&secs);
+    check(next_handle == before, "bad BAR refs allocate no device BOs");
+    free(data);
+}
+
 static void run_target(const char *path)
 {
     struct ane_nn *nn;
@@ -1271,6 +1311,7 @@ int main(int argc, char **argv)
 	dup2(STDOUT_FILENO, STDERR_FILENO);
 	run_caps();
 	snprintf(path, sizeof(path), "%s/add/program-0.anec", dir);
+	run_default_bounds(path);
 	run_target(path);
 	run_case("ABI 2: load, exec and free", ANE_ABI_M2_MAJOR, path, 0);
 	run_case("ABI 2: first BO mmap fails", ANE_ABI_M2_MAJOR, path, 1);
