@@ -48,7 +48,7 @@ NCHW shapes; every original op/shape/diagnostic is in
 | broadcast multiply | `[1,16,64,64] * [1,16,1,1]` | SE-channel broadcasting is exact on the host. Direct MIL requires equal static operand shapes; needs broadcast lowering/fusion. |
 | average pool | `[1,16,64,64] -> [1,16,1,1]` | No source-qualified `avg_pool` encoder. Keep the exact original mean; a conv/reduction decomposition would need extra rounding qualification. |
 | max pool | `[1,16,160,160] -> [1,16,80,80]` | No source-qualified `max_pool` encoder. A linear convolution cannot replace a max exactly. |
-| transpose / returned reshape alias | `[1,64,40,40] -> [1,40,40,64] -> [1,1600,64]` | Host output layout is exact. Whole YuNet refuses fastest-axis movement; standalone aliases refuse `h13.returned-input-alias`. Needs materialized layout/output support. |
+| transpose / returned reshape alias | `[1,4,40,40] -> [1,40,40,4] -> [1,1600,4]` | Host output layout is exact. Whole YuNet refuses fastest-axis movement; standalone aliases refuse `h13.returned-input-alias`. Needs materialized layout/output support. |
 
 The raw direct refusals for small-channel/depthwise/5×5/strided convolution,
 resize and transpose convolution are resolved by the rewrites above. Add,
