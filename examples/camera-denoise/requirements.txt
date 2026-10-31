@@ -1,0 +1,8 @@
+# Python 3.12, Linux CPU wheels; no CUDA dependency.
+construct==2.10.70
+numpy==2.2.6
+onnx==1.19.1
+onnxruntime==1.23.2
+scikit-image==0.25.2
+coremltools==9.0
+pytest==8.4.2

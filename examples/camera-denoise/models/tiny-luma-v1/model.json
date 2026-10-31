@@ -1,0 +1,279 @@
+{
+  "model": "tiny-luma-unet-v1",
+  "license": "MIT",
+  "format": "GRAY8",
+  "tile": 64,
+  "halo": 12,
+  "core": 40,
+  "state": "stateless",
+  "coremltools": "9.0",
+  "ops": [
+    {
+      "name": "enc",
+      "op": "conv",
+      "inputs": {
+        "x": [
+          1,
+          1,
+          64,
+          64
+        ]
+      },
+      "output": [
+        1,
+        8,
+        64,
+        64
+      ],
+      "mil": "probes/enc.mil"
+    },
+    {
+      "name": "skip",
+      "op": "relu",
+      "inputs": {
+        "enc": [
+          1,
+          8,
+          64,
+          64
+        ]
+      },
+      "output": [
+        1,
+        8,
+        64,
+        64
+      ],
+      "mil": "probes/skip.mil"
+    },
+    {
+      "name": "down",
+      "op": "conv",
+      "inputs": {
+        "skip": [
+          1,
+          8,
+          64,
+          64
+        ]
+      },
+      "output": [
+        1,
+        8,
+        32,
+        32
+      ],
+      "mil": "probes/down.mil"
+    },
+    {
+      "name": "down_relu",
+      "op": "relu",
+      "inputs": {
+        "down": [
+          1,
+          8,
+          32,
+          32
+        ]
+      },
+      "output": [
+        1,
+        8,
+        32,
+        32
+      ],
+      "mil": "probes/down_relu.mil"
+    },
+    {
+      "name": "mid",
+      "op": "conv",
+      "inputs": {
+        "down_relu": [
+          1,
+          8,
+          32,
+          32
+        ]
+      },
+      "output": [
+        1,
+        8,
+        32,
+        32
+      ],
+      "mil": "probes/mid.mil"
+    },
+    {
+      "name": "low",
+      "op": "relu",
+      "inputs": {
+        "mid": [
+          1,
+          8,
+          32,
+          32
+        ]
+      },
+      "output": [
+        1,
+        8,
+        32,
+        32
+      ],
+      "mil": "probes/low.mil"
+    },
+    {
+      "name": "up",
+      "op": "upsample_nearest_neighbor",
+      "inputs": {
+        "low": [
+          1,
+          8,
+          32,
+          32
+        ]
+      },
+      "output": [
+        1,
+        8,
+        64,
+        64
+      ],
+      "mil": "probes/up.mil"
+    },
+    {
+      "name": "merged",
+      "op": "add",
+      "inputs": {
+        "up": [
+          1,
+          8,
+          64,
+          64
+        ],
+        "skip": [
+          1,
+          8,
+          64,
+          64
+        ]
+      },
+      "output": [
+        1,
+        8,
+        64,
+        64
+      ],
+      "mil": "probes/merged.mil"
+    },
+    {
+      "name": "dec",
+      "op": "conv",
+      "inputs": {
+        "merged": [
+          1,
+          8,
+          64,
+          64
+        ]
+      },
+      "output": [
+        1,
+        8,
+        64,
+        64
+      ],
+      "mil": "probes/dec.mil"
+    },
+    {
+      "name": "decoded",
+      "op": "relu",
+      "inputs": {
+        "dec": [
+          1,
+          8,
+          64,
+          64
+        ]
+      },
+      "output": [
+        1,
+        8,
+        64,
+        64
+      ],
+      "mil": "probes/decoded.mil"
+    },
+    {
+      "name": "head",
+      "op": "conv",
+      "inputs": {
+        "decoded": [
+          1,
+          8,
+          64,
+          64
+        ]
+      },
+      "output": [
+        1,
+        1,
+        64,
+        64
+      ],
+      "mil": "probes/head.mil"
+    },
+    {
+      "name": "restored",
+      "op": "sub",
+      "inputs": {
+        "x": [
+          1,
+          1,
+          64,
+          64
+        ],
+        "head": [
+          1,
+          1,
+          64,
+          64
+        ]
+      },
+      "output": [
+        1,
+        1,
+        64,
+        64
+      ],
+      "mil": "probes/restored.mil"
+    },
+    {
+      "name": "denoised",
+      "op": "clip",
+      "inputs": {
+        "restored": [
+          1,
+          1,
+          64,
+          64
+        ]
+      },
+      "output": [
+        1,
+        1,
+        64,
+        64
+      ],
+      "mil": "probes/denoised.mil"
+    }
+  ],
+  "native_targets": [],
+  "artifacts": {
+    "weights.npz": "94727af5fc6e6bc1cf84d8915e5341d26e87f8dfd46da1f1d112d7cac1bb3874",
+    "weights.bin": "56ffb1ab98d1c30e49024a8fbd59b62caa197856f5f5d76c80236d4514310248",
+    "model.onnx": "e89353526c8750818034676de5a522903d823551a881d901b08bc4b71fbe6b5c",
+    "model.mil": "ccaa3ce7fe513d9f42ac5ff3c6b54dd7be1adc21d90476f24ba064b9e0821b2c",
+    "training.json": "e461ff2bcb5b13166532f14d36045843f67810df4d75b02b787519fc5b23ba64"
+  }
+}
