@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""Render an opt-in blur/framing preview from a still image; no camera/audio."""
+import argparse
+import os
+from pathlib import Path
+import shutil
+
+import cv2
+import numpy as np
+from aurora_camera_effects.backend import Backend,ROOT
+from aurora_camera_effects.image import replacement_nv12,model_rgb
+
+CACHE=Path(os.environ.get('XDG_CACHE_HOME',Path.home()/'.cache'))/'aurora-camera-h13'
+
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('command',choices=['preview','off'])
+    p.add_argument('--input',type=Path)
+    p.add_argument('--engine',choices=['auto','ane','cpu'],default='auto')
+    p.add_argument('--models',type=Path,default=ROOT/'models')
+    p.add_argument('--compiler-root',type=Path,help='optional compiler graph-owner checkout')
+    p.add_argument('--framing',action='store_true')
+    a=p.parse_args()
+    if a.compiler_root:
+        os.environ['AURORA_CAMERA_COMPILER_ROOT']=str(a.compiler_root.resolve())
+    if a.command=='off':
+        shutil.rmtree(CACHE,ignore_errors=True)
+        print('camera-effects off; preview removed; no service or system setting was changed')
+        return
+    if a.input is None:
+        p.error('preview requires --input portrait.jpg')
+    bgr=cv2.imread(str(a.input))
+    if bgr is None:
+        p.error('cannot read input image')
+    height,width=bgr.shape[:2]
+    scale=min(1,1280/width,720/height)
+    width=max(2,int(width*scale)//2*2);height=max(2,int(height*scale)//2*2)
+    y,uv=replacement_nv12(bgr[...,::-1],width,height)
+    effect=Backend(width,height,'blur',a.framing,1,4,1.25,model_root=a.models,engine=a.engine)
+    try:
+        output=effect.process_bytes(y.tobytes()+uv.tobytes(),1_000_000_000)
+        n=width*height
+        y=np.frombuffer(output,np.uint8,count=n).reshape(height,width)
+        uv=np.frombuffer(output,np.uint8,offset=n).reshape(height//2,width//2,2)
+        rgb=model_rgb(y,uv,(width,height))
+        CACHE.mkdir(parents=True,exist_ok=True)
+        path=CACHE/'preview.png'
+        if not cv2.imwrite(str(path),np.clip(rgb[...,::-1]*255,0,255).astype(np.uint8)):
+            raise OSError('preview write failed')
+        print(path)
+    finally:
+        effect.close()
+
+
+if __name__=='__main__':
+    main()

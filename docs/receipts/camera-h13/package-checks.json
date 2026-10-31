@@ -1,0 +1,715 @@
+{
+  "host": "Darwin/arm64 build host",
+  "device_calls": false,
+  "reader_fix": "fu-camera-h13-reader",
+  "records": [
+    {
+      "model": "selfie",
+      "stage": "conv-001-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-007-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-010-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-014-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-017-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-021-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-023-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-026-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-029-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-031-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-034-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-037-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-040-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-046-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 2
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-046-1",
+      "encoder": "h13-generic-conv",
+      "tasks": 2
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-053-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-056-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-060-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-062-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-068-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 2
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-068-1",
+      "encoder": "h13-generic-conv",
+      "tasks": 2
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-075-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-078-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-082-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-085-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-091-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 2
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-091-1",
+      "encoder": "h13-generic-conv",
+      "tasks": 2
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-098-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-101-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-105-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-108-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-114-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 2
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-114-1",
+      "encoder": "h13-generic-conv",
+      "tasks": 2
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-121-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-124-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-128-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-131-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-137-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 2
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-137-1",
+      "encoder": "h13-generic-conv",
+      "tasks": 2
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-144-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-147-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-151-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-155-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-158-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-161-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 2
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-163-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-167-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-170-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-175-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-178-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-181-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-183-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-187-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-190-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-195-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-198-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-201-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-203-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-207-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-210-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-215-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-218-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "selfie",
+      "stage": "conv-221-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-000-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-002-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-003-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-006-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-007-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-009-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-010-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-012-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-013-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-015-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-016-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-019-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-020-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-022-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-023-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-026-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-027-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-029-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-030-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-033-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-034-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-036-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-037-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-039-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-040-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-042-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-043-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-046-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-048-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-049-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-051-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-052-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-055-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-057-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-058-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-060-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-061-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-064-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-065-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-068-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-069-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-072-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-073-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-076-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-077-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-081-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-082-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-086-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-087-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-091-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-092-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-096-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-097-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-101-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    },
+    {
+      "model": "yunet",
+      "stage": "conv-102-0",
+      "encoder": "h13-generic-conv",
+      "tasks": 1
+    }
+  ]
+}

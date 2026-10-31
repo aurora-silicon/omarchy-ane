@@ -1,7 +1,7 @@
 # Camera H13 coverage
 
 Compiler: mil-hwx-compiler PR #5 head
-`72e1d99c6f51eaf97ad61280936d42dbb0b6a1ae`. No compiler internals changed.
+`72e1d99c6f51eaf97ad61280936d42dbb0b6a1ae`. No compiler op encoder changed. A separate reader-only compatibility PR is required to validate channel-changing convolution packages; it preserves existing ANEC task, span, layout and allocation checks.
 All numbers below were measured on a Darwin/arm64 build host using CPU
 simulation. No M1 Pro, M2 or other ANE execution was performed by this worker.
 
