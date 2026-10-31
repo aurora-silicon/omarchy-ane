@@ -77,3 +77,6 @@ ane/test/_build/
 ane/h15/sim/sim_h15
 ane/h15/sim/sim_h15_filled
 ane/h18/sim/sim_h18
+
+# Local qualification/preview logs and archived slot runs.
+examples/camera-effects/slot-results*/

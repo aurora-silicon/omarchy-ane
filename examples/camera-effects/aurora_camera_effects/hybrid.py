@@ -60,13 +60,18 @@ def unpack_surface(buffer,binding):
 
 class HybridGraph:
     def __init__(self, root, metadata, library, *, simulate=False, qualification=False,
-                 compiler_root=Path('/usr/lib/mil-hwx-compiler'), package=None):
+                 compiler_root=Path('/usr/lib/mil-hwx-compiler'), package=None, receipt=None):
         self.root=Path(root).resolve()
         self.directory=Path(package).resolve() if package else self.root/'compiled/H13/hybrid'
         self.closed=False
         self.records=[]
         self.simulate=simulate
         self.island_errors={}
+        self.island_results={}
+        self.originals={}
+        self.preparation_errors={}
+        self.qualification=qualification
+        self.qualified_islands=None
         plan_file=local(self.directory,'plan.json')
         self.plan=json.loads(plan_file.read_text())
         if (self.plan.get('schema')!=1 or self.plan.get('model')!=metadata['model'] or
@@ -78,18 +83,18 @@ class HybridGraph:
                 raise ValueError(f'hybrid package identity mismatch: {name}')
         if not any(s['kind']=='ane' for s in self.plan['steps']):
             raise OSError('hybrid package has no compiled islands')
+        islands=[s['original'] for s in self.plan['steps'] if s['kind']=='ane' and 'original' in s]
+        self.total_islands=sum(s['kind']=='ane' for s in self.plan['steps'])
+        if receipt is not None:
+            # Used by CPU tests to exercise exactly the production routing gate.
+            self.select_islands(receipt, simulation=simulate)
+        elif not simulate and not qualification:
+            if not (self.directory/'qualification.json').is_file():
+                raise OSError('no matching H13 hybrid qualification')
+            self.select_islands(json.loads(local(self.directory,'qualification.json').read_text()))
+        if qualification:
+            self.island_results={key:dict(status='qualified',samples=[]) for key in islands}
         if not simulate:
-            # Explicit qualification execution is a separate lead-only command.
-            # A normal backend call cannot self-qualify a package.
-            if not qualification:
-                if not (self.directory/'qualification.json').is_file():
-                    raise OSError('no matching H13 hybrid qualification')
-                receipt=json.loads(local(self.directory,'qualification.json').read_text())
-                if (receipt.get('status')!='pass' or receipt.get('target')!='H13' or
-                    receipt.get('mode')!='libane-device' or receipt.get('abi')!=1 or receipt.get('chip')!=13 or
-                    receipt.get('plan_sha256')!=sha(plan_file) or receipt.get('images',0)<30 or
-                    receipt.get('islands_compared')!=sum(s['kind']=='ane' for s in self.plan['steps'])):
-                    raise OSError('no matching H13 hybrid qualification')
             lib=C.CDLL(str(library))
             lib.pyane_query_caps.argtypes=[C.c_int,C.POINTER(C.c_uint32),C.POINTER(C.c_uint32)]
             lib.pyane_query_caps.restype=C.c_int
@@ -106,25 +111,37 @@ class HybridGraph:
                 if step['kind']=='cpu':
                     self.steps.append((step,session(local(self.directory,step['file']))))
                 else:
+                    key=step.get('original')
+                    if key is not None and (qualification or
+                        (self.qualified_islands is not None and key not in self.qualified_islands)):
+                        self.originals[key]=session(local(self.directory,key))
+                    if self.qualified_islands is not None and key not in self.qualified_islands:
+                        self.steps.append((step,[]))
+                        continue
                     stages=[]
-                    for name in step['stages']:
-                        root=local(self.directory,name+'/reference.onnx').parent
-                        if simulate:
-                            stages.append((session(root/'reference.onnx'),None))
-                        else:
-                            manifest,_=self.runner.inspect_anec.load_package(root/'bundle')
-                            if len(manifest['programs'])!=1 or manifest['dispatchPlan']!=[0]:
-                                raise ValueError('island must contain one formula-built program')
-                            program=manifest['programs'][0]
-                            if (program['encoder']!='h13-generic-conv' or len(program['inputs'])!=1 or
-                                len(program['outputs'])!=1):
-                                raise ValueError('unsupported island bindings')
-                            prepared=self.runner.PreparedProgram(self.adapter,
-                                local(root/'bundle',program['file']).read_bytes(),
-                                [bytes(program['inputs'][0]['allocationBytes'])],
-                                [program['outputs'][0]['allocationBytes']])
-                            self.records.append(prepared)
-                            stages.append((program,prepared))
+                    try:
+                        for name in step['stages']:
+                            root=local(self.directory,name+'/reference.onnx').parent
+                            if simulate:
+                                stages.append((session(root/'reference.onnx'),None))
+                            else:
+                                manifest,_=self.runner.inspect_anec.load_package(root/'bundle')
+                                if len(manifest['programs'])!=1 or manifest['dispatchPlan']!=[0]:
+                                    raise ValueError('island must contain one formula-built program')
+                                program=manifest['programs'][0]
+                                if (program['encoder']!='h13-generic-conv' or len(program['inputs'])!=1 or
+                                    len(program['outputs'])!=1):
+                                    raise ValueError('unsupported island bindings')
+                                prepared=self.runner.PreparedProgram(self.adapter,
+                                    local(root/'bundle',program['file']).read_bytes(),
+                                    [bytes(program['inputs'][0]['allocationBytes'])],
+                                    [program['outputs'][0]['allocationBytes']])
+                                self.records.append(prepared)
+                                stages.append((program,prepared))
+                    except Exception as error:
+                        if not qualification:
+                            raise
+                        self.preparation_errors[key]=f'{type(error).__name__}: {error}'
                     self.steps.append((step,stages))
         except BaseException as error:
             self.close(primary=error)
@@ -134,6 +151,38 @@ class HybridGraph:
             for name in step['inputs']:
                 uses[name]=uses.get(name,0)+1
         self.uses=uses
+
+    @property
+    def engine_description(self):
+        count=self.total_islands if self.qualified_islands is None else len(self.qualified_islands)
+        return f'ane-hybrid ({count} of {self.total_islands} islands on the ANE)'
+
+    def select_islands(self, receipt, *, simulation=False):
+        """Reject incomplete/stale receipts before any device access."""
+        keys={s.get('original') for s in self.plan['steps'] if s['kind']=='ane'}
+        results=receipt.get('islands',{})
+        valid=(receipt.get('schema')==2 and receipt.get('status')=='pass' and
+               receipt.get('target')=='H13' and
+               receipt.get('mode')==('cpu-simulation' if simulation else 'libane-device') and
+               (simulation or (receipt.get('abi'),receipt.get('chip'))==(1,13)) and
+               receipt.get('plan_sha256')==sha(self.directory/'plan.json') and
+               receipt.get('images')==30 and receipt.get('islands_compared')==len(keys) and
+               isinstance(results,dict) and set(results)==keys and None not in keys)
+        records=receipt.get('records',[])
+        valid=valid and len(keys)==self.total_islands and len(records)==30
+        valid=valid and len({r.get('file') for r in records})==30 and all(r.get('status')=='pass' for r in records)
+        if self.plan.get('model')=='selfie':
+            valid=valid and all(r.get('mask_iou',0)>=.98 and r.get('mask_disagreement',1)<=.005 and
+                               r.get('mask_mean_abs',1)<=.005 for r in records)
+        if not valid:
+            raise OSError('no matching H13 hybrid qualification')
+        for result in results.values():
+            samples=result.get('samples',[])
+            if (result.get('status') not in ('qualified','refused') or len(samples)!=30 or
+                {s.get('file') for s in samples}!={r['file'] for r in records} or
+                (result['status']=='qualified' and any(s.get('status')!='pass' for s in samples))):
+                raise OSError('incomplete per-island qualification')
+        self.qualified_islands={k for k,v in results.items() if v['status']=='qualified'}
 
     def island(self, step, stages, value):
         t=step['transform']
@@ -168,7 +217,7 @@ class HybridGraph:
             raise ValueError('island output shape mismatch')
         return np.ascontiguousarray(value,dtype=np.float32)
 
-    def __call__(self, x, *, compare_islands=False, deadline_seconds=30):
+    def __call__(self, x, *, compare_islands=False, sample=None, deadline_seconds=30):
         if self.closed:
             raise RuntimeError('hybrid graph closed')
         deadline=time.monotonic()+deadline_seconds
@@ -181,17 +230,40 @@ class HybridGraph:
                 result=operation.run(step['outputs'],{n:values[n] for n in step['inputs']})
             else:
                 value=values[step['inputs'][0]]
-                result=[self.island(step,operation,value)]
+                key=step.get('original')
+                def original(*,rounded=False):
+                    source=value.astype(np.float16).astype(np.float32) if rounded else value.astype(np.float32)
+                    return self.originals[key].run(step['outputs'],{step['inputs'][0]:source})
                 if compare_islands:
-                    ref=session(self.directory/step['original']).run(None,
-                        {step['inputs'][0]:value.astype(np.float16).astype(np.float32)})[0]
-                    diff=np.abs(result[0]-ref)
-                    # One fp16 boundary rounding plus float32 accumulation order.
-                    tolerance=.002+.002*np.abs(ref)
-                    if not np.isfinite(ref).all() or np.any(diff>tolerance):
-                        raise ValueError(f"island parity failed: {step['original']}; max_abs={diff.max()}")
-                    key=step['original']
-                    self.island_errors[key]=max(self.island_errors.get(key,0.),float(diff.max()))
+                    if not self.qualification:
+                        raise ValueError('island comparison requires explicit qualification mode')
+                    # Traverse the original graph so a faulty candidate cannot
+                    # contaminate the inputs used to qualify later islands.
+                    result=original()
+                    record=dict(file=sample,status='pass',max_abs=None,error=None)
+                    try:
+                        if key in self.preparation_errors:
+                            raise ValueError(self.preparation_errors[key])
+                        actual=self.island(step,operation,value)
+                        # Keep the existing parity boundary: compare with the
+                        # same fp16 input consumed by the candidate. CPU fallback
+                        # and qualification traversal retain the original input.
+                        ref=original(rounded=True)[0]
+                        if actual.shape!=ref.shape or not np.isfinite(actual).all() or not np.isfinite(ref).all():
+                            raise ValueError('invalid island output')
+                        diff=np.abs(actual-ref)
+                        record['max_abs']=float(diff.max())
+                        self.island_errors[key]=max(self.island_errors.get(key,0.),record['max_abs'])
+                        if np.any(diff>.002+.002*np.abs(ref)):
+                            raise ValueError(f'island parity failed; max_abs={record["max_abs"]}')
+                    except Exception as error:
+                        record.update(status='fail',error=f'{type(error).__name__}: {error}')
+                        self.island_results[key].update(status='refused',refusal_reason='island parity or candidate execution failure')
+                    self.island_results[key]['samples'].append(record)
+                elif self.qualified_islands is not None and key not in self.qualified_islands:
+                    result=original()
+                else:
+                    result=[self.island(step,operation,value)]
             values.update(zip(step['outputs'],result))
             for name in step['inputs']:
                 remaining[name]-=1
@@ -209,3 +281,4 @@ class HybridGraph:
             # Stream teardown releases the host partitions and their weights,
             # including when shared graph-owner cleanup raises an error.
             self.steps.clear()
+            self.originals.clear()

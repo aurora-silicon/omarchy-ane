@@ -115,6 +115,8 @@ class Model:
                 self.runtime=CPUOnly(self.cpu)
                 self.runtime.native_failure=error
         self.engine=self.native_engine if self.native is not None else 'cpu'
+        if self.engine=='ane-hybrid':
+            print('engine: '+self.native.engine_description,file=sys.stderr,flush=True)
         reason=self.runtime.native_failure
         print(f'camera-effects {name}: engine={self.engine} requested={engine}' +
               (f' fallback={reason}' if reason else ''),file=sys.stderr,flush=True)

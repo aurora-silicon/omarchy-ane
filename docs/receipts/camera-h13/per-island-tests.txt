@@ -1,0 +1,15 @@
+CPU-only checks; no libane device execution, compiler build or hardware request.
+
+PYTHONPATH=examples/camera-effects python -m pytest examples/camera-effects/tests/test_qualification.py -q
+35 passed in 1204.59s (0:20:04)
+
+AURORA_CAMERA_ENGINE=cpu PYTHONPATH=examples/camera-effects python -m pytest examples/camera-effects/tests/test_h13.py examples/camera-effects/tests/test_backend.py -k 'not native_failure_retires_owner and not invalid_native_output' -q
+20 passed, 2 deselected in 252.39s (0:04:12)
+The two deselected cases require a built C fallback-policy binding.
+
+CPU pipeline timing smoke: one warm-up, three measured frames, blur plus framing.
+256x256 median 36.875708 ms/frame; 620x640 preview median 71.376166 ms/frame.
+These are development-host CPU measurements, not ANE timing evidence.
+
+YuNet: 55 candidate islands, all 30 portraits checked, original-000.onnx artificially corrupted.
+54 qualified, 1 refused; all 30 final-output comparisons pass.
