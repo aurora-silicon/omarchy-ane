@@ -1,0 +1,6 @@
+{
+  "status": "fail",
+  "mode": "cpu-simulation",
+  "host": "Darwin/arm64 build host",
+  "error": "000000105335.jpg: mask IoU 0.9473684210526315 < 0.98"
+}

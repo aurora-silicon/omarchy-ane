@@ -87,3 +87,19 @@ The exporter reads the committed, hash-identified source models; it does not
 fetch a converted model or call Apple's compiler. Conversion dependencies are
 build-only. Do not infer native support from successful MIL export or isolated
 operator probes. See `LICENCE-AUDIT.md`, `VALIDATION.md` and `LEAD-TEST-PLAN.md`.
+# H13 convolution engine
+
+See [TRY.md](TRY.md) for the one-command still-image demo and
+[LEAD-RUN.md](LEAD-RUN.md) for install and device qualification. `--engine`
+selects `auto`, `ane` or `cpu`; the C backend accepts the same choice through
+`AURORA_CAMERA_ENGINE`. Startup prints the actual engine and fallback reason.
+All convolutions and 2× resizes lower after exact rewrites; activations and other
+host operations still run on CPU. This is an `ane-hybrid` engine. An unqualified
+package uses CPU; compile success does not enable device execution.
+
+Weights and generated programs are downloaded/built at install and ignored by
+Git. Run `python fetch-models.py` before using a fresh checkout, including the
+existing export scripts. The pinned PR #3 exports and original source weights
+are SHA-256 checked. See [../../docs/ANE-GAPS.md](../../docs/ANE-GAPS.md).
+The install target also ships the shared pure-Python fallback binding beside
+the backend, so a CPU-only installation does not require a libane shared object.

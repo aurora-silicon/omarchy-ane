@@ -22,6 +22,26 @@ in each `model.json`. The original selfie model uses consented but unreleased
 training data according to its model card; its released weights are Apache-2.0.
 No claim is made that the original training dataset can be redistributed.
 
+H13 integration: keep the same general MediaPipe and YuNet weights so the CPU
+reference and effect behavior stay comparable. Landscape MediaPipe retains the
+same activation/resize family; changing networks would not remove those gaps.
+No alternative model or weights are used. Exact channel padding, 5x5 gather/mix
+and transpose-convolution pixel shuffle introduce no learned parameters.
+`fetch-models.py` pins the public PR #3 conversion at revision
+`64327b7633c98e10130f008b9802bc827114a4de` and checks each exported artifact
+against the existing `model.json`. It also downloads/checks the original weights
+from the public sources above. Weights and generated bundles are excluded from
+the source tree in Git; the inherited PR #3 binary files are removed from this
+branch's tip. Generated programs contain only the compiler's formula-built
+programs and these openly licensed weights. The compiler is MIT:
+[public PR #5](https://github.com/aurora-silicon/mil-hwx-compiler/pull/5).
+
+The H13 parity subset is the first 30 ascending COCO validation IDs with licence
+4, at least one noncrowd person and height >= width. This measures disagreement
+with the CPU model, without using the annotation masks as ground truth.
+Annotations are CC BY 4.0 and the selected images CC BY 2.0. Images remain local;
+public receipts contain only their IDs, download URLs, hashes and numbers.
+
 The general selfie model is optimized for nearby prominent people; distant
 people, occlusion, thin structures, different scales, low light and motion can
 reduce quality. COCO is an open, independently annotated stress sample, not a

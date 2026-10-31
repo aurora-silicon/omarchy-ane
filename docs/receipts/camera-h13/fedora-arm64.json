@@ -1,0 +1,28 @@
+{
+  "host": "Fedora 44 aarch64 Lima build VM",
+  "kernel": "6.19.10-300.fc44.aarch64",
+  "page_size": 4096,
+  "test_python": "3.12.16",
+  "device_calls": false,
+  "build_wrapper": "buildslot-arm64",
+  "rc": 0,
+  "tests": {
+    "passed": 23,
+    "seconds": 1.69
+  },
+  "c_bridge_smoke": "pass",
+  "elf_machine": "ARM aarch64",
+  "source_sha256": {
+    "examples/camera-effects/aurora_camera_effects/backend.py": "ad41bb919193ff3c3aca063bbeee62e4105835008cb64d460021d388c127c69a",
+    "examples/camera-effects/aurora_camera_effects/hybrid.py": "3b90c07136dbe10ff85ead948beff4709681f57f7ca6d4cc48a89474f0473d14",
+    "examples/camera-effects/tests/test_h13.py": "b05291bf228a18a58b460a09c726e9b1979043dcfd870ab96c24ac2bc2b030bd",
+    "examples/camera-effects/tests/test_backend.py": "e4279a580019fa4b3d72c710c4cae1921d859f7d72c79cdfc715ec785990fb41",
+    "examples/camera-effects/camera_effects.c": "8a1f7d3c513f060fe945df97eb8b934373008a224608fe9d3485cdad739ff1f9",
+    "examples/camera-effects/camera_effects.h": "82a20b90d71a49a86a34761cc60c8c474870d2deb71038f613e6c8c0103c673a"
+  },
+  "artifact_sha256": {
+    "bindings/python/dylib/libane_python.so": "c1504f4dcbd74088efd78544d808957e86328d6e5d3b74c5a82fd2519325dc51",
+    "examples/camera-effects/libaurora-camera-effects.so": "95115c99783783a3beb1cbd06bb68651763224990bee7a47be96f71092edb03d"
+  },
+  "limitation": "4 KiB VM pages; no physical H13 or 16 KiB-page target execution"
+}

@@ -60,6 +60,16 @@ __pycache__/
 
 .omp/
 .private-patterns
+
+# Open camera weights and generated ANE bundles are install-time downloads.
+examples/camera-effects/models/*.tflite
+examples/camera-effects/models/*.onnx
+examples/camera-effects/models/*/*.onnx
+examples/camera-effects/models/*/weights.bin
+examples/camera-effects/models/*/probes.zip
+examples/camera-effects/models/*/compiled/
+examples/camera-effects/.venv-h13/
+examples/camera-effects/.venv-h13-bootstrap/
 test/*
 ane/test/_build/
 

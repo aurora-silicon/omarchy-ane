@@ -1,0 +1,17 @@
+{
+  "host": "Darwin/arm64 build host",
+  "baseline_compiler": "72e1d99c6f51eaf97ad61280936d42dbb0b6a1ae",
+  "fresh_setup_compiler_base": "f7879f1707ee6ab80609c0293cf2278f2455eee4",
+  "records": [
+    {
+      "model": "selfie",
+      "identical_ANE_programs": 63,
+      "identical_host_ONNX_partitions": 59
+    },
+    {
+      "model": "yunet",
+      "identical_ANE_programs": 55,
+      "identical_host_ONNX_partitions": 29
+    }
+  ]
+}

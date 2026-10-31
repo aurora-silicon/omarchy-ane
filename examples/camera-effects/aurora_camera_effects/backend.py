@@ -3,6 +3,7 @@
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import sys
 import time
@@ -19,6 +20,7 @@ ROOT=Path(__file__).resolve().parents[1]
 REPO=ROOT.parents[1]
 sys.path.insert(0,str(REPO/'bindings/python/python'))
 from ane import Fallback
+from ane.fallback import Call
 LIBRARY=REPO/'bindings/python/dylib/libane_python.so'
 if not LIBRARY.is_file():
     LIBRARY=Path('/usr/lib/libane_python.so')
@@ -39,8 +41,45 @@ def verified(root, name):
     return metadata
 
 
+class CPUOnly:
+    """A CPU-only call when libane is absent or explicitly deselected."""
+    native=None
+    native_failure=None
+
+    def __init__(self, cpu):
+        self.cpu=cpu
+        self.calls=self.total_ns=self.failed_calls=0
+        self.last_ns=self.min_ns=self.max_ns=0
+
+    def run(self, x):
+        start=time.monotonic_ns()
+        try:
+            result=self.cpu(x)
+        except BaseException:
+            self.failed_calls+=1
+            raise
+        call=Call()
+        call.latency_ns=time.monotonic_ns()-start
+        call.reason=1
+        self.calls+=1
+        self.total_ns+=call.latency_ns
+        self.last_ns=call.latency_ns
+        self.min_ns=min(self.min_ns or call.latency_ns,call.latency_ns)
+        self.max_ns=max(self.max_ns,call.latency_ns)
+        return result,call
+
+    def stats(self):
+        return dict(calls=self.calls,native_calls=0,cpu_calls=self.calls,failed_calls=self.failed_calls,
+                    total_ns=self.total_ns,last_ns=self.last_ns,min_ns=self.min_ns,max_ns=self.max_ns,
+                    native_ready=0,reason=1,native_error=0,
+                    calls_per_second=self.calls*1e9/self.total_ns if self.total_ns else 0)
+
+
 class Model:
-    def __init__(self, name, root=ROOT/'models', library=LIBRARY, native_factory=None):
+    def __init__(self, name, root=ROOT/'models', library=LIBRARY, native_factory=None, *, engine=None):
+        engine=engine or os.environ.get('AURORA_CAMERA_ENGINE','auto')
+        if engine not in ('auto','ane','cpu'):
+            raise ValueError('engine must be auto, ane or cpu')
         self.closed=False
         self.root=Path(root)/name
         self.metadata=verified(self.root,name)
@@ -54,11 +93,31 @@ class Model:
         if self.names!=self.metadata['output_names']:
             raise ValueError('model output contract mismatch')
         self.native=None
+        self.native_engine='ane'
         def load():
-            from .native import NativeGraph
-            self.native=native_factory() if native_factory else NativeGraph(self.root,self.metadata,library)
+            if native_factory:
+                self.native=native_factory()
+            elif (self.root/'compiled/H13/hybrid/plan.json').is_file():
+                from .hybrid import HybridGraph
+                self.native_engine='ane-hybrid'
+                self.native=HybridGraph(self.root,self.metadata,library,
+                    compiler_root=Path(os.environ.get('AURORA_CAMERA_COMPILER_ROOT','/usr/lib/mil-hwx-compiler')))
+            else:
+                from .native import NativeGraph
+                self.native=NativeGraph(self.root,self.metadata,library)
             return lambda x: self.validate(self.native(x))
-        self.runtime=Fallback(self.cpu,library=library,native_factory=load)
+        if engine=='cpu':
+            self.runtime=CPUOnly(self.cpu)
+        else:
+            try:
+                self.runtime=Fallback(self.cpu,library=library,native_factory=load)
+            except OSError as error:
+                self.runtime=CPUOnly(self.cpu)
+                self.runtime.native_failure=error
+        self.engine=self.native_engine if self.native is not None else 'cpu'
+        reason=self.runtime.native_failure
+        print(f'camera-effects {name}: engine={self.engine} requested={engine}' +
+              (f' fallback={reason}' if reason else ''),file=sys.stderr,flush=True)
 
     def validate(self, outputs):
         if len(outputs)!=len(self.shapes):
@@ -77,6 +136,10 @@ class Model:
         # Both graph boundaries use fp16; CPU convolution accumulates fp32.
         x=np.ascontiguousarray(x,dtype=np.float16)
         values,call=self.runtime.run(x)
+        if call.backend==0 and self.engine!='cpu':
+            self.engine='cpu'
+            print(f'camera-effects {self.metadata["model"]}: engine=cpu fallback={self.runtime.native_failure}',
+                  file=sys.stderr,flush=True)
         return self.validate(values),call
 
     def close(self):
@@ -95,7 +158,7 @@ class Model:
 class Backend:
     def __init__(self, width, height, background='off', framing=False,
                  minimum=1., maximum=1., default=1., zoom=0., replacement='',
-                 matrix=601, full=False, *, model_root=ROOT/'models', library=LIBRARY):
+                 matrix=601, full=False, *, model_root=ROOT/'models', library=LIBRARY, engine=None):
         if type(width)!=int or type(height)!=int or width<2 or height<2 or width>4096 or height>2160 or (width|height)&1:
             raise ValueError('expected even NV12 dimensions up to 4096x2160')
         if background not in ('off','blur','replace') or matrix not in (601,709):
@@ -103,10 +166,10 @@ class Backend:
         self.width,self.height=width,height
         self.background,self.framing=background,bool(framing)
         self.matrix,self.full=matrix,bool(full)
-        self.segmenter=Model('selfie',model_root,library) if background!='off' else None
+        self.segmenter=Model('selfie',model_root,library,engine=engine) if background!='off' else None
         self.detector=None
         try:
-            self.detector=Model('yunet',model_root,library) if framing else None
+            self.detector=Model('yunet',model_root,library,engine=engine) if framing else None
             self.framer=Framer(minimum,maximum,default,zoom) if framing else None
             self.replacement=None
             if background=='replace':

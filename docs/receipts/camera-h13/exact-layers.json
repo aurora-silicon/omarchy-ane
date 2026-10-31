@@ -1,0 +1,5504 @@
+[
+  {
+    "model": "selfie",
+    "layer": "ce_op_3",
+    "op": "pad",
+    "inputs": {
+      "x": [
+        1,
+        3,
+        256,
+        256
+      ]
+    },
+    "output": [
+      1,
+      3,
+      257,
+      257
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_11",
+    "op": "conv",
+    "inputs": {
+      "ce_v_3_0": [
+        1,
+        3,
+        257,
+        257
+      ]
+    },
+    "output": [
+      1,
+      16,
+      128,
+      128
+    ],
+    "stride": [
+      2,
+      2
+    ],
+    "groups": 1,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_16",
+    "op": "clip",
+    "inputs": {
+      "ce_v_13_0": [
+        1,
+        16,
+        128,
+        128
+      ]
+    },
+    "output": [
+      1,
+      16,
+      128,
+      128
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_27",
+    "op": "conv",
+    "inputs": {
+      "ce_v_19_0": [
+        1,
+        16,
+        128,
+        128
+      ]
+    },
+    "output": [
+      1,
+      16,
+      128,
+      128
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_32",
+    "op": "pad",
+    "inputs": {
+      "ce_v_28_0": [
+        1,
+        16,
+        128,
+        128
+      ]
+    },
+    "output": [
+      1,
+      16,
+      129,
+      129
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_40",
+    "op": "conv",
+    "inputs": {
+      "ce_v_32_0": [
+        1,
+        16,
+        129,
+        129
+      ]
+    },
+    "output": [
+      1,
+      16,
+      64,
+      64
+    ],
+    "stride": [
+      2,
+      2
+    ],
+    "groups": 16,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_48",
+    "op": "avg_pool",
+    "inputs": {
+      "ce_v_41_0": [
+        1,
+        16,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "stride": [
+      64,
+      64
+    ],
+    "groups": null,
+    "kernel": [
+      64,
+      64
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_56",
+    "op": "conv",
+    "inputs": {
+      "ce_v_48_0": [
+        1,
+        16,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      8,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_65",
+    "op": "conv",
+    "inputs": {
+      "ce_v_57_0": [
+        1,
+        8,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_66",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_65_0": [
+        1,
+        16,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_67",
+    "op": "mul",
+    "inputs": {
+      "ce_v_41_0": [
+        1,
+        16,
+        64,
+        64
+      ],
+      "ce_v_66_0": [
+        1,
+        16,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      16,
+      64,
+      64
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_75",
+    "op": "conv",
+    "inputs": {
+      "ce_v_67_0": [
+        1,
+        16,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      16,
+      64,
+      64
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_83",
+    "op": "conv",
+    "inputs": {
+      "ce_v_75_0": [
+        1,
+        16,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      72,
+      64,
+      64
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_88",
+    "op": "pad",
+    "inputs": {
+      "ce_v_84_0": [
+        1,
+        72,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      72,
+      65,
+      65
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_96",
+    "op": "conv",
+    "inputs": {
+      "ce_v_88_0": [
+        1,
+        72,
+        65,
+        65
+      ]
+    },
+    "output": [
+      1,
+      72,
+      32,
+      32
+    ],
+    "stride": [
+      2,
+      2
+    ],
+    "groups": 72,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_105",
+    "op": "conv",
+    "inputs": {
+      "ce_v_97_0": [
+        1,
+        72,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      24,
+      32,
+      32
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_113",
+    "op": "conv",
+    "inputs": {
+      "ce_v_105_0": [
+        1,
+        24,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      88,
+      32,
+      32
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_118",
+    "op": "pad",
+    "inputs": {
+      "ce_v_114_0": [
+        1,
+        88,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      88,
+      34,
+      34
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_126",
+    "op": "conv",
+    "inputs": {
+      "ce_v_118_0": [
+        1,
+        88,
+        34,
+        34
+      ]
+    },
+    "output": [
+      1,
+      88,
+      32,
+      32
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 88,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_135",
+    "op": "conv",
+    "inputs": {
+      "ce_v_127_0": [
+        1,
+        88,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      24,
+      32,
+      32
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_144",
+    "op": "conv",
+    "inputs": {
+      "ce_v_136_0": [
+        1,
+        24,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      96,
+      32,
+      32
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_149",
+    "op": "clip",
+    "inputs": {
+      "ce_v_146_0": [
+        1,
+        96,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      96,
+      32,
+      32
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_156",
+    "op": "pad",
+    "inputs": {
+      "ce_v_152_0": [
+        1,
+        96,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      96,
+      35,
+      35
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_164",
+    "op": "conv",
+    "inputs": {
+      "ce_v_156_0": [
+        1,
+        96,
+        35,
+        35
+      ]
+    },
+    "output": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "stride": [
+      2,
+      2
+    ],
+    "groups": 96,
+    "kernel": [
+      5,
+      5
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_169",
+    "op": "clip",
+    "inputs": {
+      "ce_v_166_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_179",
+    "op": "avg_pool",
+    "inputs": {
+      "ce_v_172_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      96,
+      1,
+      1
+    ],
+    "stride": [
+      16,
+      16
+    ],
+    "groups": null,
+    "kernel": [
+      16,
+      16
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_187",
+    "op": "conv",
+    "inputs": {
+      "ce_v_179_0": [
+        1,
+        96,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      24,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_196",
+    "op": "conv",
+    "inputs": {
+      "ce_v_188_0": [
+        1,
+        24,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      96,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_197",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_196_0": [
+        1,
+        96,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      96,
+      1,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_206",
+    "op": "conv",
+    "inputs": {
+      "ce_v_198_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      32,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_214",
+    "op": "conv",
+    "inputs": {
+      "ce_v_206_0": [
+        1,
+        32,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_219",
+    "op": "clip",
+    "inputs": {
+      "ce_v_216_0": [
+        1,
+        128,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_226",
+    "op": "pad",
+    "inputs": {
+      "ce_v_222_0": [
+        1,
+        128,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      128,
+      20,
+      20
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_234",
+    "op": "conv",
+    "inputs": {
+      "ce_v_226_0": [
+        1,
+        128,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 128,
+    "kernel": [
+      5,
+      5
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_239",
+    "op": "clip",
+    "inputs": {
+      "ce_v_236_0": [
+        1,
+        128,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_249",
+    "op": "avg_pool",
+    "inputs": {
+      "ce_v_242_0": [
+        1,
+        128,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      128,
+      1,
+      1
+    ],
+    "stride": [
+      16,
+      16
+    ],
+    "groups": null,
+    "kernel": [
+      16,
+      16
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_257",
+    "op": "conv",
+    "inputs": {
+      "ce_v_249_0": [
+        1,
+        128,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      32,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_266",
+    "op": "conv",
+    "inputs": {
+      "ce_v_258_0": [
+        1,
+        32,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      128,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_267",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_266_0": [
+        1,
+        128,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      128,
+      1,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_268",
+    "op": "mul",
+    "inputs": {
+      "ce_v_242_0": [
+        1,
+        128,
+        16,
+        16
+      ],
+      "ce_v_267_0": [
+        1,
+        128,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_276",
+    "op": "conv",
+    "inputs": {
+      "ce_v_268_0": [
+        1,
+        128,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      32,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_285",
+    "op": "conv",
+    "inputs": {
+      "ce_v_277_0": [
+        1,
+        32,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_290",
+    "op": "clip",
+    "inputs": {
+      "ce_v_287_0": [
+        1,
+        128,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_297",
+    "op": "pad",
+    "inputs": {
+      "ce_v_293_0": [
+        1,
+        128,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      128,
+      20,
+      20
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_305",
+    "op": "conv",
+    "inputs": {
+      "ce_v_297_0": [
+        1,
+        128,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 128,
+    "kernel": [
+      5,
+      5
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_310",
+    "op": "clip",
+    "inputs": {
+      "ce_v_307_0": [
+        1,
+        128,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_320",
+    "op": "avg_pool",
+    "inputs": {
+      "ce_v_313_0": [
+        1,
+        128,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      128,
+      1,
+      1
+    ],
+    "stride": [
+      16,
+      16
+    ],
+    "groups": null,
+    "kernel": [
+      16,
+      16
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_328",
+    "op": "conv",
+    "inputs": {
+      "ce_v_320_0": [
+        1,
+        128,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      32,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_337",
+    "op": "conv",
+    "inputs": {
+      "ce_v_329_0": [
+        1,
+        32,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      128,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_338",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_337_0": [
+        1,
+        128,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      128,
+      1,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_339",
+    "op": "mul",
+    "inputs": {
+      "ce_v_313_0": [
+        1,
+        128,
+        16,
+        16
+      ],
+      "ce_v_338_0": [
+        1,
+        128,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_347",
+    "op": "conv",
+    "inputs": {
+      "ce_v_339_0": [
+        1,
+        128,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      32,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_356",
+    "op": "conv",
+    "inputs": {
+      "ce_v_348_0": [
+        1,
+        32,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_361",
+    "op": "clip",
+    "inputs": {
+      "ce_v_358_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_368",
+    "op": "pad",
+    "inputs": {
+      "ce_v_364_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      96,
+      20,
+      20
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_376",
+    "op": "conv",
+    "inputs": {
+      "ce_v_368_0": [
+        1,
+        96,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 96,
+    "kernel": [
+      5,
+      5
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_381",
+    "op": "clip",
+    "inputs": {
+      "ce_v_378_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_391",
+    "op": "avg_pool",
+    "inputs": {
+      "ce_v_384_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      96,
+      1,
+      1
+    ],
+    "stride": [
+      16,
+      16
+    ],
+    "groups": null,
+    "kernel": [
+      16,
+      16
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_399",
+    "op": "conv",
+    "inputs": {
+      "ce_v_391_0": [
+        1,
+        96,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      24,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_408",
+    "op": "conv",
+    "inputs": {
+      "ce_v_400_0": [
+        1,
+        24,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      96,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_409",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_408_0": [
+        1,
+        96,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      96,
+      1,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_418",
+    "op": "conv",
+    "inputs": {
+      "ce_v_410_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      32,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_427",
+    "op": "conv",
+    "inputs": {
+      "ce_v_419_0": [
+        1,
+        32,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_432",
+    "op": "clip",
+    "inputs": {
+      "ce_v_429_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_439",
+    "op": "pad",
+    "inputs": {
+      "ce_v_435_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      96,
+      20,
+      20
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_447",
+    "op": "conv",
+    "inputs": {
+      "ce_v_439_0": [
+        1,
+        96,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 96,
+    "kernel": [
+      5,
+      5
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_452",
+    "op": "clip",
+    "inputs": {
+      "ce_v_449_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_462",
+    "op": "avg_pool",
+    "inputs": {
+      "ce_v_455_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      96,
+      1,
+      1
+    ],
+    "stride": [
+      16,
+      16
+    ],
+    "groups": null,
+    "kernel": [
+      16,
+      16
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_470",
+    "op": "conv",
+    "inputs": {
+      "ce_v_462_0": [
+        1,
+        96,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      24,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_479",
+    "op": "conv",
+    "inputs": {
+      "ce_v_471_0": [
+        1,
+        24,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      96,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_480",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_479_0": [
+        1,
+        96,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      96,
+      1,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_489",
+    "op": "conv",
+    "inputs": {
+      "ce_v_481_0": [
+        1,
+        96,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      32,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_497",
+    "op": "avg_pool",
+    "inputs": {
+      "ce_v_490_0": [
+        1,
+        32,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      32,
+      1,
+      1
+    ],
+    "stride": [
+      16,
+      16
+    ],
+    "groups": null,
+    "kernel": [
+      16,
+      16
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_505",
+    "op": "conv",
+    "inputs": {
+      "ce_v_490_0": [
+        1,
+        32,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_513",
+    "op": "conv",
+    "inputs": {
+      "ce_v_497_0": [
+        1,
+        32,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      128,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_515",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_513_0": [
+        1,
+        128,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      128,
+      1,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_516",
+    "op": "mul",
+    "inputs": {
+      "ce_v_514_0": [
+        1,
+        128,
+        16,
+        16
+      ],
+      "ce_v_515_0": [
+        1,
+        128,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_520",
+    "op": "upsample_bilinear",
+    "inputs": {
+      "ce_v_516_0": [
+        1,
+        128,
+        16,
+        16
+      ]
+    },
+    "output": [
+      1,
+      128,
+      32,
+      32
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_528",
+    "op": "conv",
+    "inputs": {
+      "ce_v_520_0": [
+        1,
+        128,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      24,
+      32,
+      32
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_536",
+    "op": "avg_pool",
+    "inputs": {
+      "ce_v_529_0": [
+        1,
+        24,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      24,
+      1,
+      1
+    ],
+    "stride": [
+      32,
+      32
+    ],
+    "groups": null,
+    "kernel": [
+      32,
+      32
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_544",
+    "op": "conv",
+    "inputs": {
+      "ce_v_536_0": [
+        1,
+        24,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      24,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_553",
+    "op": "conv",
+    "inputs": {
+      "ce_v_545_0": [
+        1,
+        24,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      24,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_554",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_553_0": [
+        1,
+        24,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      24,
+      1,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_555",
+    "op": "mul",
+    "inputs": {
+      "ce_v_136_0": [
+        1,
+        24,
+        32,
+        32
+      ],
+      "ce_v_554_0": [
+        1,
+        24,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      24,
+      32,
+      32
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_564",
+    "op": "conv",
+    "inputs": {
+      "ce_v_556_0": [
+        1,
+        24,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      24,
+      32,
+      32
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_569",
+    "op": "pad",
+    "inputs": {
+      "ce_v_565_0": [
+        1,
+        24,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      24,
+      34,
+      34
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_577",
+    "op": "conv",
+    "inputs": {
+      "ce_v_569_0": [
+        1,
+        24,
+        34,
+        34
+      ]
+    },
+    "output": [
+      1,
+      24,
+      32,
+      32
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 24,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_583",
+    "op": "upsample_bilinear",
+    "inputs": {
+      "ce_v_579_0": [
+        1,
+        24,
+        32,
+        32
+      ]
+    },
+    "output": [
+      1,
+      24,
+      64,
+      64
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_591",
+    "op": "conv",
+    "inputs": {
+      "ce_v_583_0": [
+        1,
+        24,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      16,
+      64,
+      64
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_599",
+    "op": "avg_pool",
+    "inputs": {
+      "ce_v_592_0": [
+        1,
+        16,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "stride": [
+      64,
+      64
+    ],
+    "groups": null,
+    "kernel": [
+      64,
+      64
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_607",
+    "op": "conv",
+    "inputs": {
+      "ce_v_599_0": [
+        1,
+        16,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_616",
+    "op": "conv",
+    "inputs": {
+      "ce_v_608_0": [
+        1,
+        16,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_617",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_616_0": [
+        1,
+        16,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_618",
+    "op": "mul",
+    "inputs": {
+      "ce_v_75_0": [
+        1,
+        16,
+        64,
+        64
+      ],
+      "ce_v_617_0": [
+        1,
+        16,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      16,
+      64,
+      64
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_627",
+    "op": "conv",
+    "inputs": {
+      "ce_v_619_0": [
+        1,
+        16,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      16,
+      64,
+      64
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_632",
+    "op": "pad",
+    "inputs": {
+      "ce_v_628_0": [
+        1,
+        16,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      16,
+      66,
+      66
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_640",
+    "op": "conv",
+    "inputs": {
+      "ce_v_632_0": [
+        1,
+        16,
+        66,
+        66
+      ]
+    },
+    "output": [
+      1,
+      16,
+      64,
+      64
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 16,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_646",
+    "op": "upsample_bilinear",
+    "inputs": {
+      "ce_v_642_0": [
+        1,
+        16,
+        64,
+        64
+      ]
+    },
+    "output": [
+      1,
+      16,
+      128,
+      128
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_654",
+    "op": "conv",
+    "inputs": {
+      "ce_v_646_0": [
+        1,
+        16,
+        128,
+        128
+      ]
+    },
+    "output": [
+      1,
+      16,
+      128,
+      128
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_662",
+    "op": "avg_pool",
+    "inputs": {
+      "ce_v_655_0": [
+        1,
+        16,
+        128,
+        128
+      ]
+    },
+    "output": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "stride": [
+      128,
+      128
+    ],
+    "groups": null,
+    "kernel": [
+      128,
+      128
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_670",
+    "op": "conv",
+    "inputs": {
+      "ce_v_662_0": [
+        1,
+        16,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_679",
+    "op": "conv",
+    "inputs": {
+      "ce_v_671_0": [
+        1,
+        16,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_680",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_679_0": [
+        1,
+        16,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_681",
+    "op": "mul",
+    "inputs": {
+      "ce_v_19_0": [
+        1,
+        16,
+        128,
+        128
+      ],
+      "ce_v_680_0": [
+        1,
+        16,
+        1,
+        1
+      ]
+    },
+    "output": [
+      1,
+      16,
+      128,
+      128
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_690",
+    "op": "conv",
+    "inputs": {
+      "ce_v_682_0": [
+        1,
+        16,
+        128,
+        128
+      ]
+    },
+    "output": [
+      1,
+      16,
+      128,
+      128
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_695",
+    "op": "pad",
+    "inputs": {
+      "ce_v_691_0": [
+        1,
+        16,
+        128,
+        128
+      ]
+    },
+    "output": [
+      1,
+      16,
+      130,
+      130
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_703",
+    "op": "conv",
+    "inputs": {
+      "ce_v_695_0": [
+        1,
+        16,
+        130,
+        130
+      ]
+    },
+    "output": [
+      1,
+      16,
+      128,
+      128
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 16,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_714",
+    "op": "conv_transpose",
+    "inputs": {
+      "ce_v_705_0": [
+        1,
+        16,
+        128,
+        128
+      ]
+    },
+    "output": [
+      1,
+      1,
+      256,
+      256
+    ],
+    "stride": [
+      2,
+      2
+    ],
+    "groups": 1,
+    "kernel": [
+      2,
+      2
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "selfie",
+    "layer": "ce_op_715",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_714_0": [
+        1,
+        1,
+        256,
+        256
+      ]
+    },
+    "output": [
+      1,
+      1,
+      256,
+      256
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_7",
+    "op": "conv",
+    "inputs": {
+      "x": [
+        1,
+        3,
+        320,
+        320
+      ]
+    },
+    "output": [
+      1,
+      16,
+      160,
+      160
+    ],
+    "stride": [
+      2,
+      2
+    ],
+    "groups": 1,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_16",
+    "op": "conv",
+    "inputs": {
+      "ce_v_8_0": [
+        1,
+        16,
+        160,
+        160
+      ]
+    },
+    "output": [
+      1,
+      16,
+      160,
+      160
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_24",
+    "op": "conv",
+    "inputs": {
+      "ce_v_16_0": [
+        1,
+        16,
+        160,
+        160
+      ]
+    },
+    "output": [
+      1,
+      16,
+      160,
+      160
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 16,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_31",
+    "op": "max_pool",
+    "inputs": {
+      "ce_v_25_0": [
+        1,
+        16,
+        160,
+        160
+      ]
+    },
+    "output": [
+      1,
+      16,
+      80,
+      80
+    ],
+    "stride": [
+      2,
+      2
+    ],
+    "groups": null,
+    "kernel": [
+      2,
+      2
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_39",
+    "op": "conv",
+    "inputs": {
+      "ce_v_31_0": [
+        1,
+        16,
+        80,
+        80
+      ]
+    },
+    "output": [
+      1,
+      16,
+      80,
+      80
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_47",
+    "op": "conv",
+    "inputs": {
+      "ce_v_39_0": [
+        1,
+        16,
+        80,
+        80
+      ]
+    },
+    "output": [
+      1,
+      16,
+      80,
+      80
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 16,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_56",
+    "op": "conv",
+    "inputs": {
+      "ce_v_48_0": [
+        1,
+        16,
+        80,
+        80
+      ]
+    },
+    "output": [
+      1,
+      32,
+      80,
+      80
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_64",
+    "op": "conv",
+    "inputs": {
+      "ce_v_56_0": [
+        1,
+        32,
+        80,
+        80
+      ]
+    },
+    "output": [
+      1,
+      32,
+      80,
+      80
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 32,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_73",
+    "op": "conv",
+    "inputs": {
+      "ce_v_65_0": [
+        1,
+        32,
+        80,
+        80
+      ]
+    },
+    "output": [
+      1,
+      32,
+      80,
+      80
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_81",
+    "op": "conv",
+    "inputs": {
+      "ce_v_73_0": [
+        1,
+        32,
+        80,
+        80
+      ]
+    },
+    "output": [
+      1,
+      32,
+      80,
+      80
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 32,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_90",
+    "op": "conv",
+    "inputs": {
+      "ce_v_82_0": [
+        1,
+        32,
+        80,
+        80
+      ]
+    },
+    "output": [
+      1,
+      64,
+      80,
+      80
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_98",
+    "op": "conv",
+    "inputs": {
+      "ce_v_90_0": [
+        1,
+        64,
+        80,
+        80
+      ]
+    },
+    "output": [
+      1,
+      64,
+      80,
+      80
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 64,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_105",
+    "op": "max_pool",
+    "inputs": {
+      "ce_v_99_0": [
+        1,
+        64,
+        80,
+        80
+      ]
+    },
+    "output": [
+      1,
+      64,
+      40,
+      40
+    ],
+    "stride": [
+      2,
+      2
+    ],
+    "groups": null,
+    "kernel": [
+      2,
+      2
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_113",
+    "op": "conv",
+    "inputs": {
+      "ce_v_105_0": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      64,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_121",
+    "op": "conv",
+    "inputs": {
+      "ce_v_113_0": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      64,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 64,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_130",
+    "op": "conv",
+    "inputs": {
+      "ce_v_122_0": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      64,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_138",
+    "op": "conv",
+    "inputs": {
+      "ce_v_130_0": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      64,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 64,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_145",
+    "op": "max_pool",
+    "inputs": {
+      "ce_v_139_0": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      64,
+      20,
+      20
+    ],
+    "stride": [
+      2,
+      2
+    ],
+    "groups": null,
+    "kernel": [
+      2,
+      2
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_153",
+    "op": "conv",
+    "inputs": {
+      "ce_v_145_0": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      64,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_161",
+    "op": "conv",
+    "inputs": {
+      "ce_v_153_0": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      64,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 64,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_170",
+    "op": "conv",
+    "inputs": {
+      "ce_v_162_0": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      64,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_178",
+    "op": "conv",
+    "inputs": {
+      "ce_v_170_0": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      64,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 64,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_185",
+    "op": "max_pool",
+    "inputs": {
+      "ce_v_179_0": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      64,
+      10,
+      10
+    ],
+    "stride": [
+      2,
+      2
+    ],
+    "groups": null,
+    "kernel": [
+      2,
+      2
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_193",
+    "op": "conv",
+    "inputs": {
+      "ce_v_185_0": [
+        1,
+        64,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      64,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_201",
+    "op": "conv",
+    "inputs": {
+      "ce_v_193_0": [
+        1,
+        64,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      64,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 64,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_210",
+    "op": "conv",
+    "inputs": {
+      "ce_v_202_0": [
+        1,
+        64,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      64,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_218",
+    "op": "conv",
+    "inputs": {
+      "ce_v_210_0": [
+        1,
+        64,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      64,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 64,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_227",
+    "op": "conv",
+    "inputs": {
+      "ce_v_219_0": [
+        1,
+        64,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      64,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_235",
+    "op": "conv",
+    "inputs": {
+      "ce_v_227_0": [
+        1,
+        64,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      64,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 64,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_239",
+    "op": "upsample_nearest_neighbor",
+    "inputs": {
+      "ce_v_236_0": [
+        1,
+        64,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      64,
+      20,
+      20
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_248",
+    "op": "conv",
+    "inputs": {
+      "ce_v_240_0": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      64,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_256",
+    "op": "conv",
+    "inputs": {
+      "ce_v_248_0": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      64,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 64,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_260",
+    "op": "upsample_nearest_neighbor",
+    "inputs": {
+      "ce_v_257_0": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      64,
+      40,
+      40
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_269",
+    "op": "conv",
+    "inputs": {
+      "ce_v_261_0": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      64,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_277",
+    "op": "conv",
+    "inputs": {
+      "ce_v_269_0": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      64,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 64,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 0
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_286",
+    "op": "conv",
+    "inputs": {
+      "ce_v_278_0": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      1,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_294",
+    "op": "conv",
+    "inputs": {
+      "ce_v_286_0": [
+        1,
+        1,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      1,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_302",
+    "op": "conv",
+    "inputs": {
+      "ce_v_257_0": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      1,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_310",
+    "op": "conv",
+    "inputs": {
+      "ce_v_302_0": [
+        1,
+        1,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      1,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_318",
+    "op": "conv",
+    "inputs": {
+      "ce_v_236_0": [
+        1,
+        64,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      1,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_326",
+    "op": "conv",
+    "inputs": {
+      "ce_v_318_0": [
+        1,
+        1,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      1,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_334",
+    "op": "conv",
+    "inputs": {
+      "ce_v_278_0": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      4,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_342",
+    "op": "conv",
+    "inputs": {
+      "ce_v_334_0": [
+        1,
+        4,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      4,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 4,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_350",
+    "op": "conv",
+    "inputs": {
+      "ce_v_257_0": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      4,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_358",
+    "op": "conv",
+    "inputs": {
+      "ce_v_350_0": [
+        1,
+        4,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      4,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 4,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_366",
+    "op": "conv",
+    "inputs": {
+      "ce_v_236_0": [
+        1,
+        64,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      4,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_374",
+    "op": "conv",
+    "inputs": {
+      "ce_v_366_0": [
+        1,
+        4,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      4,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 4,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_382",
+    "op": "conv",
+    "inputs": {
+      "ce_v_278_0": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      1,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_390",
+    "op": "conv",
+    "inputs": {
+      "ce_v_382_0": [
+        1,
+        1,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      1,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_398",
+    "op": "conv",
+    "inputs": {
+      "ce_v_257_0": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      1,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_406",
+    "op": "conv",
+    "inputs": {
+      "ce_v_398_0": [
+        1,
+        1,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      1,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_414",
+    "op": "conv",
+    "inputs": {
+      "ce_v_236_0": [
+        1,
+        64,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      1,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_422",
+    "op": "conv",
+    "inputs": {
+      "ce_v_414_0": [
+        1,
+        1,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      1,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_430",
+    "op": "conv",
+    "inputs": {
+      "ce_v_278_0": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      10,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_438",
+    "op": "conv",
+    "inputs": {
+      "ce_v_430_0": [
+        1,
+        10,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      10,
+      40,
+      40
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 10,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_446",
+    "op": "conv",
+    "inputs": {
+      "ce_v_257_0": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      10,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_454",
+    "op": "conv",
+    "inputs": {
+      "ce_v_446_0": [
+        1,
+        10,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      10,
+      20,
+      20
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 10,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_462",
+    "op": "conv",
+    "inputs": {
+      "ce_v_236_0": [
+        1,
+        64,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      10,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 1,
+    "kernel": [
+      1,
+      1
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_470",
+    "op": "conv",
+    "inputs": {
+      "ce_v_462_0": [
+        1,
+        10,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      10,
+      10,
+      10
+    ],
+    "stride": [
+      1,
+      1
+    ],
+    "groups": 10,
+    "kernel": [
+      3,
+      3
+    ],
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_473",
+    "op": "transpose",
+    "inputs": {
+      "ce_v_294_0": [
+        1,
+        1,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      40,
+      40,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_474",
+    "op": "reshape",
+    "inputs": {
+      "ce_v_473_0": [
+        1,
+        40,
+        40,
+        1
+      ]
+    },
+    "output": [
+      1,
+      1600,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_475",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_474_0": [
+        1,
+        1600,
+        1
+      ]
+    },
+    "output": [
+      1,
+      1600,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_478",
+    "op": "transpose",
+    "inputs": {
+      "ce_v_310_0": [
+        1,
+        1,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      20,
+      20,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_479",
+    "op": "reshape",
+    "inputs": {
+      "ce_v_478_0": [
+        1,
+        20,
+        20,
+        1
+      ]
+    },
+    "output": [
+      1,
+      400,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_480",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_479_0": [
+        1,
+        400,
+        1
+      ]
+    },
+    "output": [
+      1,
+      400,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_483",
+    "op": "transpose",
+    "inputs": {
+      "ce_v_326_0": [
+        1,
+        1,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      10,
+      10,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_484",
+    "op": "reshape",
+    "inputs": {
+      "ce_v_483_0": [
+        1,
+        10,
+        10,
+        1
+      ]
+    },
+    "output": [
+      1,
+      100,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_485",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_484_0": [
+        1,
+        100,
+        1
+      ]
+    },
+    "output": [
+      1,
+      100,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_488",
+    "op": "transpose",
+    "inputs": {
+      "ce_v_390_0": [
+        1,
+        1,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      40,
+      40,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_489",
+    "op": "reshape",
+    "inputs": {
+      "ce_v_488_0": [
+        1,
+        40,
+        40,
+        1
+      ]
+    },
+    "output": [
+      1,
+      1600,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_490",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_489_0": [
+        1,
+        1600,
+        1
+      ]
+    },
+    "output": [
+      1,
+      1600,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_493",
+    "op": "transpose",
+    "inputs": {
+      "ce_v_406_0": [
+        1,
+        1,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      20,
+      20,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_494",
+    "op": "reshape",
+    "inputs": {
+      "ce_v_493_0": [
+        1,
+        20,
+        20,
+        1
+      ]
+    },
+    "output": [
+      1,
+      400,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_495",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_494_0": [
+        1,
+        400,
+        1
+      ]
+    },
+    "output": [
+      1,
+      400,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_498",
+    "op": "transpose",
+    "inputs": {
+      "ce_v_422_0": [
+        1,
+        1,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      10,
+      10,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_499",
+    "op": "reshape",
+    "inputs": {
+      "ce_v_498_0": [
+        1,
+        10,
+        10,
+        1
+      ]
+    },
+    "output": [
+      1,
+      100,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_500",
+    "op": "sigmoid",
+    "inputs": {
+      "ce_v_499_0": [
+        1,
+        100,
+        1
+      ]
+    },
+    "output": [
+      1,
+      100,
+      1
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_503",
+    "op": "transpose",
+    "inputs": {
+      "ce_v_342_0": [
+        1,
+        4,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      40,
+      40,
+      4
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_504",
+    "op": "reshape",
+    "inputs": {
+      "ce_v_503_0": [
+        1,
+        40,
+        40,
+        4
+      ]
+    },
+    "output": [
+      1,
+      1600,
+      4
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_507",
+    "op": "transpose",
+    "inputs": {
+      "ce_v_358_0": [
+        1,
+        4,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      20,
+      20,
+      4
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_508",
+    "op": "reshape",
+    "inputs": {
+      "ce_v_507_0": [
+        1,
+        20,
+        20,
+        4
+      ]
+    },
+    "output": [
+      1,
+      400,
+      4
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_511",
+    "op": "transpose",
+    "inputs": {
+      "ce_v_374_0": [
+        1,
+        4,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      10,
+      10,
+      4
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_512",
+    "op": "reshape",
+    "inputs": {
+      "ce_v_511_0": [
+        1,
+        10,
+        10,
+        4
+      ]
+    },
+    "output": [
+      1,
+      100,
+      4
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_515",
+    "op": "transpose",
+    "inputs": {
+      "ce_v_438_0": [
+        1,
+        10,
+        40,
+        40
+      ]
+    },
+    "output": [
+      1,
+      40,
+      40,
+      10
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_516",
+    "op": "reshape",
+    "inputs": {
+      "ce_v_515_0": [
+        1,
+        40,
+        40,
+        10
+      ]
+    },
+    "output": [
+      1,
+      1600,
+      10
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_519",
+    "op": "transpose",
+    "inputs": {
+      "ce_v_454_0": [
+        1,
+        10,
+        20,
+        20
+      ]
+    },
+    "output": [
+      1,
+      20,
+      20,
+      10
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_520",
+    "op": "reshape",
+    "inputs": {
+      "ce_v_519_0": [
+        1,
+        20,
+        20,
+        10
+      ]
+    },
+    "output": [
+      1,
+      400,
+      10
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_523",
+    "op": "transpose",
+    "inputs": {
+      "ce_v_470_0": [
+        1,
+        10,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      10,
+      10,
+      10
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  },
+  {
+    "model": "yunet",
+    "layer": "ce_op_524",
+    "op": "reshape",
+    "inputs": {
+      "ce_v_523_0": [
+        1,
+        10,
+        10,
+        10
+      ]
+    },
+    "output": [
+      1,
+      100,
+      10
+    ],
+    "stride": null,
+    "groups": null,
+    "kernel": null,
+    "dtype": "fp16",
+    "direct_rc": 65
+  }
+]
