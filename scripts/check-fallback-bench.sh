@@ -15,6 +15,7 @@ make -C "$root/bindings/python/dylib" libane_python
 make -C "$root/tools" check-fallback test_libane_ioctl
 "$root/tools/test_libane_ioctl" "$root/fixtures/h14-anec"
 python3 -m unittest discover -s "$root/tools" -p 'test_fallback.py' -v
+python3 -m unittest discover -s "$root/tools" -p 'test_ane_bench_owner.py' -v
 python3 -m unittest discover -s "$root/tools" -p 'test_mobilenet_baseline.py' -v
 for batch in 1 8; do
     compiler_options=()

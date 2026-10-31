@@ -148,6 +148,7 @@ python3.12 -m venv /tmp/ane-bench-venv
 . /tmp/ane-bench-venv/bin/activate
 pip install --only-binary=:all: -r tools/requirements-bench.txt
 python3 -m unittest discover -s tools -p 'test_fallback.py' -v
+python3 -m unittest discover -s tools -p 'test_ane_bench_owner.py' -v
 python3 -m unittest discover -s tools -p 'test_mobilenet_baseline.py' -v
 ```
 
@@ -155,7 +156,8 @@ A build host can run `scripts/check-fallback-bench.sh` for the same checks plus
 batch 1/8 CPU smoke measurements. `scripts/check-fallback-compiler.sh` additionally
 builds the pinned published compiler unchanged and captures full/per-op refusals.
 Both scripts use private build directories, Python 3.12 wheels and at most eight
-compiler jobs. No ANE is needed. Tests cover missing/busy/failed native callbacks,
+compiler jobs. No ANE is needed. The owner/factory policy tests also run with the Python
+standard library alone. Tests cover missing/busy/failed native callbacks,
 retirement, CPU errors, concurrent calls, same-weight CPU math and baseline shape,
 RNG, depthwise count and weight-blob identity.
 
