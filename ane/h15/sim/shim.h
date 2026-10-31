@@ -40,6 +40,7 @@ typedef int64_t s64;
 /* ---- annotations ---- */
 #define __iomem
 #define __init
+#define __exit
 #ifndef __always_inline
 #define __always_inline inline
 #endif
@@ -156,6 +157,8 @@ struct platform_driver {
 #define MODULE_DESCRIPTION(x)
 #define MODULE_DEVICE_TABLE(t, x)
 #define module_platform_driver(x) extern char __sim_kmod_noop
+#define module_init(f) extern char __sim_mi_##f
+#define module_exit(f) extern char __sim_me_##f
 
 /* ---- fake MMIO bus with a full access record ---- */
 #define SIM_MAX_REGIONS 8

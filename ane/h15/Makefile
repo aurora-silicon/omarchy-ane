@@ -6,7 +6,7 @@
 #   make check                 (host ADT walker self test)
 ifneq ($(KERNELRELEASE),)
 	obj-m := ane_h15.o
-	ane_h15-objs := ane_h15_main.o ane_h15_soc.o
+	ane_h15-objs := ane_h15_main.o ane_h15_soc.o ane_h15_overlay.o
 	ccflags-y += -I$(src)
 else
 	KERNELDIR ?= /lib/modules/$(shell uname -r)/build
@@ -50,7 +50,19 @@ sim/sim_h15_filled: sim/sim_harness.c ane_h15_main.c ane_h15_soc.c $(SIM_HDRS)
 sim-probe-filled: sim/sim_h15_filled
 	./sim/sim_h15_filled pos-filled
 
-sim-test: sim/sim_h15
+# The run-time overlay (apply_overlay=1): the REAL ane_h15_overlay.c against a fake live device tree, then the generated
+# blob header must be what gen-runtime-overlay.py writes from the overlay sources.
+sim/sim_overlay: sim/sim_overlay.c ane_h15_overlay.c ane_h15_overlay.h ane_h15_overlay_data.h $(wildcard sim/ovl/linux/*.h)
+	$(SIM_CC) $(SIM_CFLAGS) -I sim/ovl -o $@ sim/sim_overlay.c
+
+sim-overlay: sim/sim_overlay
+	./sim/sim_overlay
+	python3 gen-runtime-overlay.py --check
+
+sim-overlay-mutation:
+	python3 sim/mutate_overlay.py
+
+sim-test: sim/sim_h15 sim-overlay
 	./sim/sim_h15 pos
 
 sim-negative-ps-stuck: sim/sim_h15
