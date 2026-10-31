@@ -324,3 +324,10 @@ original MIT luma UNet, open-data training and MIL/ONNX exports, a provisional
 video-filter backend vtable, and host quality/latency checks through libane's
 fallback helper. Native model compilation and device qualification remain
 explicit requirements; this example does not add a camera source or filter node.
+
+### Opt-in camera call effects
+
+[Camera effects](examples/camera-effects/README.md) extends the camera filter with
+open-model background blur/replacement and per-stream face framing, using shared
+runtime fallback. CPU validation and compiler limitations are documented there;
+no qualified native effect package is advertised.

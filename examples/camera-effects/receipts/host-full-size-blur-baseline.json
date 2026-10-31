@@ -1,0 +1,208 @@
+{
+  "schema": "aurora.camera.effects.host-baseline.v1",
+  "source_revision": "64327b7633c98e10130f008b9802bc827114a4de",
+  "blur_implementation": "full-resolution Gaussian baseline; superseded by reduced-size blur",
+  "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+  "architecture": "x86_64",
+  "ort_threads": 2,
+  "opencv_threads": 1,
+  "warmup_frames": 3,
+  "frames_per_case": 30,
+  "excludes": [
+    "camera capture",
+    "denoise",
+    "C bridge packing",
+    "worker queues",
+    "portal/application latency"
+  ],
+  "timings": [
+    {
+      "width": 1280,
+      "height": 720,
+      "background": "off",
+      "framing": false,
+      "frames": 30,
+      "wall_p50_ms": 0.0016215000000000001,
+      "wall_p95_ms": 0.0033439999999999954,
+      "process_cpu_mean_ms": 0.0011602333333333335,
+      "process_cpu_p50_ms": 0.000847,
+      "cores_at_30fps": 3.480700000000001e-05,
+      "inference": {}
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "background": "blur",
+      "framing": false,
+      "frames": 30,
+      "wall_p50_ms": 57.430733000000004,
+      "wall_p95_ms": 88.32778880000001,
+      "process_cpu_mean_ms": 83.4213921,
+      "process_cpu_p50_ms": 83.39772500000001,
+      "cores_at_30fps": 2.502641763,
+      "inference": {
+        "segmentation": {
+          "cpu_calls": 33,
+          "native_calls": 0,
+          "failed_calls": 0
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "background": "replace",
+      "framing": false,
+      "frames": 30,
+      "wall_p50_ms": 27.965407,
+      "wall_p95_ms": 31.513614999999998,
+      "process_cpu_mean_ms": 53.459929300000006,
+      "process_cpu_p50_ms": 54.3380065,
+      "cores_at_30fps": 1.6037978790000003,
+      "inference": {
+        "segmentation": {
+          "cpu_calls": 33,
+          "native_calls": 0,
+          "failed_calls": 0
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "background": "off",
+      "framing": true,
+      "frames": 30,
+      "wall_p50_ms": 9.6944135,
+      "wall_p95_ms": 11.680077249999993,
+      "process_cpu_mean_ms": 19.52395166666667,
+      "process_cpu_p50_ms": 19.5230385,
+      "cores_at_30fps": 0.5857185500000001,
+      "inference": {
+        "face": {
+          "cpu_calls": 33,
+          "native_calls": 0,
+          "failed_calls": 0
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "background": "blur",
+      "framing": true,
+      "frames": 30,
+      "wall_p50_ms": 63.0819615,
+      "wall_p95_ms": 94.68074745,
+      "process_cpu_mean_ms": 119.86474623333334,
+      "process_cpu_p50_ms": 115.482269,
+      "cores_at_30fps": 3.595942387,
+      "inference": {
+        "segmentation": {
+          "cpu_calls": 33,
+          "native_calls": 0,
+          "failed_calls": 0
+        },
+        "face": {
+          "cpu_calls": 33,
+          "native_calls": 0,
+          "failed_calls": 0
+        }
+      }
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "background": "off",
+      "framing": false,
+      "frames": 30,
+      "wall_p50_ms": 0.0015795,
+      "wall_p95_ms": 0.002270399999999999,
+      "process_cpu_mean_ms": 0.0011482666666666667,
+      "process_cpu_p50_ms": 0.000838,
+      "cores_at_30fps": 3.4448e-05,
+      "inference": {}
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "background": "blur",
+      "framing": false,
+      "frames": 30,
+      "wall_p50_ms": 146.2284935,
+      "wall_p95_ms": 172.5155044,
+      "process_cpu_mean_ms": 184.2534118,
+      "process_cpu_p50_ms": 188.7851635,
+      "cores_at_30fps": 5.527602354000001,
+      "inference": {
+        "segmentation": {
+          "cpu_calls": 33,
+          "native_calls": 0,
+          "failed_calls": 0
+        }
+      }
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "background": "replace",
+      "framing": false,
+      "frames": 30,
+      "wall_p50_ms": 64.780572,
+      "wall_p95_ms": 95.26119915,
+      "process_cpu_mean_ms": 99.15545436666667,
+      "process_cpu_p50_ms": 95.21897200000001,
+      "cores_at_30fps": 2.9746636310000003,
+      "inference": {
+        "segmentation": {
+          "cpu_calls": 33,
+          "native_calls": 0,
+          "failed_calls": 0
+        }
+      }
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "background": "off",
+      "framing": true,
+      "frames": 30,
+      "wall_p50_ms": 11.127047000000001,
+      "wall_p95_ms": 11.639206349999998,
+      "process_cpu_mean_ms": 21.83557473333333,
+      "process_cpu_p50_ms": 21.8099845,
+      "cores_at_30fps": 0.655067242,
+      "inference": {
+        "face": {
+          "cpu_calls": 33,
+          "native_calls": 0,
+          "failed_calls": 0
+        }
+      }
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "background": "blur",
+      "framing": true,
+      "frames": 30,
+      "wall_p50_ms": 160.064833,
+      "wall_p95_ms": 183.657919,
+      "process_cpu_mean_ms": 208.00202973333336,
+      "process_cpu_p50_ms": 206.25339350000002,
+      "cores_at_30fps": 6.240060892000001,
+      "inference": {
+        "segmentation": {
+          "cpu_calls": 33,
+          "native_calls": 0,
+          "failed_calls": 0
+        },
+        "face": {
+          "cpu_calls": 33,
+          "native_calls": 0,
+          "failed_calls": 0
+        }
+      }
+    }
+  ]
+}

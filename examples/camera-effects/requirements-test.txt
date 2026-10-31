@@ -1,0 +1,10 @@
+-r requirements-runtime.txt
+pytest==8.3.5
+pycocotools==2.0.11
+mediapipe==0.10.21
+opencv-contrib-python==4.11.0.86
+# MediaPipe's legacy checker imports these; bound its NumPy-1.x environment.
+jax==0.4.38
+jaxlib==0.4.38
+scipy==1.13.1
+matplotlib==3.9.4
