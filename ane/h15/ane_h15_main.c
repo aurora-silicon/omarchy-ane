@@ -132,7 +132,10 @@ MODULE_PARM_DESC(map_fw,
 static char *fw_seg;
 module_param(fw_seg, charp, 0444);
 MODULE_PARM_DESC(fw_seg,
-		 "stage=run map_fw=1: TEXT and DATA of the preloaded firmware as hex physical:size pairs, \"TEXTPA:SIZE,DATAPA:SIZE\", from the live ADT /arm-io/ane segment-ranges of this boot. 16 KiB aligned, outside system RAM. TEXT is mapped read only at the RVBAR entry address, DATA read+write right after it.");
+		 "TEXT and DATA from this boot's live ADT as hex \"TEXTPA:SIZE,DATAPA:SIZE\". "
+		 "Stage 2 compares the current domain's RVBAR entry with TEXT without mapping; "
+		 "stage=run map_fw=1 maps TEXT read only and DATA read+write. "
+		 "Both segments must be 16 KiB aligned and outside system RAM.");
 
 static bool confirm_rtkit;
 module_param(confirm_rtkit, bool, 0444);
@@ -548,6 +551,8 @@ static bool ane_h15_window_ok(struct ane_h15 *ane, int idx, const char *what,
 	return false;
 }
 
+static int ane_h15_translation(struct ane_h15 *ane, u64 rvbar);
+
 static int ane_h15_stage_wrapper(struct ane_h15 *ane)
 {
 	const struct ane_h15_soc *s = ane->soc;
@@ -606,6 +611,8 @@ static int ane_h15_stage_wrapper(struct ane_h15 *ane)
 		 "ane_h15 preflight cpu_status=%#x rvbar=%#llx a2i_ctrl=%#x i2a_ctrl=%#x t6021_stopped_status=%s\n",
 		 status, ((u64)rvbar_hi << 32) | rvbar_lo, a2i, i2a,
 		 status == 0x2a ? "equal" : "differs");
+	if (fw_seg)
+		return ane_h15_translation(ane, ((u64)rvbar_hi << 32) | rvbar_lo);
 	ane_h15_result(ane, 2, "PASS", "preflight-read-only");
 	return 0;
 }
@@ -865,6 +872,45 @@ static int ane_h15_parse_segs(struct ane_h15 *ane)
 	ane->map_size[1] = size[1];
 	ane->map_iova[0] = s->rvbar_expect & ~1ull;
 	ane->map_iova[1] = ane->map_iova[0] + size[0];
+	return 0;
+}
+
+static int ane_h15_translation(struct ane_h15 *ane, u64 rvbar)
+{
+	struct iommu_domain *domain;
+	u64 pa;
+	int ret;
+
+	if (!ane->soc->rvbar_expect) {
+		ane_h15_result(ane, 2, "REFUSED", "no-measured-rvbar");
+		return -ENODEV;
+	}
+	if (rvbar != ane->soc->rvbar_expect) {
+		ane_h15_result(ane, 2, "REFUSED", "rvbar-entry-changed");
+		return -EINVAL;
+	}
+	ret = ane_h15_parse_segs(ane);
+	if (ret) {
+		ane_h15_result(ane, 2, "REFUSED", "fw_seg missing or unsafe");
+		return ret;
+	}
+	domain = iommu_get_domain_for_dev(ane->dev);
+	if (!domain) {
+		ane_h15_result(ane, 2, "REFUSED", "translation-domain-unavailable");
+		return -ENODEV;
+	}
+	pa = iommu_iova_to_phys(domain, ane->map_iova[0]);
+	dev_info(ane->dev, "ane_h15 translation rvbar_iova=%#llx expected_pa=%#llx resolved_pa=%#llx\n",
+		 ane->map_iova[0], ane->map_pa[0], pa);
+	if (!pa) {
+		ane_h15_result(ane, 2, "REFUSED", "translation-zero");
+		return -ENOENT;
+	}
+	if (pa != ane->map_pa[0]) {
+		ane_h15_result(ane, 2, "FAIL", "rvbar-text-entry-mismatch");
+		return -EIO;
+	}
+	ane_h15_result(ane, 2, "PASS", "rvbar-text-entry-match");
 	return 0;
 }
 
