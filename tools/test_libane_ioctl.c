@@ -43,6 +43,8 @@ void *__real_mmap(void *addr, size_t len, int prot, int flags, int fd,
 		  off_t off);
 
 static int abi_major;
+static uint32_t caps_size = 32, caps_chip, caps_abi;
+static int caps_missing;
 static int fake_fd = -1;
 /* Every device open registers its fd: a session (and this test) holds
  * several nns open at once, and an ioctl must be answered for each of
@@ -404,6 +406,21 @@ static int fake_exec(const struct drm_ane_exec *a)
 	return 0;
 }
 
+static int fake_caps(struct drm_ane_get_caps *a)
+{
+	if (a->flags || a->pad)
+		return refuse("GET_CAPS reserved input", a->flags | a->pad);
+	if (caps_missing) {
+		errno = ENOTTY;
+		return -1;
+	}
+	memset(a, 0, sizeof(*a));
+	a->size = caps_size;
+	a->abi_version = caps_abi ? caps_abi : (uint32_t)abi_major;
+	a->chip_family = caps_chip ? caps_chip : (abi_major == 1 ? 13 : 14);
+	return 0;
+}
+
 int __wrap_ioctl(int fd, unsigned long request, ...)
 {
 	va_list ap;
@@ -418,6 +435,8 @@ int __wrap_ioctl(int fd, unsigned long request, ...)
 	switch (request) {
 	case DRM_IOCTL_VERSION:
 		return fake_version(arg);
+	case DRM_IOCTL_ANE_GET_CAPS:
+		return fake_caps(arg);
 	case DRM_IOCTL_ANE_BO_INIT:
 		return fake_bo_init(arg);
 	case DRM_IOCTL_ANE_BO_FREE:
@@ -1145,6 +1164,36 @@ static void run_prog_lookup(const char *path)
 	(void)before;
 }
 
+static void run_caps(void)
+{
+	uint32_t abi, chip;
+
+	abi_major = 1;
+	check(!ane_query_caps(0, &abi, &chip) && abi == 1 && chip == 13,
+	      "GET_CAPS H13 through existing enumeration");
+	abi_major = 2;
+	check(!ane_query_caps(0, &abi, &chip) && abi == 2 && chip == 14,
+	      "GET_CAPS H14 through existing enumeration");
+	caps_chip = 16;
+	check(!ane_query_caps(0, &abi, &chip) && chip == 16,
+	      "GET_CAPS reports future family without treating it as H14");
+	caps_chip = 0;
+	caps_size = 4;
+	check(ane_query_caps(0, &abi, &chip) == -ENOTSUP && !abi && !chip,
+	      "GET_CAPS short structure refused");
+	caps_size = 32;
+	caps_abi = 1;
+	check(ane_query_caps(0, &abi, &chip) == -ENOTSUP,
+	      "GET_CAPS version mismatch refused");
+	caps_abi = 0;
+	caps_missing = 1;
+	check(ane_query_caps(0, &abi, &chip) == -ENOTSUP,
+	      "legacy driver without GET_CAPS refused");
+	caps_missing = 0;
+	check(next_handle == 0, "GET_CAPS never allocates BOs");
+	n_fake_fds = 0;
+}
+
 int main(int argc, char **argv)
 {
 	const char *dir = argc > 1 ? argv[1] : "../fixtures/h14-anec";
@@ -1155,6 +1204,7 @@ int main(int argc, char **argv)
 	 * and stderr apart and merges them out of order). */
 	setvbuf(stdout, NULL, _IOLBF, 0);
 	dup2(STDOUT_FILENO, STDERR_FILENO);
+	run_caps();
 	snprintf(path, sizeof(path), "%s/add/program-0.anec", dir);
 	run_case("ABI 2: load, exec and free", ANE_ABI_M2_MAJOR, path, 0);
 	run_case("ABI 2: first BO mmap fails", ANE_ABI_M2_MAJOR, path, 1);

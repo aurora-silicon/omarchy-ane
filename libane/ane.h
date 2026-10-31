@@ -115,6 +115,9 @@ struct ane_nn {
 	} while (0)
 #endif /* LIBANE_CONFIG_NO_STATIC_ASSERT */
 
+/* Capability query through the existing libane device enumeration. No load
+ * or submission. Unknown/legacy GET_CAPS returns negative errno. */
+int ane_query_caps(int dev_id, uint32_t *abi_version, uint32_t *chip_family);
 struct ane_nn *__ane_init(const char *path, int dev_id);
 #define ane_init(path) (__ane_init(path, 0))
 
@@ -169,6 +172,35 @@ void ane_set_oracle_nchw(struct ane_nn *nn, uint32_t ch,
 void ane_untile(void *data, void *tile, const uint64_t N, const uint64_t C,
 		const uint64_t H, const uint64_t W, const uint64_t P,
 		const uint64_t R);
+
+/* Optional CPU fallback policy for an existing libane operation or graph.
+ * Both callbacks use the same caller-owned inputs and open model weights.
+ * The native callback can call ane_exec, ane-session or an existing graph
+ * worker; this helper does not load models or implement another transport.
+ * Callbacks return 0 or negative errno. A failed native callback is retired
+ * for this state's lifetime. The caller serializes access to each state. */
+typedef int (*ane_infer_fn)(void *context);
+#define ANE_INFER_CPU 0u
+#define ANE_INFER_NATIVE 1u
+#define ANE_FALLBACK_NONE 0u
+#define ANE_FALLBACK_UNAVAILABLE 1u
+#define ANE_FALLBACK_NATIVE_FAILED 2u
+struct ane_fallback_state {
+	uint64_t calls, native_calls, cpu_calls, failed_calls;
+	uint64_t total_ns, last_ns, min_ns, max_ns;
+	uint32_t native_ready, reason;
+	int32_t native_error;
+	uint32_t reserved;
+};
+struct ane_fallback_call {
+	uint64_t latency_ns, native_ns;
+	uint32_t backend, reason;
+	int32_t native_error, status;
+};
+void ane_fallback_init(struct ane_fallback_state *state, int native_ready);
+int ane_fallback_run(struct ane_fallback_state *state, ane_infer_fn native,
+		     ane_infer_fn cpu, void *context,
+		     struct ane_fallback_call *call);
 
 #if defined(__cplusplus)
 }

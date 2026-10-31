@@ -8,4 +8,5 @@ setup(
 	author_email='eyn@gmx.com',
 	packages=['ane'],
 	install_requires=['construct', 'numpy'],
+	extras_require={'fallback': ['onnxruntime>=1.23.2']},
 )

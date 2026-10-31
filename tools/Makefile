@@ -198,4 +198,13 @@ else
 endif
 
 clean:
-	rm -f ane-run ane-session ane-selfcheck test_libane_ioctl test_ane_stats test_t6021_pool test_ane_session_cache test_ane_session_cache_lsan test_ane_session_state test_ane_bo_probe test_t6021_prog_lookup test_t6021_prog_lookup_a64 test_sha256_a64.log test_check_band test_ane_timing
+	rm -f test_ane_fallback ane-run ane-session ane-selfcheck test_libane_ioctl test_ane_stats test_t6021_pool test_ane_session_cache test_ane_session_cache_lsan test_ane_session_state test_ane_bo_probe test_t6021_prog_lookup test_t6021_prog_lookup_a64 test_sha256_a64.log test_check_band test_ane_timing
+# Optional fallback helper uses no device or heavyweight inference dependency.
+test_ane_fallback: test_ane_fallback.c ../libane/ane_fallback.c ../libane/ane.h
+	$(CC) $(CFLAGS) -o $@ test_ane_fallback.c ../libane/ane_fallback.c
+
+.PHONY: check-fallback
+check-fallback: test_ane_fallback
+	./test_ane_fallback
+
+check: check-fallback

@@ -4,6 +4,7 @@
 # Copyright 2022 Eileen Yoon <eyn@gmx.com>
 
 import atexit
+import errno
 import ctypes
 import numpy as np
 from ctypes import c_void_p
@@ -11,7 +12,7 @@ from construct import Struct, Array, Int32ul, Int64ul
 
 class _Driver:
 	def __init__(self, lib_path):
-		self.lib = ctypes.cdll.LoadLibrary(lib_path)
+		self.lib = ctypes.CDLL(lib_path, use_errno=True)
 		self.lib.pyane_init.restype = c_void_p
 		self.lib.pyane_init.argtypes = [ctypes.c_char_p, ctypes.c_int]
 		self.lib.pyane_free.argtypes = [c_void_p]
@@ -45,7 +46,17 @@ class model:
 	def predict(self, inarrs):  # list of numpy arrays
 		assert(len(inarrs) == self.src_count)
 		assert(all(((arr.dtype == np.float16) and (arr.shape == self.src_nchw[idx][:4])) for idx,arr in enumerate(inarrs)))
-		self.driver.lib.pyane_send(self.handle, *[arr.tobytes(order='C') for arr in inarrs], *self.inputs_pad)
-		self.driver.lib.pyane_exec(self.handle)
-		self.driver.lib.pyane_read(self.handle, *self.outputs, *self.outputs_pad)
+		for operation, arguments in (
+			("pyane_send", [self.handle, *[arr.tobytes(order='C') for arr in inarrs], *self.inputs_pad]),
+			("pyane_exec", [self.handle]),
+			("pyane_read", [self.handle, *self.outputs, *self.outputs_pad]),
+		):
+			ctypes.set_errno(0)
+			status = getattr(self.driver.lib, operation)(*arguments)
+			if status:
+				number = ctypes.get_errno() or (-status if status < -1 else errno.EIO)
+				raise OSError(number, f"{operation} failed")
 		return [np.frombuffer(self.outputs[idx], dtype=np.float16).reshape(*self.dst_nchw[idx][:4]) for idx in range(self.dst_count)]
+
+# Optional shared CPU fallback policy for existing model/graph callers.
+from .fallback import Fallback, OnnxCPU

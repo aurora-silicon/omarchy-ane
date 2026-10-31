@@ -10,7 +10,7 @@ LIBS = -I/usr/include/libdrm -I../ane/src/uapi/drm
 BUILD_DIR = .
 SRC_DIR = .
 
-OBJECTS = $(BUILD_DIR)/ane.o $(BUILD_DIR)/ane_m2.o $(BUILD_DIR)/ane_sha256.o
+OBJECTS = $(BUILD_DIR)/ane.o $(BUILD_DIR)/ane_m2.o $(BUILD_DIR)/ane_sha256.o $(BUILD_DIR)/ane_fallback.o
 
 .PHONY: libane install uninstall clean
 

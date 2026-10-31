@@ -518,6 +518,30 @@ static inline void device_close(int fd)
 	}
 }
 
+int ane_query_caps(int dev_id, uint32_t *abi_version, uint32_t *chip_family)
+{
+	struct drm_ane_get_caps caps = {0};
+	int major = 0;
+	int fd;
+	int rc;
+
+	if (!abi_version || !chip_family)
+		return -EINVAL;
+	*abi_version = *chip_family = 0;
+	fd = device_open(dev_id, &major);
+	if (fd < 0)
+		return fd;
+	rc = ioctl(fd, DRM_IOCTL_ANE_GET_CAPS, &caps);
+	device_close(fd);
+	if (rc < 0)
+		return -ENOTSUP;
+	if (caps.size < 16 || caps.abi_version != (uint32_t)major)
+		return -ENOTSUP;
+	*abi_version = caps.abi_version;
+	*chip_family = caps.chip_family;
+	return 0;
+}
+
 static inline int ane_device_open(struct ane_nn *nn, int dev_id,
 				  int *abi_major)
 {

@@ -91,3 +91,21 @@ int pyane_read(struct ane_nn *nn, void *x0, void *x1, void *x2, void *x3,
 			return -1;
 	return 0;
 }
+
+/* Keep policy in libane; the Python layer only marshals callbacks and arrays. */
+void pyane_fallback_init(struct ane_fallback_state *state, int native_ready)
+{
+	ane_fallback_init(state, native_ready);
+}
+
+int pyane_fallback_run(struct ane_fallback_state *state, ane_infer_fn native,
+		      ane_infer_fn cpu, void *context,
+		      struct ane_fallback_call *call)
+{
+	return ane_fallback_run(state, native, cpu, context, call);
+}
+
+int pyane_query_caps(int dev_id, uint32_t *abi_version, uint32_t *chip_family)
+{
+	return ane_query_caps(dev_id, abi_version, chip_family);
+}
