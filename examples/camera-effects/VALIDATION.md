@@ -90,6 +90,24 @@ on M2. The reduced-blur lead receipt reports ten Python tests. The merged
 current-source build-host run, including consistent test core/socket naming and
 per-user capability configuration, is still pending.
 
+## Whole-model compiler coverage
+
+The [pinned source-compiler receipt](receipts/compiler-gaps.json) records
+**0/60** successful whole-model/first-per-operator probes at compiler revision
+`8f8fb25f58e05a27db4c503e8eea7d4f13be4219`. These are exact exported geometries;
+operator support elsewhere does not qualify these models. First full-model
+refusals are:
+
+| Model | H13 | H14 | H16G |
+| --- | --- | --- | --- |
+| Selfie | `h13.unsupported-pad` | `h14.outside-parity-envelope` | unsupported `clip` |
+| YuNet | `h13.nonfoldable-transpose` | `h14.unsupported-chain` | unsupported `max_pool` |
+
+The receipt includes the complete first diagnostics. Fixing one first refusal
+can expose further gaps. No native target is advertised; compiler frontend
+coverage and generation-owner/device qualification remain required before ANE
+execution. The shared runtime currently selects CPU for both models.
+
 ## Limits and lead work
 
 Host measurements exclude camera DMA mapping, denoise, C packing/queue overhead,

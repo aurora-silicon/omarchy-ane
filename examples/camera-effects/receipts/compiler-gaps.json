@@ -1,0 +1,60 @@
+{
+  "schema": "aurora.camera.effects.compiler-gaps.v1",
+  "compiler_repository": "https://github.com/aurora-silicon/mil-hwx-compiler",
+  "compiler_revision": "8f8fb25f58e05a27db4c503e8eea7d4f13be4219",
+  "model_artifacts": {
+    "selfie": {
+      "model.onnx": "3f53ece391efe8e1934e4a4d5871cae746779130c7b300076b7c487419c53db4",
+      "model.mil": "653fcd48fc9c384140a79c73747c729e8d9bff4bdc8939a72f7eb7ac5f10445f",
+      "weights.bin": "e546ea0681cdad802d5549e225e79c278746eb66d84c361e083296fa1e2fe0a9",
+      "probes.zip": "7de53b5dba63a66cb4f41659e21ab3d2c6e0739316403179377ef34f0bc83d64"
+    },
+    "yunet": {
+      "model.onnx": "06b5e4731bd9a7ad804613af381daa8e215edb1fee5fdd123b8ac32f944c1acb",
+      "model.mil": "aff48f209446baac8bc8992f7d5aee0da0738dc4651f2baee87d5406f6233b80",
+      "weights.bin": "179ca91f8acdb926c10d5588b234df683d5aa89a9f662f86822406d6e10cd7c5",
+      "probes.zip": "f475a0d58cf6ba7f260ead85031a2f255049eeeba4b3c22b9d3892f3d4bcf32d"
+    }
+  },
+  "native_targets_qualified": [],
+  "probes": 60,
+  "passed": 0,
+  "full_models": [
+    {
+      "model": "selfie",
+      "target": "H13",
+      "rc": 65,
+      "diagnostic": "8:5: error [h13.unsupported-pad]: H13 pad with pad [0,0,0,0,0,1,0,1] needs a data-movement program: every decoded H13 encoder writes an output surface of its input's shape and the binding ABI carries one contiguous slice, so no host-side form can materialize the grown or replicated region \u2014 and Apple's own tool rejects pad in every form including the identity view (6/6 callback_status=1), so pad elimination belongs to the frontend, not to a new encoder\n"
+    },
+    {
+      "model": "selfie",
+      "target": "H14",
+      "rc": 65,
+      "diagnostic": "8:5: error [h14.outside-parity-envelope]: H14 supports only the decoded fp16 elementwise, scalar-constant, and unary parity envelope\n"
+    },
+    {
+      "model": "selfie",
+      "target": "H16G",
+      "rc": 65,
+      "diagnostic": "21:5: error [h16g.legalize.unsupported-operation]: H16G has no decoded primitive for 'clip'\n"
+    },
+    {
+      "model": "yunet",
+      "target": "H13",
+      "rc": 65,
+      "diagnostic": "508:5: error [h13.nonfoldable-transpose]: H13 a transpose moves the storage-fastest axis, so its view reads rows whose elements sit a non-unit storage stride apart: the NCHW descriptor carries contiguous rows and no surface interpretation expresses the permutation at any size; a consuming matmul's transpose flag is the only decoded mechanism that absorbs one, and this view has a 'reshape' consumer with no such flag\n"
+    },
+    {
+      "model": "yunet",
+      "target": "H14",
+      "rc": 65,
+      "diagnostic": "529:5: error [h14.unsupported-chain]: H14 chains must return only the last operation result\n"
+    },
+    {
+      "model": "yunet",
+      "target": "H16G",
+      "rc": 65,
+      "diagnostic": "36:5: error [h16g.legalize.unsupported-operation]: H16G has no decoded primitive for 'max_pool'\n"
+    }
+  ]
+}
