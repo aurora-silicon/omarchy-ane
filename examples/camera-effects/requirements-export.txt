@@ -1,0 +1,7 @@
+-r requirements-runtime.txt
+coremltools==9.0
+onnx==1.17.0
+tflite==2.18.0
+onnx2torch==1.5.15
+pytest==8.3.5
+pycocotools==2.0.11

@@ -1,0 +1,2126 @@
+{
+  "model": "yunet",
+  "source_sha256": "8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4",
+  "license": "MIT",
+  "input": [
+    1,
+    3,
+    320,
+    320
+  ],
+  "output_names": [
+    "cls_8",
+    "cls_16",
+    "cls_32",
+    "obj_8",
+    "obj_16",
+    "obj_32",
+    "bbox_8",
+    "bbox_16",
+    "bbox_32",
+    "kps_8",
+    "kps_16",
+    "kps_32"
+  ],
+  "output_shapes": [
+    [
+      1,
+      1600,
+      1
+    ],
+    [
+      1,
+      400,
+      1
+    ],
+    [
+      1,
+      100,
+      1
+    ],
+    [
+      1,
+      1600,
+      1
+    ],
+    [
+      1,
+      400,
+      1
+    ],
+    [
+      1,
+      100,
+      1
+    ],
+    [
+      1,
+      1600,
+      4
+    ],
+    [
+      1,
+      400,
+      4
+    ],
+    [
+      1,
+      100,
+      4
+    ],
+    [
+      1,
+      1600,
+      10
+    ],
+    [
+      1,
+      400,
+      10
+    ],
+    [
+      1,
+      100,
+      10
+    ]
+  ],
+  "onnx_torch_max_abs": [
+    1.7881393432617188e-07,
+    1.1920928955078125e-07,
+    2.980232238769531e-07,
+    9.221548680216074e-08,
+    9.171571946353652e-08,
+    8.671486284583807e-08,
+    1.0728836059570312e-06,
+    5.960464477539062e-07,
+    1.6689300537109375e-06,
+    1.3709068298339844e-06,
+    5.960464477539062e-07,
+    3.814697265625e-06
+  ],
+  "mil_outputs": [
+    "ce_v_475_0",
+    "ce_v_480_0",
+    "ce_v_485_0",
+    "ce_v_490_0",
+    "ce_v_495_0",
+    "ce_v_500_0",
+    "ce_v_504_0",
+    "ce_v_508_0",
+    "ce_v_512_0",
+    "ce_v_516_0",
+    "ce_v_520_0",
+    "ce_v_524_0"
+  ],
+  "native_targets": [],
+  "ops": [
+    {
+      "name": "ce_op_7",
+      "op": "conv",
+      "inputs": {
+        "x": [
+          1,
+          3,
+          320,
+          320
+        ]
+      },
+      "output": [
+        1,
+        16,
+        160,
+        160
+      ],
+      "mil": "probes/ce_op_7.mil"
+    },
+    {
+      "name": "ce_op_8",
+      "op": "relu",
+      "inputs": {
+        "ce_v_7_0": [
+          1,
+          16,
+          160,
+          160
+        ]
+      },
+      "output": [
+        1,
+        16,
+        160,
+        160
+      ],
+      "mil": "probes/ce_op_8.mil"
+    },
+    {
+      "name": "ce_op_16",
+      "op": "conv",
+      "inputs": {
+        "ce_v_8_0": [
+          1,
+          16,
+          160,
+          160
+        ]
+      },
+      "output": [
+        1,
+        16,
+        160,
+        160
+      ],
+      "mil": "probes/ce_op_16.mil"
+    },
+    {
+      "name": "ce_op_24",
+      "op": "conv",
+      "inputs": {
+        "ce_v_16_0": [
+          1,
+          16,
+          160,
+          160
+        ]
+      },
+      "output": [
+        1,
+        16,
+        160,
+        160
+      ],
+      "mil": "probes/ce_op_24.mil"
+    },
+    {
+      "name": "ce_op_25",
+      "op": "relu",
+      "inputs": {
+        "ce_v_24_0": [
+          1,
+          16,
+          160,
+          160
+        ]
+      },
+      "output": [
+        1,
+        16,
+        160,
+        160
+      ],
+      "mil": "probes/ce_op_25.mil"
+    },
+    {
+      "name": "ce_op_31",
+      "op": "max_pool",
+      "inputs": {
+        "ce_v_25_0": [
+          1,
+          16,
+          160,
+          160
+        ]
+      },
+      "output": [
+        1,
+        16,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_31.mil"
+    },
+    {
+      "name": "ce_op_39",
+      "op": "conv",
+      "inputs": {
+        "ce_v_31_0": [
+          1,
+          16,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        16,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_39.mil"
+    },
+    {
+      "name": "ce_op_47",
+      "op": "conv",
+      "inputs": {
+        "ce_v_39_0": [
+          1,
+          16,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        16,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_47.mil"
+    },
+    {
+      "name": "ce_op_48",
+      "op": "relu",
+      "inputs": {
+        "ce_v_47_0": [
+          1,
+          16,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        16,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_48.mil"
+    },
+    {
+      "name": "ce_op_56",
+      "op": "conv",
+      "inputs": {
+        "ce_v_48_0": [
+          1,
+          16,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        32,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_56.mil"
+    },
+    {
+      "name": "ce_op_64",
+      "op": "conv",
+      "inputs": {
+        "ce_v_56_0": [
+          1,
+          32,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        32,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_64.mil"
+    },
+    {
+      "name": "ce_op_65",
+      "op": "relu",
+      "inputs": {
+        "ce_v_64_0": [
+          1,
+          32,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        32,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_65.mil"
+    },
+    {
+      "name": "ce_op_73",
+      "op": "conv",
+      "inputs": {
+        "ce_v_65_0": [
+          1,
+          32,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        32,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_73.mil"
+    },
+    {
+      "name": "ce_op_81",
+      "op": "conv",
+      "inputs": {
+        "ce_v_73_0": [
+          1,
+          32,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        32,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_81.mil"
+    },
+    {
+      "name": "ce_op_82",
+      "op": "relu",
+      "inputs": {
+        "ce_v_81_0": [
+          1,
+          32,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        32,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_82.mil"
+    },
+    {
+      "name": "ce_op_90",
+      "op": "conv",
+      "inputs": {
+        "ce_v_82_0": [
+          1,
+          32,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        64,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_90.mil"
+    },
+    {
+      "name": "ce_op_98",
+      "op": "conv",
+      "inputs": {
+        "ce_v_90_0": [
+          1,
+          64,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        64,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_98.mil"
+    },
+    {
+      "name": "ce_op_99",
+      "op": "relu",
+      "inputs": {
+        "ce_v_98_0": [
+          1,
+          64,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        64,
+        80,
+        80
+      ],
+      "mil": "probes/ce_op_99.mil"
+    },
+    {
+      "name": "ce_op_105",
+      "op": "max_pool",
+      "inputs": {
+        "ce_v_99_0": [
+          1,
+          64,
+          80,
+          80
+        ]
+      },
+      "output": [
+        1,
+        64,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_105.mil"
+    },
+    {
+      "name": "ce_op_113",
+      "op": "conv",
+      "inputs": {
+        "ce_v_105_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        64,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_113.mil"
+    },
+    {
+      "name": "ce_op_121",
+      "op": "conv",
+      "inputs": {
+        "ce_v_113_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        64,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_121.mil"
+    },
+    {
+      "name": "ce_op_122",
+      "op": "relu",
+      "inputs": {
+        "ce_v_121_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        64,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_122.mil"
+    },
+    {
+      "name": "ce_op_130",
+      "op": "conv",
+      "inputs": {
+        "ce_v_122_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        64,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_130.mil"
+    },
+    {
+      "name": "ce_op_138",
+      "op": "conv",
+      "inputs": {
+        "ce_v_130_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        64,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_138.mil"
+    },
+    {
+      "name": "ce_op_139",
+      "op": "relu",
+      "inputs": {
+        "ce_v_138_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        64,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_139.mil"
+    },
+    {
+      "name": "ce_op_145",
+      "op": "max_pool",
+      "inputs": {
+        "ce_v_139_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        64,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_145.mil"
+    },
+    {
+      "name": "ce_op_153",
+      "op": "conv",
+      "inputs": {
+        "ce_v_145_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        64,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_153.mil"
+    },
+    {
+      "name": "ce_op_161",
+      "op": "conv",
+      "inputs": {
+        "ce_v_153_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        64,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_161.mil"
+    },
+    {
+      "name": "ce_op_162",
+      "op": "relu",
+      "inputs": {
+        "ce_v_161_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        64,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_162.mil"
+    },
+    {
+      "name": "ce_op_170",
+      "op": "conv",
+      "inputs": {
+        "ce_v_162_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        64,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_170.mil"
+    },
+    {
+      "name": "ce_op_178",
+      "op": "conv",
+      "inputs": {
+        "ce_v_170_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        64,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_178.mil"
+    },
+    {
+      "name": "ce_op_179",
+      "op": "relu",
+      "inputs": {
+        "ce_v_178_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        64,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_179.mil"
+    },
+    {
+      "name": "ce_op_185",
+      "op": "max_pool",
+      "inputs": {
+        "ce_v_179_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        64,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_185.mil"
+    },
+    {
+      "name": "ce_op_193",
+      "op": "conv",
+      "inputs": {
+        "ce_v_185_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        64,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_193.mil"
+    },
+    {
+      "name": "ce_op_201",
+      "op": "conv",
+      "inputs": {
+        "ce_v_193_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        64,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_201.mil"
+    },
+    {
+      "name": "ce_op_202",
+      "op": "relu",
+      "inputs": {
+        "ce_v_201_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        64,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_202.mil"
+    },
+    {
+      "name": "ce_op_210",
+      "op": "conv",
+      "inputs": {
+        "ce_v_202_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        64,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_210.mil"
+    },
+    {
+      "name": "ce_op_218",
+      "op": "conv",
+      "inputs": {
+        "ce_v_210_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        64,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_218.mil"
+    },
+    {
+      "name": "ce_op_219",
+      "op": "relu",
+      "inputs": {
+        "ce_v_218_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        64,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_219.mil"
+    },
+    {
+      "name": "ce_op_227",
+      "op": "conv",
+      "inputs": {
+        "ce_v_219_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        64,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_227.mil"
+    },
+    {
+      "name": "ce_op_235",
+      "op": "conv",
+      "inputs": {
+        "ce_v_227_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        64,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_235.mil"
+    },
+    {
+      "name": "ce_op_236",
+      "op": "relu",
+      "inputs": {
+        "ce_v_235_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        64,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_236.mil"
+    },
+    {
+      "name": "ce_op_239",
+      "op": "upsample_nearest_neighbor",
+      "inputs": {
+        "ce_v_236_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        64,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_239.mil"
+    },
+    {
+      "name": "ce_op_240",
+      "op": "add",
+      "inputs": {
+        "ce_v_179_0": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "ce_v_239_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        64,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_240.mil"
+    },
+    {
+      "name": "ce_op_248",
+      "op": "conv",
+      "inputs": {
+        "ce_v_240_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        64,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_248.mil"
+    },
+    {
+      "name": "ce_op_256",
+      "op": "conv",
+      "inputs": {
+        "ce_v_248_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        64,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_256.mil"
+    },
+    {
+      "name": "ce_op_257",
+      "op": "relu",
+      "inputs": {
+        "ce_v_256_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        64,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_257.mil"
+    },
+    {
+      "name": "ce_op_260",
+      "op": "upsample_nearest_neighbor",
+      "inputs": {
+        "ce_v_257_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        64,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_260.mil"
+    },
+    {
+      "name": "ce_op_261",
+      "op": "add",
+      "inputs": {
+        "ce_v_139_0": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "ce_v_260_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        64,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_261.mil"
+    },
+    {
+      "name": "ce_op_269",
+      "op": "conv",
+      "inputs": {
+        "ce_v_261_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        64,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_269.mil"
+    },
+    {
+      "name": "ce_op_277",
+      "op": "conv",
+      "inputs": {
+        "ce_v_269_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        64,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_277.mil"
+    },
+    {
+      "name": "ce_op_278",
+      "op": "relu",
+      "inputs": {
+        "ce_v_277_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        64,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_278.mil"
+    },
+    {
+      "name": "ce_op_286",
+      "op": "conv",
+      "inputs": {
+        "ce_v_278_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        1,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_286.mil"
+    },
+    {
+      "name": "ce_op_294",
+      "op": "conv",
+      "inputs": {
+        "ce_v_286_0": [
+          1,
+          1,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        1,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_294.mil"
+    },
+    {
+      "name": "ce_op_302",
+      "op": "conv",
+      "inputs": {
+        "ce_v_257_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        1,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_302.mil"
+    },
+    {
+      "name": "ce_op_310",
+      "op": "conv",
+      "inputs": {
+        "ce_v_302_0": [
+          1,
+          1,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        1,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_310.mil"
+    },
+    {
+      "name": "ce_op_318",
+      "op": "conv",
+      "inputs": {
+        "ce_v_236_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        1,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_318.mil"
+    },
+    {
+      "name": "ce_op_326",
+      "op": "conv",
+      "inputs": {
+        "ce_v_318_0": [
+          1,
+          1,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        1,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_326.mil"
+    },
+    {
+      "name": "ce_op_334",
+      "op": "conv",
+      "inputs": {
+        "ce_v_278_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        4,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_334.mil"
+    },
+    {
+      "name": "ce_op_342",
+      "op": "conv",
+      "inputs": {
+        "ce_v_334_0": [
+          1,
+          4,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        4,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_342.mil"
+    },
+    {
+      "name": "ce_op_350",
+      "op": "conv",
+      "inputs": {
+        "ce_v_257_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        4,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_350.mil"
+    },
+    {
+      "name": "ce_op_358",
+      "op": "conv",
+      "inputs": {
+        "ce_v_350_0": [
+          1,
+          4,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        4,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_358.mil"
+    },
+    {
+      "name": "ce_op_366",
+      "op": "conv",
+      "inputs": {
+        "ce_v_236_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        4,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_366.mil"
+    },
+    {
+      "name": "ce_op_374",
+      "op": "conv",
+      "inputs": {
+        "ce_v_366_0": [
+          1,
+          4,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        4,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_374.mil"
+    },
+    {
+      "name": "ce_op_382",
+      "op": "conv",
+      "inputs": {
+        "ce_v_278_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        1,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_382.mil"
+    },
+    {
+      "name": "ce_op_390",
+      "op": "conv",
+      "inputs": {
+        "ce_v_382_0": [
+          1,
+          1,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        1,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_390.mil"
+    },
+    {
+      "name": "ce_op_398",
+      "op": "conv",
+      "inputs": {
+        "ce_v_257_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        1,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_398.mil"
+    },
+    {
+      "name": "ce_op_406",
+      "op": "conv",
+      "inputs": {
+        "ce_v_398_0": [
+          1,
+          1,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        1,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_406.mil"
+    },
+    {
+      "name": "ce_op_414",
+      "op": "conv",
+      "inputs": {
+        "ce_v_236_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        1,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_414.mil"
+    },
+    {
+      "name": "ce_op_422",
+      "op": "conv",
+      "inputs": {
+        "ce_v_414_0": [
+          1,
+          1,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        1,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_422.mil"
+    },
+    {
+      "name": "ce_op_430",
+      "op": "conv",
+      "inputs": {
+        "ce_v_278_0": [
+          1,
+          64,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        10,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_430.mil"
+    },
+    {
+      "name": "ce_op_438",
+      "op": "conv",
+      "inputs": {
+        "ce_v_430_0": [
+          1,
+          10,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        10,
+        40,
+        40
+      ],
+      "mil": "probes/ce_op_438.mil"
+    },
+    {
+      "name": "ce_op_446",
+      "op": "conv",
+      "inputs": {
+        "ce_v_257_0": [
+          1,
+          64,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        10,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_446.mil"
+    },
+    {
+      "name": "ce_op_454",
+      "op": "conv",
+      "inputs": {
+        "ce_v_446_0": [
+          1,
+          10,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        10,
+        20,
+        20
+      ],
+      "mil": "probes/ce_op_454.mil"
+    },
+    {
+      "name": "ce_op_462",
+      "op": "conv",
+      "inputs": {
+        "ce_v_236_0": [
+          1,
+          64,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        10,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_462.mil"
+    },
+    {
+      "name": "ce_op_470",
+      "op": "conv",
+      "inputs": {
+        "ce_v_462_0": [
+          1,
+          10,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        10,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_470.mil"
+    },
+    {
+      "name": "ce_op_473",
+      "op": "transpose",
+      "inputs": {
+        "ce_v_294_0": [
+          1,
+          1,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        40,
+        40,
+        1
+      ],
+      "mil": "probes/ce_op_473.mil"
+    },
+    {
+      "name": "ce_op_474",
+      "op": "reshape",
+      "inputs": {
+        "ce_v_473_0": [
+          1,
+          40,
+          40,
+          1
+        ]
+      },
+      "output": [
+        1,
+        1600,
+        1
+      ],
+      "mil": "probes/ce_op_474.mil"
+    },
+    {
+      "name": "ce_op_475",
+      "op": "sigmoid",
+      "inputs": {
+        "ce_v_474_0": [
+          1,
+          1600,
+          1
+        ]
+      },
+      "output": [
+        1,
+        1600,
+        1
+      ],
+      "mil": "probes/ce_op_475.mil"
+    },
+    {
+      "name": "ce_op_478",
+      "op": "transpose",
+      "inputs": {
+        "ce_v_310_0": [
+          1,
+          1,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        20,
+        20,
+        1
+      ],
+      "mil": "probes/ce_op_478.mil"
+    },
+    {
+      "name": "ce_op_479",
+      "op": "reshape",
+      "inputs": {
+        "ce_v_478_0": [
+          1,
+          20,
+          20,
+          1
+        ]
+      },
+      "output": [
+        1,
+        400,
+        1
+      ],
+      "mil": "probes/ce_op_479.mil"
+    },
+    {
+      "name": "ce_op_480",
+      "op": "sigmoid",
+      "inputs": {
+        "ce_v_479_0": [
+          1,
+          400,
+          1
+        ]
+      },
+      "output": [
+        1,
+        400,
+        1
+      ],
+      "mil": "probes/ce_op_480.mil"
+    },
+    {
+      "name": "ce_op_483",
+      "op": "transpose",
+      "inputs": {
+        "ce_v_326_0": [
+          1,
+          1,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        10,
+        10,
+        1
+      ],
+      "mil": "probes/ce_op_483.mil"
+    },
+    {
+      "name": "ce_op_484",
+      "op": "reshape",
+      "inputs": {
+        "ce_v_483_0": [
+          1,
+          10,
+          10,
+          1
+        ]
+      },
+      "output": [
+        1,
+        100,
+        1
+      ],
+      "mil": "probes/ce_op_484.mil"
+    },
+    {
+      "name": "ce_op_485",
+      "op": "sigmoid",
+      "inputs": {
+        "ce_v_484_0": [
+          1,
+          100,
+          1
+        ]
+      },
+      "output": [
+        1,
+        100,
+        1
+      ],
+      "mil": "probes/ce_op_485.mil"
+    },
+    {
+      "name": "ce_op_488",
+      "op": "transpose",
+      "inputs": {
+        "ce_v_390_0": [
+          1,
+          1,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        40,
+        40,
+        1
+      ],
+      "mil": "probes/ce_op_488.mil"
+    },
+    {
+      "name": "ce_op_489",
+      "op": "reshape",
+      "inputs": {
+        "ce_v_488_0": [
+          1,
+          40,
+          40,
+          1
+        ]
+      },
+      "output": [
+        1,
+        1600,
+        1
+      ],
+      "mil": "probes/ce_op_489.mil"
+    },
+    {
+      "name": "ce_op_490",
+      "op": "sigmoid",
+      "inputs": {
+        "ce_v_489_0": [
+          1,
+          1600,
+          1
+        ]
+      },
+      "output": [
+        1,
+        1600,
+        1
+      ],
+      "mil": "probes/ce_op_490.mil"
+    },
+    {
+      "name": "ce_op_493",
+      "op": "transpose",
+      "inputs": {
+        "ce_v_406_0": [
+          1,
+          1,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        20,
+        20,
+        1
+      ],
+      "mil": "probes/ce_op_493.mil"
+    },
+    {
+      "name": "ce_op_494",
+      "op": "reshape",
+      "inputs": {
+        "ce_v_493_0": [
+          1,
+          20,
+          20,
+          1
+        ]
+      },
+      "output": [
+        1,
+        400,
+        1
+      ],
+      "mil": "probes/ce_op_494.mil"
+    },
+    {
+      "name": "ce_op_495",
+      "op": "sigmoid",
+      "inputs": {
+        "ce_v_494_0": [
+          1,
+          400,
+          1
+        ]
+      },
+      "output": [
+        1,
+        400,
+        1
+      ],
+      "mil": "probes/ce_op_495.mil"
+    },
+    {
+      "name": "ce_op_498",
+      "op": "transpose",
+      "inputs": {
+        "ce_v_422_0": [
+          1,
+          1,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        10,
+        10,
+        1
+      ],
+      "mil": "probes/ce_op_498.mil"
+    },
+    {
+      "name": "ce_op_499",
+      "op": "reshape",
+      "inputs": {
+        "ce_v_498_0": [
+          1,
+          10,
+          10,
+          1
+        ]
+      },
+      "output": [
+        1,
+        100,
+        1
+      ],
+      "mil": "probes/ce_op_499.mil"
+    },
+    {
+      "name": "ce_op_500",
+      "op": "sigmoid",
+      "inputs": {
+        "ce_v_499_0": [
+          1,
+          100,
+          1
+        ]
+      },
+      "output": [
+        1,
+        100,
+        1
+      ],
+      "mil": "probes/ce_op_500.mil"
+    },
+    {
+      "name": "ce_op_503",
+      "op": "transpose",
+      "inputs": {
+        "ce_v_342_0": [
+          1,
+          4,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        40,
+        40,
+        4
+      ],
+      "mil": "probes/ce_op_503.mil"
+    },
+    {
+      "name": "ce_op_504",
+      "op": "reshape",
+      "inputs": {
+        "ce_v_503_0": [
+          1,
+          40,
+          40,
+          4
+        ]
+      },
+      "output": [
+        1,
+        1600,
+        4
+      ],
+      "mil": "probes/ce_op_504.mil"
+    },
+    {
+      "name": "ce_op_507",
+      "op": "transpose",
+      "inputs": {
+        "ce_v_358_0": [
+          1,
+          4,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        20,
+        20,
+        4
+      ],
+      "mil": "probes/ce_op_507.mil"
+    },
+    {
+      "name": "ce_op_508",
+      "op": "reshape",
+      "inputs": {
+        "ce_v_507_0": [
+          1,
+          20,
+          20,
+          4
+        ]
+      },
+      "output": [
+        1,
+        400,
+        4
+      ],
+      "mil": "probes/ce_op_508.mil"
+    },
+    {
+      "name": "ce_op_511",
+      "op": "transpose",
+      "inputs": {
+        "ce_v_374_0": [
+          1,
+          4,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        10,
+        10,
+        4
+      ],
+      "mil": "probes/ce_op_511.mil"
+    },
+    {
+      "name": "ce_op_512",
+      "op": "reshape",
+      "inputs": {
+        "ce_v_511_0": [
+          1,
+          10,
+          10,
+          4
+        ]
+      },
+      "output": [
+        1,
+        100,
+        4
+      ],
+      "mil": "probes/ce_op_512.mil"
+    },
+    {
+      "name": "ce_op_515",
+      "op": "transpose",
+      "inputs": {
+        "ce_v_438_0": [
+          1,
+          10,
+          40,
+          40
+        ]
+      },
+      "output": [
+        1,
+        40,
+        40,
+        10
+      ],
+      "mil": "probes/ce_op_515.mil"
+    },
+    {
+      "name": "ce_op_516",
+      "op": "reshape",
+      "inputs": {
+        "ce_v_515_0": [
+          1,
+          40,
+          40,
+          10
+        ]
+      },
+      "output": [
+        1,
+        1600,
+        10
+      ],
+      "mil": "probes/ce_op_516.mil"
+    },
+    {
+      "name": "ce_op_519",
+      "op": "transpose",
+      "inputs": {
+        "ce_v_454_0": [
+          1,
+          10,
+          20,
+          20
+        ]
+      },
+      "output": [
+        1,
+        20,
+        20,
+        10
+      ],
+      "mil": "probes/ce_op_519.mil"
+    },
+    {
+      "name": "ce_op_520",
+      "op": "reshape",
+      "inputs": {
+        "ce_v_519_0": [
+          1,
+          20,
+          20,
+          10
+        ]
+      },
+      "output": [
+        1,
+        400,
+        10
+      ],
+      "mil": "probes/ce_op_520.mil"
+    },
+    {
+      "name": "ce_op_523",
+      "op": "transpose",
+      "inputs": {
+        "ce_v_470_0": [
+          1,
+          10,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        10,
+        10,
+        10
+      ],
+      "mil": "probes/ce_op_523.mil"
+    },
+    {
+      "name": "ce_op_524",
+      "op": "reshape",
+      "inputs": {
+        "ce_v_523_0": [
+          1,
+          10,
+          10,
+          10
+        ]
+      },
+      "output": [
+        1,
+        100,
+        10
+      ],
+      "mil": "probes/ce_op_524.mil"
+    }
+  ],
+  "artifacts": {
+    "model.onnx": "06b5e4731bd9a7ad804613af381daa8e215edb1fee5fdd123b8ac32f944c1acb",
+    "model.mil": "aff48f209446baac8bc8992f7d5aee0da0738dc4651f2baee87d5406f6233b80",
+    "weights.bin": "179ca91f8acdb926c10d5588b234df683d5aa89a9f662f86822406d6e10cd7c5",
+    "probes.zip": "f475a0d58cf6ba7f260ead85031a2f255049eeeba4b3c22b9d3892f3d4bcf32d"
+  }
+}

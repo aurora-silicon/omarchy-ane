@@ -1,0 +1,4 @@
+numpy==1.26.4
+onnxruntime==1.20.1
+opencv-python-headless==4.11.0.86
+construct==2.10.70
