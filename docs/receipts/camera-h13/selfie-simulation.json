@@ -1,0 +1,527 @@
+{
+  "status": "pass",
+  "target": "H13",
+  "mode": "cpu-simulation",
+  "abi": null,
+  "chip": null,
+  "host": "Darwin/arm64 build host",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "plan_sha256": "c4d69493a02f2c9a0d309729dd1b548eb9364d68e70df2284234626029c6a6ea",
+  "images": 30,
+  "islands_compared": 58,
+  "island_max_abs": {
+    "original-001.onnx": 0.0298919677734375,
+    "original-007.onnx": 0.0312042236328125,
+    "original-010.onnx": 0.0038824081420898438,
+    "original-014.onnx": 0.0009684562683105469,
+    "original-017.onnx": 0.0009336471557617188,
+    "original-021.onnx": 0.0078125,
+    "original-023.onnx": 0.0196075439453125,
+    "original-026.onnx": 0.01349639892578125,
+    "original-029.onnx": 0.0076656341552734375,
+    "original-031.onnx": 0.03073883056640625,
+    "original-034.onnx": 0.015594482421875,
+    "original-037.onnx": 0.0075664520263671875,
+    "original-040.onnx": 0.0077800750732421875,
+    "original-046.onnx": 0.00629425048828125,
+    "original-053.onnx": 0.006988525390625,
+    "original-056.onnx": 0.00720977783203125,
+    "original-060.onnx": 0.0019521713256835938,
+    "original-062.onnx": 0.007598876953125,
+    "original-068.onnx": 0.0038204193115234375,
+    "original-075.onnx": 0.0076045989990234375,
+    "original-078.onnx": 0.015445709228515625,
+    "original-082.onnx": 0.0036935806274414062,
+    "original-085.onnx": 0.0039043426513671875,
+    "original-091.onnx": 0.0069637298583984375,
+    "original-098.onnx": 0.0038967132568359375,
+    "original-101.onnx": 0.01534271240234375,
+    "original-105.onnx": 0.0075168609619140625,
+    "original-108.onnx": 0.0077610015869140625,
+    "original-114.onnx": 0.0077991485595703125,
+    "original-121.onnx": 0.0038442611694335938,
+    "original-124.onnx": 0.0068264007568359375,
+    "original-128.onnx": 0.0076904296875,
+    "original-131.onnx": 0.01438140869140625,
+    "original-137.onnx": 0.006763458251953125,
+    "original-144.onnx": 0.00376129150390625,
+    "original-147.onnx": 0.00681304931640625,
+    "original-151.onnx": 0.01540374755859375,
+    "original-155.onnx": 0.0037527084350585938,
+    "original-158.onnx": 0.00390625,
+    "original-161.onnx": 0.001220703125,
+    "original-163.onnx": 0.015590667724609375,
+    "original-167.onnx": 0.0307464599609375,
+    "original-170.onnx": 0.02667236328125,
+    "original-175.onnx": 0.0038690567016601562,
+    "original-178.onnx": 0.006938934326171875,
+    "original-181.onnx": 0.00390625,
+    "original-183.onnx": 0.01363372802734375,
+    "original-187.onnx": 0.007778167724609375,
+    "original-190.onnx": 0.015392303466796875,
+    "original-195.onnx": 0.0038928985595703125,
+    "original-198.onnx": 0.0037479400634765625,
+    "original-201.onnx": 0.001953125,
+    "original-203.onnx": 0.012905120849609375,
+    "original-207.onnx": 0.0035676956176757812,
+    "original-210.onnx": 0.0026226043701171875,
+    "original-215.onnx": 0.0078105926513671875,
+    "original-218.onnx": 0.03125,
+    "original-221.onnx": 0.494140625
+  },
+  "criterion": "islands: abs <= .002 + .002*abs(reference); mean mask IoU >= .98, every image mask disagreement and MAE <= .005; YuNet abs <= .03 + .02*abs(reference)",
+  "mean_mask_iou": 0.9985279206163945,
+  "min_mask_iou": 0.9865689865689866,
+  "records": [
+    {
+      "file": "000000000872.jpg",
+      "id": 872,
+      "sha256": "c2aa138ee3a59b057a7ba6fc5a6a18e62af531aa7dab78a7bfd33c1cd7e55eb6",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000000872.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.6785310420673341,
+      "output_max_abs": [
+        0.03778946399688721
+      ],
+      "mask_iou": 0.9994086922243027,
+      "mask_union": 10147,
+      "mask_disagreement": 9.1552734375e-05,
+      "mask_mean_abs": 6.133034912636504e-05
+    },
+    {
+      "file": "000000012280.jpg",
+      "id": 12280,
+      "sha256": "158ef0b15ff392039468263fa18735f81b39de9e8a7753e1e1aba7037262da56",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000012280.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.6569808751810342,
+      "output_max_abs": [
+        0.014663010835647583
+      ],
+      "mask_iou": 1.0,
+      "mask_union": 1326,
+      "mask_disagreement": 0.0,
+      "mask_mean_abs": 2.0038360162288882e-05
+    },
+    {
+      "file": "000000019924.jpg",
+      "id": 19924,
+      "sha256": "b0bb42c6674456ecd9155b790a6a595646aacfe45ce80bd7667ac75fb7fe8bc8",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000019924.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.5764657920226455,
+      "output_max_abs": [
+        0.02118086814880371
+      ],
+      "mask_iou": 0.999954279444038,
+      "mask_union": 43744,
+      "mask_disagreement": 3.0517578125e-05,
+      "mask_mean_abs": 3.974643550463952e-05
+    },
+    {
+      "file": "000000021167.jpg",
+      "id": 21167,
+      "sha256": "b77df96f91ed9a0842559ea8a238d602d4a09069b9129c43a9d62a27361df156",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000021167.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.8199302079156041,
+      "output_max_abs": [
+        0.03775098919868469
+      ],
+      "mask_iou": 0.999833067035509,
+      "mask_union": 41933,
+      "mask_disagreement": 0.0001068115234375,
+      "mask_mean_abs": 0.00012039779539918527
+    },
+    {
+      "file": "000000022705.jpg",
+      "id": 22705,
+      "sha256": "01627a2e4b79593b0debcffcdcf9b6c795d0d9e71aa2a3e9e22a9db05a70bc85",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000022705.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.4628742500208318,
+      "output_max_abs": [
+        0.04231107234954834
+      ],
+      "mask_iou": 0.9999006852716258,
+      "mask_union": 10069,
+      "mask_disagreement": 1.52587890625e-05,
+      "mask_mean_abs": 5.344033343135379e-05
+    },
+    {
+      "file": "000000028993.jpg",
+      "id": 28993,
+      "sha256": "9d582d15dc1a53b419f8c32253d4eb1bbe0fa20ada973e4d24e72af55b880a83",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000028993.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.467868790961802,
+      "output_max_abs": [
+        0.06117480993270874
+      ],
+      "mask_iou": 0.9948911594846734,
+      "mask_union": 4502,
+      "mask_disagreement": 0.0003509521484375,
+      "mask_mean_abs": 0.00017160609422717243
+    },
+    {
+      "file": "000000030504.jpg",
+      "id": 30504,
+      "sha256": "6a07fb2882010ba47140c43ffd7cd4a51331f197666ea9837b43bc077e88f552",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000030504.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.44531220803037286,
+      "output_max_abs": [
+        0.022959530353546143
+      ],
+      "mask_iou": 1.0,
+      "mask_union": 6482,
+      "mask_disagreement": 0.0,
+      "mask_mean_abs": 3.154928708681837e-05
+    },
+    {
+      "file": "000000033368.jpg",
+      "id": 33368,
+      "sha256": "8744e00ee252788e713def22b9d93710db7676dd5bda496241d14fe03661187c",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000033368.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.6091332919895649,
+      "output_max_abs": [
+        0.026620566844940186
+      ],
+      "mask_iou": 0.9994026284348865,
+      "mask_union": 6696,
+      "mask_disagreement": 6.103515625e-05,
+      "mask_mean_abs": 3.617181573645212e-05
+    },
+    {
+      "file": "000000035062.jpg",
+      "id": 35062,
+      "sha256": "ced2374ae4276360bd7ca8f1aa2cf46bfebd62af2ac1eaa04a8e64fccc150333",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000035062.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.5307739160489291,
+      "output_max_abs": [
+        0.06204381585121155
+      ],
+      "mask_iou": 0.9998402013463037,
+      "mask_union": 50063,
+      "mask_disagreement": 0.0001220703125,
+      "mask_mean_abs": 0.00021848098549526185
+    },
+    {
+      "file": "000000035682.jpg",
+      "id": 35682,
+      "sha256": "1844cfa76d23a9768578f2c27306ecbad99326d2d374b070af9c56d50058c155",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000035682.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.5298250000923872,
+      "output_max_abs": [
+        0.04437628388404846
+      ],
+      "mask_iou": 0.9999186991869918,
+      "mask_union": 12300,
+      "mask_disagreement": 1.52587890625e-05,
+      "mask_mean_abs": 0.00017743342323228717
+    },
+    {
+      "file": "000000038210.jpg",
+      "id": 38210,
+      "sha256": "0317a0094f357ea07c293ee9c32e58a87e5e0a5438c6d9c09250266df1249a00",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000038210.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.42434333404526114,
+      "output_max_abs": [
+        0.010864466428756714
+      ],
+      "mask_iou": 1.0,
+      "mask_union": 4213,
+      "mask_disagreement": 0.0,
+      "mask_mean_abs": 1.3126280464348383e-05
+    },
+    {
+      "file": "000000040757.jpg",
+      "id": 40757,
+      "sha256": "60f4f240bb8fdd983afdb8966fcb7994e74d36b8e65d77f47066ea95fa297dba",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000040757.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.39295691694132984,
+      "output_max_abs": [
+        0.040612876415252686
+      ],
+      "mask_iou": 0.9996457669146298,
+      "mask_union": 14115,
+      "mask_disagreement": 7.62939453125e-05,
+      "mask_mean_abs": 0.00013344765466172248
+    },
+    {
+      "file": "000000042102.jpg",
+      "id": 42102,
+      "sha256": "13adc5e53fd4b2e2610663744fbc76be64abf81a2932bf2acf26afb5e107368c",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000042102.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.37453949986957014,
+      "output_max_abs": [
+        0.03788068890571594
+      ],
+      "mask_iou": 0.9998426138688659,
+      "mask_union": 31769,
+      "mask_disagreement": 7.62939453125e-05,
+      "mask_mean_abs": 7.233709038700908e-05
+    },
+    {
+      "file": "000000043435.jpg",
+      "id": 43435,
+      "sha256": "c3b039effaf2412a450faff11d2dd0c5f5ed0090d12d550ce7a0eab9cec51974",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000043435.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.38249612506479025,
+      "output_max_abs": [
+        0.05447906255722046
+      ],
+      "mask_iou": 0.9986326615540099,
+      "mask_union": 16821,
+      "mask_disagreement": 0.0003509521484375,
+      "mask_mean_abs": 0.00033983789035119116
+    },
+    {
+      "file": "000000054605.jpg",
+      "id": 54605,
+      "sha256": "7faf996ad9ff347643c1e94acadf2ff62c16d042344ef04567cdd3382bcccc75",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000054605.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.352301332866773,
+      "output_max_abs": [
+        0.0976828932762146
+      ],
+      "mask_iou": 0.9879740980573543,
+      "mask_union": 6486,
+      "mask_disagreement": 0.001190185546875,
+      "mask_mean_abs": 0.0007564029656350613
+    },
+    {
+      "file": "000000054931.jpg",
+      "id": 54931,
+      "sha256": "a49694d5dc982701f33a1d449a3ff7ebf953d1947ca141352097fb2528b10d1b",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000054931.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.5284490000922233,
+      "output_max_abs": [
+        0.022452741861343384
+      ],
+      "mask_iou": 0.9998806682577566,
+      "mask_union": 8380,
+      "mask_disagreement": 1.52587890625e-05,
+      "mask_mean_abs": 3.2533647754462436e-05
+    },
+    {
+      "file": "000000060899.jpg",
+      "id": 60899,
+      "sha256": "57c62f60ea71b9d40d33fa94635153fc02b1eec74b167324e874ee2ffb12ecab",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000060899.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.586585541954264,
+      "output_max_abs": [
+        0.03263533115386963
+      ],
+      "mask_iou": 0.9997922077922078,
+      "mask_union": 9625,
+      "mask_disagreement": 3.0517578125e-05,
+      "mask_mean_abs": 3.771757837967016e-05
+    },
+    {
+      "file": "000000067534.jpg",
+      "id": 67534,
+      "sha256": "f6aab4c789a4a04db8a31071efbee504f1764497a8a48aae43e82d89d0cc3db9",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000067534.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.9358279169537127,
+      "output_max_abs": [
+        0.028404653072357178
+      ],
+      "mask_iou": 0.999910485704567,
+      "mask_union": 55857,
+      "mask_disagreement": 7.62939453125e-05,
+      "mask_mean_abs": 6.907003262313083e-05
+    },
+    {
+      "file": "000000074733.jpg",
+      "id": 74733,
+      "sha256": "d99c93fb6d22a5d51bbb6e09ca5f10c11bdcf90a711abf6cc83188df52cc456a",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000074733.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.8923375830054283,
+      "output_max_abs": [
+        0.03832244873046875
+      ],
+      "mask_iou": 0.9980027960854804,
+      "mask_union": 10014,
+      "mask_disagreement": 0.00030517578125,
+      "mask_mean_abs": 0.0001974741171579808
+    },
+    {
+      "file": "000000077460.jpg",
+      "id": 77460,
+      "sha256": "7337d0644d375ee68e8ae92d5bf040d372d91e83d5db3495910410cefefaef26",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000077460.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.9122928329743445,
+      "output_max_abs": [
+        0.022861361503601074
+      ],
+      "mask_iou": 0.9990384615384615,
+      "mask_union": 1040,
+      "mask_disagreement": 1.52587890625e-05,
+      "mask_mean_abs": 4.297200939618051e-05
+    },
+    {
+      "file": "000000078170.jpg",
+      "id": 78170,
+      "sha256": "e9ccccb034030771eafc383d2872bce55e7ff395313b610ffc1215eeb72912a3",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000078170.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.4042262081056833,
+      "output_max_abs": [
+        0.00022220611572265625
+      ],
+      "mask_iou": 1.0,
+      "mask_union": 0,
+      "mask_disagreement": 0.0,
+      "mask_mean_abs": 6.539266905747354e-09
+    },
+    {
+      "file": "000000080153.jpg",
+      "id": 80153,
+      "sha256": "3805f4e59254e155f166f340ee8eff2beaea49ee475ae837782da3cfc65bf8ea",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000080153.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.354249041993171,
+      "output_max_abs": [
+        0.014945805072784424
+      ],
+      "mask_iou": 0.9997905759162303,
+      "mask_union": 4775,
+      "mask_disagreement": 1.52587890625e-05,
+      "mask_mean_abs": 2.7528412829269655e-05
+    },
+    {
+      "file": "000000080932.jpg",
+      "id": 80932,
+      "sha256": "c5bdb620680ad74c2bb788cabbf3374d68285bec3a2023fadf0ffc7eb257ba72",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000080932.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.3706817920319736,
+      "output_max_abs": [
+        0.04571533203125
+      ],
+      "mask_iou": 0.9995456817046022,
+      "mask_union": 22011,
+      "mask_disagreement": 0.000152587890625,
+      "mask_mean_abs": 0.00017892105097416788
+    },
+    {
+      "file": "000000094326.jpg",
+      "id": 94326,
+      "sha256": "492ffd8a904c5f016947af4928607b8978c10d3d46dbf9231e394162c26f6263",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000094326.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.3557923750486225,
+      "output_max_abs": [
+        0.032240837812423706
+      ],
+      "mask_iou": 0.999908282124186,
+      "mask_union": 10903,
+      "mask_disagreement": 1.52587890625e-05,
+      "mask_mean_abs": 5.70547126699239e-05
+    },
+    {
+      "file": "000000094751.jpg",
+      "id": 94751,
+      "sha256": "4231038444f2ce50dcf7aac0255478c0a19ca857a6b10e137f7bce0c8da7f039",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000094751.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.3283225828781724,
+      "output_max_abs": [
+        7.790327072143555e-05
+      ],
+      "mask_iou": 1.0,
+      "mask_union": 0,
+      "mask_disagreement": 0.0,
+      "mask_mean_abs": 1.7207639757543802e-09
+    },
+    {
+      "file": "000000094871.jpg",
+      "id": 94871,
+      "sha256": "568808faf0e3ca50a66434ac7b053c6f493e48a45bf986e8bdcc7c48e3ee74eb",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000094871.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.3576758331619203,
+      "output_max_abs": [
+        0.05024707317352295
+      ],
+      "mask_iou": 0.9989840839823908,
+      "mask_union": 5906,
+      "mask_disagreement": 9.1552734375e-05,
+      "mask_mean_abs": 0.0001372157857986167
+    },
+    {
+      "file": "000000096493.jpg",
+      "id": 96493,
+      "sha256": "cecec146af7564d8229b996b99d25289924c039bf41475b0c533909699b39351",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000096493.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.3650204590521753,
+      "output_max_abs": [
+        0.06386885046958923
+      ],
+      "mask_iou": 0.9990490319144889,
+      "mask_union": 26289,
+      "mask_disagreement": 0.0003814697265625,
+      "mask_mean_abs": 0.0004054743330925703
+    },
+    {
+      "file": "000000098392.jpg",
+      "id": 98392,
+      "sha256": "c976adf7599725c1bab7fbae692611501e7a33fb5e182c3e301f985205340ecf",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000098392.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.3059262498281896,
+      "output_max_abs": [
+        0.041214048862457275
+      ],
+      "mask_iou": 0.9865689865689866,
+      "mask_union": 819,
+      "mask_disagreement": 0.0001678466796875,
+      "mask_mean_abs": 5.4349235142581165e-05
+    },
+    {
+      "file": "000000105335.jpg",
+      "id": 105335,
+      "sha256": "c304cfc54f2b3ee939e1e9cb5a710a42cd8647c1256348c3e24cfd218e8a77a9",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000105335.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.2826480839867145,
+      "output_max_abs": [
+        0.04499691724777222
+      ],
+      "mask_iou": 1.0,
+      "mask_union": 18,
+      "mask_disagreement": 0.0,
+      "mask_mean_abs": 7.798771548550576e-05
+    },
+    {
+      "file": "000000107226.jpg",
+      "id": 107226,
+      "sha256": "285a3dfd666d35fb60eb63b9dd46b7b49aae4fcafe194f51d7e4b446abdab725",
+      "source": "https://s3.amazonaws.com/images.cocodataset.org/val2017/000000107226.jpg",
+      "license": "CC-BY-2.0",
+      "seconds": 0.28395408298820257,
+      "output_max_abs": [
+        0.07883477210998535
+      ],
+      "mask_iou": 0.9961218040792875,
+      "mask_union": 20886,
+      "mask_disagreement": 0.0012359619140625,
+      "mask_mean_abs": 0.0006889794021844864
+    }
+  ]
+}

@@ -1,0 +1,310 @@
+[
+  {
+    "model": "selfie",
+    "name": "ce_op_16",
+    "op": "clip",
+    "original_shape": [
+      1,
+      16,
+      128,
+      128
+    ],
+    "rewrite": "fp32-exact-clip-scalars",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n"
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_66",
+    "op": "sigmoid",
+    "original_shape": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "rewrite": "pad-channels-to-64-or-512",
+    "rc": 0,
+    "diagnostic": ""
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_149",
+    "op": "clip",
+    "original_shape": [
+      1,
+      96,
+      32,
+      32
+    ],
+    "rewrite": "fp32-exact-clip-scalars",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n"
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_169",
+    "op": "clip",
+    "original_shape": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "rewrite": "fp32-exact-clip-scalars",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n"
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_197",
+    "op": "sigmoid",
+    "original_shape": [
+      1,
+      96,
+      1,
+      1
+    ],
+    "rewrite": "pad-channels-to-64-or-512",
+    "rc": 0,
+    "diagnostic": ""
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_219",
+    "op": "clip",
+    "original_shape": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "rewrite": "fp32-exact-clip-scalars",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n"
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_239",
+    "op": "clip",
+    "original_shape": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "rewrite": "fp32-exact-clip-scalars",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n"
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_267",
+    "op": "sigmoid",
+    "original_shape": [
+      1,
+      128,
+      1,
+      1
+    ],
+    "rewrite": "pad-channels-to-64-or-512",
+    "rc": 0,
+    "diagnostic": ""
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_290",
+    "op": "clip",
+    "original_shape": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "rewrite": "fp32-exact-clip-scalars",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n"
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_310",
+    "op": "clip",
+    "original_shape": [
+      1,
+      128,
+      16,
+      16
+    ],
+    "rewrite": "fp32-exact-clip-scalars",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n"
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_338",
+    "op": "sigmoid",
+    "original_shape": [
+      1,
+      128,
+      1,
+      1
+    ],
+    "rewrite": "pad-channels-to-64-or-512",
+    "rc": 0,
+    "diagnostic": ""
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_361",
+    "op": "clip",
+    "original_shape": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "rewrite": "fp32-exact-clip-scalars",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n"
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_381",
+    "op": "clip",
+    "original_shape": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "rewrite": "fp32-exact-clip-scalars",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n"
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_409",
+    "op": "sigmoid",
+    "original_shape": [
+      1,
+      96,
+      1,
+      1
+    ],
+    "rewrite": "pad-channels-to-64-or-512",
+    "rc": 0,
+    "diagnostic": ""
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_432",
+    "op": "clip",
+    "original_shape": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "rewrite": "fp32-exact-clip-scalars",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n"
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_452",
+    "op": "clip",
+    "original_shape": [
+      1,
+      96,
+      16,
+      16
+    ],
+    "rewrite": "fp32-exact-clip-scalars",
+    "rc": 65,
+    "diagnostic": "7:5: error [h13.inexact-constant]: H13 clip alpha and beta must be finite fp32 scalars exactly representable in fp16\n"
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_480",
+    "op": "sigmoid",
+    "original_shape": [
+      1,
+      96,
+      1,
+      1
+    ],
+    "rewrite": "pad-channels-to-64-or-512",
+    "rc": 0,
+    "diagnostic": ""
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_515",
+    "op": "sigmoid",
+    "original_shape": [
+      1,
+      128,
+      1,
+      1
+    ],
+    "rewrite": "pad-channels-to-64-or-512",
+    "rc": 0,
+    "diagnostic": ""
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_554",
+    "op": "sigmoid",
+    "original_shape": [
+      1,
+      24,
+      1,
+      1
+    ],
+    "rewrite": "pad-channels-to-64-or-512",
+    "rc": 0,
+    "diagnostic": ""
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_617",
+    "op": "sigmoid",
+    "original_shape": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "rewrite": "pad-channels-to-64-or-512",
+    "rc": 0,
+    "diagnostic": ""
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_680",
+    "op": "sigmoid",
+    "original_shape": [
+      1,
+      16,
+      1,
+      1
+    ],
+    "rewrite": "pad-channels-to-64-or-512",
+    "rc": 0,
+    "diagnostic": ""
+  },
+  {
+    "model": "selfie",
+    "name": "ce_op_715",
+    "op": "sigmoid",
+    "original_shape": [
+      1,
+      1,
+      256,
+      256
+    ],
+    "rewrite": "pad-channels-to-64-or-512",
+    "rc": 65,
+    "diagnostic": "6:5: error [h13.unary-outside-envelope]: H13 sigmoid is outside the decoded unary envelope: the captured geometries are silu, sigmoid, exp, gelu, leaky_relu, relu, rsqrt, sqrt, and tanh at CHW (64,1,1)/(512,1,1), and abs at (64,1,1)/(128,1,1)/(256,1,1)/(512,1,1)/(1024,1,1)/(2048,1,1)/(4096,1,1) \u2014 LUT unaries have no 64-lane split\n"
+  }
+]

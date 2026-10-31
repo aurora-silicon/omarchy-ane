@@ -1,0 +1,2643 @@
+{
+  "selfie": {
+    "compiler_revision": "72e1d99c6f51eaf97ad61280936d42dbb0b6a1ae",
+    "compiler_sha256": "aa460694598818cf3f1afe52218b43deb60745c3dc4133f046c692535eba38a7",
+    "source_sha256": "9ee168ec7c8f2a16c56fe8e1cfbc514974cbbb7e434051b455635f1bd1462f5c",
+    "onnx_sha256": "3f53ece391efe8e1934e4a4d5871cae746779130c7b300076b7c487419c53db4",
+    "convolutions": [
+      {
+        "name": "/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          3,
+          257,
+          257
+        ],
+        "output": [
+          1,
+          16,
+          128,
+          128
+        ],
+        "stages": [
+          {
+            "directory": "conv-001-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_1",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          128,
+          128
+        ],
+        "output": [
+          1,
+          16,
+          128,
+          128
+        ],
+        "stages": [
+          {
+            "directory": "conv-007-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_2",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          129,
+          129
+        ],
+        "output": [
+          1,
+          16,
+          64,
+          64
+        ],
+        "stages": [
+          {
+            "directory": "conv-010-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_3",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          8,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-014-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_4",
+        "op": "Conv",
+        "input": [
+          1,
+          8,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          16,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-017-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_5",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          64,
+          64
+        ],
+        "output": [
+          1,
+          16,
+          64,
+          64
+        ],
+        "stages": [
+          {
+            "directory": "conv-021-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_6",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          64,
+          64
+        ],
+        "output": [
+          1,
+          72,
+          64,
+          64
+        ],
+        "stages": [
+          {
+            "directory": "conv-023-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_7",
+        "op": "Conv",
+        "input": [
+          1,
+          72,
+          65,
+          65
+        ],
+        "output": [
+          1,
+          72,
+          32,
+          32
+        ],
+        "stages": [
+          {
+            "directory": "conv-026-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_8",
+        "op": "Conv",
+        "input": [
+          1,
+          72,
+          32,
+          32
+        ],
+        "output": [
+          1,
+          24,
+          32,
+          32
+        ],
+        "stages": [
+          {
+            "directory": "conv-029-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_9",
+        "op": "Conv",
+        "input": [
+          1,
+          24,
+          32,
+          32
+        ],
+        "output": [
+          1,
+          88,
+          32,
+          32
+        ],
+        "stages": [
+          {
+            "directory": "conv-031-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_10",
+        "op": "Conv",
+        "input": [
+          1,
+          88,
+          34,
+          34
+        ],
+        "output": [
+          1,
+          88,
+          32,
+          32
+        ],
+        "stages": [
+          {
+            "directory": "conv-034-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_11",
+        "op": "Conv",
+        "input": [
+          1,
+          88,
+          32,
+          32
+        ],
+        "output": [
+          1,
+          24,
+          32,
+          32
+        ],
+        "stages": [
+          {
+            "directory": "conv-037-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_12",
+        "op": "Conv",
+        "input": [
+          1,
+          24,
+          32,
+          32
+        ],
+        "output": [
+          1,
+          96,
+          32,
+          32
+        ],
+        "stages": [
+          {
+            "directory": "conv-040-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_13",
+        "op": "Conv",
+        "input": [
+          1,
+          96,
+          35,
+          35
+        ],
+        "output": [
+          1,
+          96,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-046-0",
+            "rc": 0
+          },
+          {
+            "directory": "conv-046-1",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_14",
+        "op": "Conv",
+        "input": [
+          1,
+          96,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          24,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-053-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_15",
+        "op": "Conv",
+        "input": [
+          1,
+          24,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          96,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-056-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_16",
+        "op": "Conv",
+        "input": [
+          1,
+          96,
+          16,
+          16
+        ],
+        "output": [
+          1,
+          32,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-060-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_17",
+        "op": "Conv",
+        "input": [
+          1,
+          32,
+          16,
+          16
+        ],
+        "output": [
+          1,
+          128,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-062-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_18",
+        "op": "Conv",
+        "input": [
+          1,
+          128,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          128,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-068-0",
+            "rc": 0
+          },
+          {
+            "directory": "conv-068-1",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_19",
+        "op": "Conv",
+        "input": [
+          1,
+          128,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          32,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-075-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_20",
+        "op": "Conv",
+        "input": [
+          1,
+          32,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          128,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-078-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_21",
+        "op": "Conv",
+        "input": [
+          1,
+          128,
+          16,
+          16
+        ],
+        "output": [
+          1,
+          32,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-082-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_22",
+        "op": "Conv",
+        "input": [
+          1,
+          32,
+          16,
+          16
+        ],
+        "output": [
+          1,
+          128,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-085-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_23",
+        "op": "Conv",
+        "input": [
+          1,
+          128,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          128,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-091-0",
+            "rc": 0
+          },
+          {
+            "directory": "conv-091-1",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_24",
+        "op": "Conv",
+        "input": [
+          1,
+          128,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          32,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-098-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_25",
+        "op": "Conv",
+        "input": [
+          1,
+          32,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          128,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-101-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_26",
+        "op": "Conv",
+        "input": [
+          1,
+          128,
+          16,
+          16
+        ],
+        "output": [
+          1,
+          32,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-105-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_27",
+        "op": "Conv",
+        "input": [
+          1,
+          32,
+          16,
+          16
+        ],
+        "output": [
+          1,
+          96,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-108-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_28",
+        "op": "Conv",
+        "input": [
+          1,
+          96,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          96,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-114-0",
+            "rc": 0
+          },
+          {
+            "directory": "conv-114-1",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_29",
+        "op": "Conv",
+        "input": [
+          1,
+          96,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          24,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-121-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_30",
+        "op": "Conv",
+        "input": [
+          1,
+          24,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          96,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-124-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_31",
+        "op": "Conv",
+        "input": [
+          1,
+          96,
+          16,
+          16
+        ],
+        "output": [
+          1,
+          32,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-128-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_32",
+        "op": "Conv",
+        "input": [
+          1,
+          32,
+          16,
+          16
+        ],
+        "output": [
+          1,
+          96,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-131-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_33",
+        "op": "Conv",
+        "input": [
+          1,
+          96,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          96,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-137-0",
+            "rc": 0
+          },
+          {
+            "directory": "conv-137-1",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_34",
+        "op": "Conv",
+        "input": [
+          1,
+          96,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          24,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-144-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_35",
+        "op": "Conv",
+        "input": [
+          1,
+          24,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          96,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-147-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_36",
+        "op": "Conv",
+        "input": [
+          1,
+          96,
+          16,
+          16
+        ],
+        "output": [
+          1,
+          32,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-151-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_38",
+        "op": "Conv",
+        "input": [
+          1,
+          32,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          128,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-155-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_37",
+        "op": "Conv",
+        "input": [
+          1,
+          32,
+          16,
+          16
+        ],
+        "output": [
+          1,
+          128,
+          16,
+          16
+        ],
+        "stages": [
+          {
+            "directory": "conv-158-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Resize",
+        "op": "Resize",
+        "input": [
+          1,
+          128,
+          16,
+          16
+        ],
+        "output": [
+          1,
+          128,
+          32,
+          32
+        ],
+        "stages": [
+          {
+            "directory": "conv-161-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_39",
+        "op": "Conv",
+        "input": [
+          1,
+          128,
+          32,
+          32
+        ],
+        "output": [
+          1,
+          24,
+          32,
+          32
+        ],
+        "stages": [
+          {
+            "directory": "conv-163-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_40",
+        "op": "Conv",
+        "input": [
+          1,
+          24,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          24,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-167-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_41",
+        "op": "Conv",
+        "input": [
+          1,
+          24,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          24,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-170-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_42",
+        "op": "Conv",
+        "input": [
+          1,
+          24,
+          32,
+          32
+        ],
+        "output": [
+          1,
+          24,
+          32,
+          32
+        ],
+        "stages": [
+          {
+            "directory": "conv-175-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_43",
+        "op": "Conv",
+        "input": [
+          1,
+          24,
+          34,
+          34
+        ],
+        "output": [
+          1,
+          24,
+          32,
+          32
+        ],
+        "stages": [
+          {
+            "directory": "conv-178-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Resize_1",
+        "op": "Resize",
+        "input": [
+          1,
+          24,
+          32,
+          32
+        ],
+        "output": [
+          1,
+          24,
+          64,
+          64
+        ],
+        "stages": [
+          {
+            "directory": "conv-181-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_44",
+        "op": "Conv",
+        "input": [
+          1,
+          24,
+          64,
+          64
+        ],
+        "output": [
+          1,
+          16,
+          64,
+          64
+        ],
+        "stages": [
+          {
+            "directory": "conv-183-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_45",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          16,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-187-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_46",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          16,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-190-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_47",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          64,
+          64
+        ],
+        "output": [
+          1,
+          16,
+          64,
+          64
+        ],
+        "stages": [
+          {
+            "directory": "conv-195-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_48",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          66,
+          66
+        ],
+        "output": [
+          1,
+          16,
+          64,
+          64
+        ],
+        "stages": [
+          {
+            "directory": "conv-198-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Resize_2",
+        "op": "Resize",
+        "input": [
+          1,
+          16,
+          64,
+          64
+        ],
+        "output": [
+          1,
+          16,
+          128,
+          128
+        ],
+        "stages": [
+          {
+            "directory": "conv-201-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_49",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          128,
+          128
+        ],
+        "output": [
+          1,
+          16,
+          128,
+          128
+        ],
+        "stages": [
+          {
+            "directory": "conv-203-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_50",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          16,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-207-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_51",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          1,
+          1
+        ],
+        "output": [
+          1,
+          16,
+          1,
+          1
+        ],
+        "stages": [
+          {
+            "directory": "conv-210-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_52",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          128,
+          128
+        ],
+        "output": [
+          1,
+          16,
+          128,
+          128
+        ],
+        "stages": [
+          {
+            "directory": "conv-215-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_53",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          130,
+          130
+        ],
+        "output": [
+          1,
+          16,
+          128,
+          128
+        ],
+        "stages": [
+          {
+            "directory": "conv-218-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/ConvTranspose",
+        "op": "ConvTranspose",
+        "input": [
+          1,
+          16,
+          128,
+          128
+        ],
+        "output": [
+          1,
+          1,
+          256,
+          256
+        ],
+        "stages": [
+          {
+            "directory": "conv-221-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      }
+    ],
+    "host": "Darwin/arm64 build host",
+    "islands": 58,
+    "ane_stages": 63
+  },
+  "yunet": {
+    "compiler_revision": "72e1d99c6f51eaf97ad61280936d42dbb0b6a1ae",
+    "compiler_sha256": "aa460694598818cf3f1afe52218b43deb60745c3dc4133f046c692535eba38a7",
+    "source_sha256": "8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4",
+    "onnx_sha256": "06b5e4731bd9a7ad804613af381daa8e215edb1fee5fdd123b8ac32f944c1acb",
+    "convolutions": [
+      {
+        "name": "/Conv_0/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          3,
+          320,
+          320
+        ],
+        "output": [
+          1,
+          16,
+          160,
+          160
+        ],
+        "stages": [
+          {
+            "directory": "conv-000-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_2/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          160,
+          160
+        ],
+        "output": [
+          1,
+          16,
+          160,
+          160
+        ],
+        "stages": [
+          {
+            "directory": "conv-002-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_3/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          160,
+          160
+        ],
+        "output": [
+          1,
+          16,
+          160,
+          160
+        ],
+        "stages": [
+          {
+            "directory": "conv-003-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_6/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          80,
+          80
+        ],
+        "output": [
+          1,
+          16,
+          80,
+          80
+        ],
+        "stages": [
+          {
+            "directory": "conv-006-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_7/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          80,
+          80
+        ],
+        "output": [
+          1,
+          16,
+          80,
+          80
+        ],
+        "stages": [
+          {
+            "directory": "conv-007-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_9/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          16,
+          80,
+          80
+        ],
+        "output": [
+          1,
+          32,
+          80,
+          80
+        ],
+        "stages": [
+          {
+            "directory": "conv-009-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_10/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          32,
+          80,
+          80
+        ],
+        "output": [
+          1,
+          32,
+          80,
+          80
+        ],
+        "stages": [
+          {
+            "directory": "conv-010-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_12/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          32,
+          80,
+          80
+        ],
+        "output": [
+          1,
+          32,
+          80,
+          80
+        ],
+        "stages": [
+          {
+            "directory": "conv-012-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_13/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          32,
+          80,
+          80
+        ],
+        "output": [
+          1,
+          32,
+          80,
+          80
+        ],
+        "stages": [
+          {
+            "directory": "conv-013-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_15/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          32,
+          80,
+          80
+        ],
+        "output": [
+          1,
+          64,
+          80,
+          80
+        ],
+        "stages": [
+          {
+            "directory": "conv-015-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_16/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          80,
+          80
+        ],
+        "output": [
+          1,
+          64,
+          80,
+          80
+        ],
+        "stages": [
+          {
+            "directory": "conv-016-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_19/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-019-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_20/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-020-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_22/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-022-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_23/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-023-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_26/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-026-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_27/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-027-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_29/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-029-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_30/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-030-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_33/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-033-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_34/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-034-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_36/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-036-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_37/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-037-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_39/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-039-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_40/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-040-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_76/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          10,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-042-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_77/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          10,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          10,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-043-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Resize_43/Resize",
+        "op": "Resize",
+        "input": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-046-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_45/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-048-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_46/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-049-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_74/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          10,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-051-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_75/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          10,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          10,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-052-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Resize_49/Resize",
+        "op": "Resize",
+        "input": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-055-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_51/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-057-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_52/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-058-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_72/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          10,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-060-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_73/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          10,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          10,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-061-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_64/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          4,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-064-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_65/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          4,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          4,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-065-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_62/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          4,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-068-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_63/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          4,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          4,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-069-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_60/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          4,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-072-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_61/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          4,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          4,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-073-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_70/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          1,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-076-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_71/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          1,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          1,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-077-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_68/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          1,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-081-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_69/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          1,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          1,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-082-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_66/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          1,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-086-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_67/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          1,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          1,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-087-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_58/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          1,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-091-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_59/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          1,
+          10,
+          10
+        ],
+        "output": [
+          1,
+          1,
+          10,
+          10
+        ],
+        "stages": [
+          {
+            "directory": "conv-092-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_56/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          1,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-096-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_57/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          1,
+          20,
+          20
+        ],
+        "output": [
+          1,
+          1,
+          20,
+          20
+        ],
+        "stages": [
+          {
+            "directory": "conv-097-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_54/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          64,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          1,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-101-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      },
+      {
+        "name": "/Conv_55/Conv",
+        "op": "Conv",
+        "input": [
+          1,
+          1,
+          40,
+          40
+        ],
+        "output": [
+          1,
+          1,
+          40,
+          40
+        ],
+        "stages": [
+          {
+            "directory": "conv-102-0",
+            "rc": 0
+          }
+        ],
+        "status": "compiled"
+      }
+    ],
+    "host": "Darwin/arm64 build host",
+    "islands": 55,
+    "ane_stages": 55
+  }
+}
