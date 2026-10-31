@@ -1,7 +1,8 @@
 # Camera effects validation
 
 The released models currently select CPU through the shared runtime. No native
-ANE execution, performance or real-camera quality result is claimed.
+ANE execution or performance is qualified. Mask quality below uses an open
+still-image dataset; live-camera CPU figures are attributed to the lead.
 
 ## Export identities
 
@@ -41,6 +42,53 @@ Review caught and fixed output-buffer exhaustion when an inference result was
 pending, and stale effect colorimetry after same-size format renegotiation.
 Pending buffers now return to the free pool; matrix/range changes rebuild the
 worker. Config reload is transactional and updates advertised board capability.
+
+## Recorded CPU and quality receipts
+
+The [COCO receipt](receipts/coco50-quality.json) records 50 CC BY 2.0 images,
+selected in ascending ID order with summed person area at least 10% and no crowd
+person labels. The production BT.601 limited NV12 round-trip, model preprocessing
+and guided upsampler are used; at most one final odd row/column is trimmed. At a
+0.5 threshold, mean IoU is **0.6814**, global IoU **0.7156**, mean Dice **0.7688**
+and boundary F1 **0.3913** at two-pixel (5x5 square) tolerance. The model bytes and mask path
+are unchanged by the later reduced-size blur patch. This selected still-image
+sample does not establish temporal, demographic or real-camera segmentation quality.
+
+The [independent source comparison](receipts/source-reference.json) passed on
+three synthetic inputs and five COCO images. Maximum absolute selfie output
+error versus MediaPipe's own CPU graph was **6.99e-5**. YuNet's fp16-rounded
+weights differed from the original OpenCV fp32 graph by at most **0.00934** in
+raw outputs. These are conversion checks, not face-detection accuracy scores.
+Fresh ONNX, MIL and weight files were byte-identical to both released models.
+
+The [full-size-blur host baseline](receipts/host-full-size-blur-baseline.json)
+uses a shared Intel i9-13900K Linux x86_64 build host, two ORT threads and one
+OpenCV thread, three warm-up frames and 30 timed frames per case. CPU is process
+time per frame; wall is median time, in milliseconds. These measurements precede
+the reduced-size blur optimisation; current-source host timing is pending.
+
+| Effect | 720p CPU | 720p wall | 1080p CPU | 1080p wall |
+| --- | ---: | ---: | ---: | ---: |
+| Off | 0.0012 | 0.0016 | 0.0011 | 0.0016 |
+| Blur | 83.42 | 57.43 | 184.25 | 146.23 |
+| Replace | 53.46 | 27.97 | 99.16 | 64.78 |
+| Framing | 19.52 | 9.69 | 21.84 | 11.13 |
+| Blur + framing | 119.86 | 63.08 | 208.00 | 160.06 |
+
+The lead's [M2 live-camera receipt](https://github.com/aurora-silicon/omarchy-ane/pull/5)
+records ORT CPU processing of real apple-isp 1080p frames. Reduced-size blur
+changed backend median wall time from **104.9 to 42.0 ms**, process CPU from
+**130 to 49 ms/frame**, and plane blur from 48.1 to 1.1 ms. Blur plus framing
+changed from 121.9 to 66.1 ms median. These device measurements use a different
+host/input/protocol from the x86 baseline and are recorded separately.
+
+The build host passed ten Python tests, the actual RTLD_LOCAL bridge and four C
+suites on the pre-lead snapshot. Its old PipeWire fixture failed to connect on
+1.6; the lead's [fixture/newest-input fix](https://github.com/aurora-silicon/camera-denoise/pull/3)
+passed four C suites and delivered 20 complete frames through a synthetic stall
+on M2. The reduced-blur lead receipt reports ten Python tests. The merged
+current-source build-host run, including consistent test core/socket naming and
+per-user capability configuration, is still pending.
 
 ## Limits and lead work
 

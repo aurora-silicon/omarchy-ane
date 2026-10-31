@@ -1,0 +1,51 @@
+{
+  "schema": "aurora.camera.effects.source-reference.v1",
+  "source_revision": "64327b7633c98e10130f008b9802bc827114a4de",
+  "mediapipe_version": "0.10.21",
+  "opencv_version": "4.11.0.86",
+  "model_artifacts": {
+    "selfie": {
+      "model.onnx": "3f53ece391efe8e1934e4a4d5871cae746779130c7b300076b7c487419c53db4",
+      "model.mil": "653fcd48fc9c384140a79c73747c729e8d9bff4bdc8939a72f7eb7ac5f10445f",
+      "weights.bin": "e546ea0681cdad802d5549e225e79c278746eb66d84c361e083296fa1e2fe0a9",
+      "probes.zip": "7de53b5dba63a66cb4f41659e21ab3d2c6e0739316403179377ef34f0bc83d64"
+    },
+    "yunet": {
+      "model.onnx": "06b5e4731bd9a7ad804613af381daa8e215edb1fee5fdd123b8ac32f944c1acb",
+      "model.mil": "aff48f209446baac8bc8992f7d5aee0da0738dc4651f2baee87d5406f6233b80",
+      "weights.bin": "179ca91f8acdb926c10d5588b234df683d5aa89a9f662f86822406d6e10cd7c5",
+      "probes.zip": "f475a0d58cf6ba7f260ead85031a2f255049eeeba4b3c22b9d3892f3d4bcf32d"
+    }
+  },
+  "selfie_mediapipe_max_abs": [
+    1.0219727286653324e-08,
+    4.204760983839151e-09,
+    1.888346548149012e-20,
+    1.9788742065429688e-05,
+    2.0623207092285156e-05,
+    6.988644599914551e-05,
+    3.6716461181640625e-05,
+    5.65648078918457e-05
+  ],
+  "coco_reference_images": [
+    "000000000785.jpg",
+    "000000000872.jpg",
+    "000000001000.jpg",
+    "000000001268.jpg",
+    "000000008021.jpg"
+  ],
+  "yunet_fp16_weight_vs_source_max_abs": [
+    0.0004197657108306885,
+    0.00023028254508972168,
+    0.0005319118499755859,
+    0.00014166906476020813,
+    3.9015430957078934e-05,
+    1.4418037608265877e-05,
+    0.003488093614578247,
+    0.0014032721519470215,
+    0.00264739990234375,
+    0.0029186606407165527,
+    0.0007257461547851562,
+    0.009330511093139648
+  ]
+}
