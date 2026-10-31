@@ -2093,6 +2093,89 @@ static void pos_dart(void)
 	}
 }
 
+static void translation_setup(const struct ane_h15_soc *s, const char *compat)
+{
+	stage2_setup(s, compat, -1);
+	node.has_iommus = true;
+	fw_seg = "10000ac4000:b0000,10001544000:43c000";
+	eng_set(s, s->rvbar, (u32)s->rvbar_expect);
+	eng_set(s, s->rvbar + 4, s->rvbar_expect >> 32);
+}
+
+static void pos_translation(void)
+{
+	const struct ane_h15_soc *s = &ane_t6031_soc;
+	static const struct {
+		u64 pa;
+		bool no_domain;
+		int ret;
+		const char *verdict;
+		const char *reason;
+	} cases[] = {
+		{ 0, false, -ENOENT, "REFUSED", "translation-zero" },
+		{ 0x10000ac4000ULL, false, 0, "PASS", "rvbar-text-entry-match" },
+		{ 0x10001544000ULL, false, -EIO, "FAIL", "rvbar-text-entry-mismatch" },
+		{ 0, true, -ENODEV, "REFUSED", "translation-domain-unavailable" },
+	};
+	unsigned int rstage;
+	char verdict[32], reason[128];
+	size_t i;
+	int ret, before;
+
+	for (i = 0; i < ARRAY_SIZE(cases); i++) {
+		translation_setup(s, "apple,t6031-ane");
+		sim_default_dom_none = cases[i].no_domain;
+		if (cases[i].pa) {
+			sim_iocalls[0] = (struct sim_iocall) {
+				SIM_IO_MAP, s->rvbar_expect & ~1ULL, cases[i].pa,
+				SZ_16K, IOMMU_READ, 0
+			};
+			sim_n_iocalls = 1;
+		}
+		before = sim_n_iocalls;
+		ret = probe_now();
+		chk(ret == cases[i].ret &&
+		    parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+		    rstage == 2 && !strcmp(verdict, cases[i].verdict) &&
+		    !strcmp(reason, cases[i].reason), cases[i].reason);
+		if (!ret)
+			chk(log_count("translation rvbar_iova=0x10000000000 "
+				      "expected_pa=0x10000ac4000 resolved_pa=0x10000ac4000") == 1,
+			    "T1 matched entry logs the IOVA, expected TEXT and resolved address");
+		chk(sim_n_iocalls == before && events_in(0, ~0ULL, 1) == 0 &&
+		    events_in(s->engine_pa, s->engine_size, 0) == 5 &&
+		    eng_events_at(s, s->cpu_control) == 0 && sim_bus_faults == 0,
+		    "T1 query changes no mapping and adds no engine access beyond preflight");
+		if (!ret)
+			ane_h15_remove(&pdev);
+		chk(sim_n_iocalls == before,
+		    "T1 teardown leaves the observed domain and mapping untouched");
+	}
+	translation_setup(&ane_t8122_soc, "apple,t8122-ane");
+	ret = probe_now();
+	chk(ret == -ENODEV &&
+	    parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    !strcmp(verdict, "REFUSED") && !strcmp(reason, "no-measured-rvbar") &&
+	    sim_n_iocalls == 0 && events_in(0, ~0ULL, 1) == 0,
+	    "T2 absent measured RVBAR refuses translation without writes");
+	translation_setup(s, "apple,t6031-ane");
+	fw_seg = "invalid";
+	ret = probe_now();
+	chk(ret == -EINVAL &&
+	    parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    !strcmp(verdict, "REFUSED") && !strcmp(reason, "fw_seg missing or unsafe") &&
+	    sim_n_iocalls == 0 && events_in(0, ~0ULL, 1) == 0,
+	    "T3 invalid firmware evidence refuses translation without writes");
+	translation_setup(s, "apple,t6031-ane");
+	eng_set(s, s->rvbar, (u32)s->rvbar_expect + 0x4000);
+	ret = probe_now();
+	chk(ret == -EINVAL &&
+	    parse_result(&rstage, verdict, sizeof(verdict), reason, sizeof(reason)) &&
+	    !strcmp(verdict, "REFUSED") && !strcmp(reason, "rvbar-entry-changed") &&
+	    sim_n_iocalls == 0 && events_in(0, ~0ULL, 1) == 0,
+	    "T4 changed current RVBAR refuses the old expected entry");
+}
+
 static int neg_dart(void)
 {
 	const struct ane_h15_soc *s = &ane_t6030_soc;
@@ -3089,6 +3172,7 @@ int main(int argc, char **argv)
 		pos_run_scratch_boot();
 		pos_run_pwgate();
 		pos_dart();
+		pos_translation();
 		pos_map();
 		pos_rtkit();
 		pos_chan();

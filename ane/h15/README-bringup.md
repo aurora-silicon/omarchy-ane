@@ -37,6 +37,19 @@ template is `ane/h16/`.
   compares CPU_STATUS with the value a stopped T6021 core reads (0x2a).
   The meaning of the bits on H15 is not measured, so the line only says
   whether the values are equal.
+
+  With `fw_seg=TEXTPA:SIZE,DATAPA:SIZE` from this boot's live ADT, stage 2 also
+  queries the existing IOMMU domain at the current `RVBAR & ~1`. The current
+  RVBAR must match the measured SoC entry. It logs the IOVA, expected TEXT
+  address and resolved physical address. `PASS reason=rvbar-text-entry-match`
+  means that entry resolves to the supplied TEXT address.
+
+  A missing domain or zero translation refuses the check; a different address
+  fails it. A zero translation means the kernel could not resolve the entry,
+  not that hardware necessarily lacks a mapping. This query allocates, attaches
+  and maps nothing. It reads no firmware bytes and issues no RUN or PWGATE
+  operation. It checks one entry, not the full TEXT range, and does not prove
+  firmware execution. Without `fw_seg`, the original preflight result stays unchanged.
 - `stage=3` or `stage=boot`: refused without `fw_path=` and
   `confirm_boot=1`. With them, the stage prints one line per
   still-unmeasured fact from the `ane_h15_facts` table (stub
@@ -58,12 +71,11 @@ template is `ane/h16/`.
   +0x1810000, +0x1820000, +0x1804000), and for every window whose version
   equals window 0's it reads PARAMS4, PROTECT, PROTECT_LOCK, the ENABLE_STREAMS
   words and TCR (plus TTBR where TCR is set) of streams 0 to 63. It logs
-  each non-zero stream and `live_streams=N locked_windows=N`. `PASS
-  reason=dart-live-stream-found` means iBoot left a stream enabled, with
-  translation on and a valid TTBR. `PASS reason=dart-no-stream-enabled`
-  means nothing is enabled: a started core could not fetch its firmware. It
-  does not show whether the mapping covers the firmware, whether the core would
-  run, or anything about the mailbox.
+  each non-zero stream and `live_streams=N locked_windows=N`.
+  `PASS reason=dart-live-stream-found` means a scanned stream has translation
+  enabled and a valid TTBR. It does not identify who programmed that stream.
+  `PASS reason=dart-no-stream-enabled` means no stream in the bounded scan meets
+  those checks. Neither result proves a firmware translation or firmware execution.
   Reading the result: `locked_windows` counts bit 0 of PROTECT_LOCK (offset 0x208), not
   of PROTECT (offset 0x200): the code tests `lock & 1`. A T6030 (J516S, run by a tester) printed bank 0
   PROTECT = PROTECT_LOCK = `0x2` and the fourth window, at bank 0 + 0x4000, with another
