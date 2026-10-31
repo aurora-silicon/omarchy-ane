@@ -43,13 +43,26 @@ def guided_mask(mask, luma):
     return np.clip(a*(luma.astype(np.float32)/255)+b,0,1)
 
 
+def _blur(plane, sigma):
+    """Gaussian blur of one plane. A wide blur keeps no detail above the
+    reduced sampling rate, so blur at 1/f size and interpolate back; a
+    full-size 1080p kernel of sigma 13.5 costs about 30 ms on an M2 core."""
+    h,w = plane.shape[:2]
+    f = 4 if sigma >= 8 else 2 if sigma >= 4 else 1
+    if f == 1 or w < 4*f or h < 4*f:
+        return cv2.GaussianBlur(plane, (0,0), sigma)
+    small = cv2.resize(plane, (w//f,h//f), interpolation=cv2.INTER_AREA)
+    small = cv2.GaussianBlur(small, (0,0), sigma/f)
+    return cv2.resize(small, (w,h), interpolation=cv2.INTER_LINEAR)
+
+
 def composite(y, uv, mask, background, replacement=None):
     h,w = y.shape
     if background == 'blur':
         # Separable Gaussian in native plane units. U and V stay separate.
         sigma = max(2., min(w,h)/80)
-        by = cv2.GaussianBlur(y, (0,0), sigma)
-        buv = cv2.GaussianBlur(uv, (0,0), sigma/2)
+        by = _blur(y, sigma)
+        buv = _blur(uv, sigma/2)
     elif background == 'replace' and replacement is not None:
         by,buv = replacement
     else:
