@@ -112,7 +112,7 @@ def test_both_models_and_replacement_file(tmp_path):
 
 def test_exported_model_identity_is_checked(tmp_path):
     import shutil
-    shutil.copytree(ROOT/'models/selfie',tmp_path/'selfie')
+    shutil.copytree(ROOT/'models/selfie',tmp_path/'selfie',ignore=shutil.ignore_patterns('compiled'))
     with (tmp_path/'selfie/model.onnx').open('ab') as f:f.write(b'bad')
     with pytest.raises(ValueError,match='identity mismatch'):verified(tmp_path/'selfie','selfie')
 

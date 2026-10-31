@@ -1,0 +1,74 @@
+{
+  "records": [
+    {
+      "engine": "cpu",
+      "width": 256,
+      "height": 256,
+      "frames": 3,
+      "warmup": 1,
+      "init_ms": 2836.8223749566823,
+      "frame_ms": [
+        47.6308329962194,
+        33.49824994802475,
+        36.875708028674126
+      ],
+      "mean_ms": 39.33493032430609,
+      "median_ms": 36.875708028674126,
+      "per_model": {
+        "selfie": {
+          "engine": "cpu",
+          "calls": 3,
+          "native_calls": 0,
+          "mean_ms": 12.681541666666666,
+          "islands_on_ane": 0,
+          "islands_total": null
+        },
+        "yunet": {
+          "engine": "cpu",
+          "calls": 3,
+          "native_calls": 0,
+          "mean_ms": 12.997944666666665,
+          "islands_on_ane": 0,
+          "islands_total": null
+        }
+      },
+      "image": "000000000872.jpg",
+      "resolution": "256x256"
+    },
+    {
+      "engine": "cpu",
+      "width": 620,
+      "height": 640,
+      "frames": 3,
+      "warmup": 1,
+      "init_ms": 3228.0068330001086,
+      "frame_ms": [
+        71.37616607360542,
+        82.85825001075864,
+        64.53883298672736
+      ],
+      "mean_ms": 72.92441635703047,
+      "median_ms": 71.37616607360542,
+      "per_model": {
+        "selfie": {
+          "engine": "cpu",
+          "calls": 3,
+          "native_calls": 0,
+          "mean_ms": 18.46519466666667,
+          "islands_on_ane": 0,
+          "islands_total": null
+        },
+        "yunet": {
+          "engine": "cpu",
+          "calls": 3,
+          "native_calls": 0,
+          "mean_ms": 16.501180333333334,
+          "islands_on_ane": 0,
+          "islands_total": null
+        }
+      },
+      "image": "000000000872.jpg",
+      "resolution": "preview"
+    }
+  ]
+}
