@@ -62,7 +62,8 @@ Use the target distro's libdir when different, e.g. `LIBDIR=/usr/lib64`.
 `libane_python.so` uses the shared runtime's `/usr/lib` location. Build with the
 final interpreter path; the C bridge embeds that interpreter and its environment.
 Install the shared `ane` Python package in that environment; do not copy another
-runtime implementation into the plugin. The bridge promotes the already-linked CPython C API for extension imports; it does not load a second interpreter. Keep libpython/extensions resident until
+runtime implementation into the plugin. The bridge promotes the already-linked CPython C API for extension imports; it
+does not load a second interpreter. Keep libpython/extensions resident until
 process exit, and stop/join stream workers before destroying their instances.
 
 `camera_effects.h` is ABI v1. The filter carries the same header. It passes tightly

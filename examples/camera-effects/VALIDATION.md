@@ -47,8 +47,8 @@ worker. Config reload is transactional and updates advertised board capability.
 Host measurements exclude camera DMA mapping, denoise, C packing/queue overhead,
 portal/application latency and ANE work. They are not target power/latency
 numbers. COCO's nearby-person subset still includes full-body/multiple-person
-scenes outside the selfie model's main training domain. Its 50-image results
-are a small open-label stress sample, not a temporal or demographic study.
+scenes outside the selfie model's main training domain. The default 50-image protocol
+is a small open-label stress sample, not a temporal or demographic study.
 
 The dormant native path reuses the existing H13 graph owner and requires an
 identified whole-model package plus independent qualification. Native support
