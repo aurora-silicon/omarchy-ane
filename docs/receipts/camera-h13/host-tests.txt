@@ -10,3 +10,4 @@ Fresh h13/setup.sh: Python 3.12 environment, verified downloads and both bundle 
 Auto preview with unqualified bundles chose CPU for both models; off removed its output.
 Fresh setup on compiler PR #5 base f7879f1 emits all 118 ANEC programs and all 88 host ONNX partitions byte-identically to the parity-tested 72e1d99 baseline.
 Installed-layout preview with the bundled Python binding and no libane shared library: CPU blur/framing and off pass.
+Fedora 44 aarch64 Lima build VM (4096-byte pages, Python 3.12.16): 23 tests passed in 1.69s; native libane/Python binding and C bridge built as ARM64 ELF; dynamic C bridge smoke passed. Runtime and test source hashes match the final branch. No device was opened.

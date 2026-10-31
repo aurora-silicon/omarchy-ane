@@ -2,8 +2,8 @@
 
 Compiler: mil-hwx-compiler PR #5 head
 `72e1d99c6f51eaf97ad61280936d42dbb0b6a1ae`. No compiler op encoder changed. [Reader-only compatibility PR #9](https://github.com/aurora-silicon/mil-hwx-compiler/pull/9) is required to validate channel-changing convolution packages; it preserves existing ANEC task, span, layout and allocation checks.
-All numbers below were measured on a Darwin/arm64 build host using CPU
-simulation. No M1 Pro, M2 or other ANE execution was performed by this worker.
+Compile and model-parity numbers below were measured on a Darwin/arm64 build host using CPU
+simulation. Native Fedora 44 aarch64 VM validation also passes: 23 tests, both ARM64 ELF libraries and the dynamic C bridge smoke test, on 4 KiB pages. No M1 Pro, M2 or other ANE execution was performed by this worker. See [the Fedora receipt](receipts/camera-h13/fedora-arm64.json).
 
 | Model | Original MIL probes | Rewritten H13 islands | CPU simulation, 30 open portraits |
 | --- | --- | --- | --- |
