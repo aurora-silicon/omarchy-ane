@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- tools: the M3 part 2 scorer isolates each run's messages and gate state. It rejects malformed page indices and comparison records. An empty capture no longer implies a missing device-tree node.
+
 - docs: the README and the level 5 receipt now give the Qwen decode at levels 3 and 4 and a 31 minute decode soak at level 5: the S1-GPTQ step reaches its floor at level 3 (0.0790 s, then 0.0788 and 0.0787 s), the fp16 step does not follow the clock, and the logits are identical at every level.
 
 ## 0.5.7 (2026-10-30)

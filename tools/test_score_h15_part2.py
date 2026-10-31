@@ -21,7 +21,7 @@ def page_hash(i, salt=""):
 class Part2Fixture:
     """One part 2 output directory, written the way the wrapper writes it."""
 
-    def __init__(self, root, changed=(), messages=0, result="PASS core-started-and-stopped", pwgate="pwgate=opened word=0x1",
+    def __init__(self, root, changed=(), messages=0, result="PASS core-started-and-stopped", pwgate: str | None = "pwgate=opened word=0x1",
                  ended=True, insmod_rc=0, compare_count=None, after_pages=None, result_line=True):
         self.dir = Path(root)
         before = {i: page_hash(i) for i in range(PAGES)}
@@ -40,8 +40,9 @@ class Part2Fixture:
             lines.append(f"{PREFIX}ane_h15 {pwgate}")
         for n in range(messages):
             lines.append(f"{PREFIX}ane_h15 msg{n} raw0=0x1{n} raw1=0x0")
-        lines.append(f"{PREFIX}ane_h15 run started_seen=1 i2a_posted={int(bool(messages))} messages={messages} "
-                     "final cpu_status=0x22 i2a_ctrl=0x20001 stopped=1")
+        if reason != "pwgate-not-open" and verdict != "REFUSED":
+            lines.append(f"{PREFIX}ane_h15 run started_seen=1 i2a_posted={int(bool(messages))} messages={messages} "
+                         "final cpu_status=0x22 i2a_ctrl=0x20001 stopped=1")
         if result_line:
             tail = f" {pwgate}" if pwgate and verdict == "PASS" else ""
             lines.append(f"{PREFIX}ane_h15 RESULT stage=5 soc=t6031 verdict={verdict} reason={reason}{tail}")
@@ -220,5 +221,66 @@ class ScoreTests(unittest.TestCase):
         self.assertTrue(bad.stdout.splitlines()[0].startswith("branch UNSCORED"))
 
 
-if __name__ == "__main__":
+class ReviewRegressions(unittest.TestCase):
+    """The five faults the PR303 review found: none of them may come back."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+
+    def cli(self):
+        return subprocess.run([sys.executable, str(HERE / "score_h15_part2.py"), str(self.root)],
+                              capture_output=True, text=True, timeout=5)
+
+    def test_an_earlier_run_does_not_advance_a_later_silent_run(self):
+        Part2Fixture(self.root)
+        log = self.root / "ane_h15-dmesg.txt"
+        old = (f"{PREFIX}ane_h15 msg0 raw0=0x1 raw1=0x0\n"
+               f"{PREFIX}ane_h15 run started_seen=1 i2a_posted=1 messages=1 final cpu_status=0x22 i2a_ctrl=0x20001 stopped=1\n"
+               f"{PREFIX}ane_h15 RESULT stage=5 soc=t6031 verdict=PASS reason=core-started-and-stopped pwgate=opened word=0x0\n")
+        log.write_text(old + log.read_text())
+        self.assertNotIn("branch A:", self.cli().stdout)
+
+    def test_a_later_unfinished_run_does_not_reuse_an_earlier_result(self):
+        Part2Fixture(self.root, messages=1)
+        log = self.root / "ane_h15-dmesg.txt"
+        with log.open("a") as stream:
+            stream.write(f"{PREFIX}ane_h15 run started_seen=1 i2a_posted=0 messages=0 "
+                         "final cpu_status=0x22 i2a_ctrl=0x20001 stopped=1\n")
+        self.assertEqual(scorer.score(self.root)["branch"], "UNSCORED")
+
+    def test_a_gate_line_still_scores_when_the_core_did_not_stop(self):
+        Part2Fixture(self.root, result="FAIL core-not-stopped", pwgate=None)
+        log = self.root / "ane_h15-dmesg.txt"
+        log.write_text(f"{PREFIX}ane_h15 pwgate already open\n" + log.read_text())
+        r = scorer.score(self.root)
+        self.assertEqual(r["branch"], "C", r)
+        self.assertTrue(r["reboot_required"], r)
+
+    def test_an_empty_capture_and_a_failed_load_prove_no_missing_node(self):
+        Part2Fixture(self.root, insmod_rc=1, result_line=False, pwgate=None)
+        (self.root / "ane_h15-dmesg.txt").write_text("")
+        r = scorer.score(self.root)
+        self.assertEqual(r["branch"], "UNSCORED", r)
+        self.assertNotIn("never_probed", r, r)
+
+    def test_a_malformed_page_index_is_unscored_not_a_traceback(self):
+        Part2Fixture(self.root, changed=(1,))
+        for name in ("data-before.txt", "data-after.txt"):
+            path = self.root / name
+            path.write_text(path.read_text().replace("\n1 ", "\nnot-a-page "))
+        out = self.cli()
+        self.assertEqual(out.returncode, 2, out.stderr)
+        self.assertTrue(out.stdout.startswith("branch UNSCORED:"), out.stdout)
+
+    def test_a_present_but_unparseable_compare_is_unscored(self):
+        Part2Fixture(self.root)
+        (self.root / "compare.txt").write_text("pages before 232, after 232, differing broken\n")
+        out = self.cli()
+        self.assertEqual(out.returncode, 2, out.stdout)
+        self.assertTrue(out.stdout.startswith("branch UNSCORED:"), out.stdout)
+
+
+if __name__ == '__main__':
     unittest.main()
