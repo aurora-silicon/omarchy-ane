@@ -77,9 +77,10 @@ end-to-end call latency/audio sync and browser/portal camera selection.
 ## Native ANE gate
 
 The shipped models advertise no native targets. Do not enable the dormant
-adapter by editing a flag alone. First resolve the exact full-model lowering
-refusals in `receipts/compiler-gaps.json`, then produce identified native
-packages through the open compiler. Establish a complete fp16 reference for all
+adapter by editing a flag alone. Run `check-compiler-buildbox.sh` through a
+controller build slot and inspect its `$BUILD_OUT/compiler-gaps.json`; resolve
+any full-model lowering refusals before producing identified native packages
+through the open compiler. Establish a complete fp16 reference for all
 ops and output bindings. Record numerical parity and resident reuse on the
 lead-selected generation before adding a qualified target to model metadata.
 
