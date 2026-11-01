@@ -142,3 +142,17 @@ def test_wedged_timing_frame_stops_before_the_next_submit(rig,tmp_path,monkeypat
     assert len(owners)==31 and owners[-1].executes==1 and all(g.closed for g in owners)
     assert result['active']['phase']=='timing-execute' and result['active']['frame']==0
     assert result['wedged_checks'][-1]==dict(phase='timing-after',frame=0,value='1')
+
+
+@pytest.mark.parametrize('device_error,expected',[
+    (True,['selfie']),(False,['selfie','yunet'])])
+def test_both_model_command_stops_after_device_error_but_not_parity_failure(tmp_path,monkeypatch,device_error,expected):
+    calls=[]
+    def fake(root,*a,**kw):
+        calls.append(root.name)
+        return dict(status='fail',device_error=device_error)
+    monkeypatch.setattr(qualifier,'qualify',fake)
+    monkeypatch.setattr(qualifier.sys,'argv',['qualify.py','--qualify','--models',str(tmp_path/'models'),
+        '--images',str(tmp_path/'images'),'--compiler-root',str(tmp_path/'compiler'),
+        '--output',str(tmp_path/'results'),'--approval',str(tmp_path/'approval'),'--device','m1pro'])
+    assert qualifier.main()==1 and calls==expected

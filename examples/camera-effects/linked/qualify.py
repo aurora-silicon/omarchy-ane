@@ -195,6 +195,8 @@ def qualify(root, images, compiler, library, output, *, simulate, frames=300,
         if result['records'] and result['records'][-1].get('status')=='running':
             result['records'][-1].update(status='fail',error=f'{type(error).__name__}: {error}')
         result['error'] = f'{type(error).__name__}: {error}'
+        if not simulate and result.get('active') is not None:
+            result['device_error']=True
     finally:
         if not simulate:
             try:
@@ -231,6 +233,8 @@ def main():
         results.append(qualify(a.models/name, a.images, a.compiler_root, a.library,
             a.output/(name+'.json'), simulate=a.simulate, frames=a.frames,
             approval=a.approval, device=a.device))
+        if results[-1].get('device_error'):
+            break  # Never LOAD the next model after a device failure.
     return 0 if all(r['status'] == 'pass' for r in results) else 1
 
 
