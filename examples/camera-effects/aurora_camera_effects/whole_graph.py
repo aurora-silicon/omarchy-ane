@@ -16,6 +16,7 @@ import time
 import numpy as np
 
 from .hybrid import local, sha
+from . import yunet_boundary
 
 
 SCHEMA = 'aurora.camera-linked.v1'
@@ -32,7 +33,8 @@ def checked_package(root, metadata, package=None):
     directory = Path(package).resolve() if package else root/'compiled/H13/linked'
     plan_path = local(directory, 'camera-linked.json')
     plan = json.loads(plan_path.read_text())
-    if (plan.get('schema') != SCHEMA or plan.get('target') != 'H13' or
+    lowered = plan.get('schema') == yunet_boundary.SCHEMA
+    if (plan.get('schema') not in (SCHEMA,yunet_boundary.SCHEMA) or plan.get('target') != 'H13' or
             plan.get('model') != metadata['model'] or
             plan.get('source_sha256') != metadata['source_sha256'] or
             plan.get('onnx_sha256') != sha(root/'model.onnx') or
@@ -42,6 +44,8 @@ def checked_package(root, metadata, package=None):
             plan.get('mil_outputs') != metadata['mil_outputs']):
         raise ValueError('linked package model identity mismatch')
     files = plan.get('files', {})
+    if lowered:
+        yunet_boundary.validate(plan,metadata)
     if not {'manifest.json', 'model.mil', 'weights.bin'} <= files.keys():
         raise ValueError('incomplete linked package identities')
     for name, digest in files.items():
@@ -56,9 +60,9 @@ def checked_package(root, metadata, package=None):
             program.get('encoder') not in ('h13-linked-conv', 'h13-linked-native-graph') or
             program.get('file') not in files or
             len(program.get('inputs', [])) != 1 or
-            program['inputs'][0].get('shape') != metadata['input'] or
-            [b.get('name') for b in program.get('outputs', [])] != metadata['mil_outputs'] or
-            [b.get('shape') for b in program['outputs']] != metadata['output_shapes']):
+            program['inputs'][0].get('shape') != (plan['program_input_shape'] if lowered else metadata['input']) or
+            [b.get('name') for b in program.get('outputs', [])] != (plan['program_outputs'] if lowered else metadata['mil_outputs']) or
+            [b.get('shape') for b in program['outputs']] != (plan['program_output_shapes'] if lowered else metadata['output_shapes'])):
         raise ValueError('unsupported linked program boundary contract')
     # Validate every physical view before allocating buffers or opening libane.
     for binding in program['inputs'] + program['outputs']:
@@ -141,8 +145,10 @@ class WholeGraph:
         self.closed = False
         self.prepared = None
         self.simulate = simulate
+        self.lowered = False
         self.loads = self.executes = 0
         self.directory, self.plan, self.manifest, self.program = checked_package(root, metadata, package)
+        self.lowered = self.plan['schema']==yunet_boundary.SCHEMA
         if not simulate and not qualification:
             receipt = json.loads(local(self.directory, 'qualification.json').read_text())
             check_receipt(receipt, self.directory)
@@ -185,8 +191,10 @@ class WholeGraph:
             raise RuntimeError('whole graph closed')
         if list(x.shape) != self.plan['input_shape'] or not np.isfinite(x).all():
             raise ValueError('invalid whole-graph input')
+        if self.lowered:
+            x=yunet_boundary.prepare(x)
         if self.simulate:
-            values = self.simulator(x, self.plan['mil_outputs'])
+            values = self.simulator(x, self.plan['program_outputs'] if self.lowered else self.plan['mil_outputs'])
         else:
             self.prepared.refill([pack_surface(x, self.program['inputs'][0])])
             self.executes += 1
@@ -194,6 +202,8 @@ class WholeGraph:
             if len(raw) != len(self.program['outputs']):
                 raise ValueError('missing linked outputs')
             values = [unpack_surface(data, b) for data, b in zip(raw, self.program['outputs'])]
+        if self.lowered:
+            values=yunet_boundary.decode(values[0],self.plan)
         if len(values) != len(self.plan['output_shapes']) or any(list(v.shape) != shape or not np.isfinite(v).all()
                for v, shape in zip(values, self.plan['output_shapes'])):
             raise ValueError('invalid whole-graph output')

@@ -175,6 +175,7 @@ def qualify(root, images, compiler, library, output, *, simulate, frames=300,
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--models', type=Path, required=True)
+    p.add_argument('--model', choices=['both','selfie','yunet'], default='both')
     p.add_argument('--images', type=Path, required=True)
     p.add_argument('--compiler-root', type=Path, required=True)
     p.add_argument('--library', type=Path, default=Path('/usr/lib/libane_python.so'))
@@ -190,7 +191,7 @@ def main():
         p.error('device qualification requires --approval, --device m1pro and --frames >= 100')
     a.output.mkdir(parents=True, exist_ok=False)
     results = []
-    for name in ('selfie', 'yunet'):
+    for name in (('selfie','yunet') if a.model=='both' else (a.model,)):
         results.append(qualify(a.models/name, a.images, a.compiler_root, a.library,
             a.output/(name+'.json'), simulate=a.simulate, frames=a.frames,
             approval=a.approval, device=a.device))
