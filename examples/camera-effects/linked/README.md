@@ -16,16 +16,20 @@ buffers and cleanup.
 
 ## Current availability
 
-**Neither original camera model has a linked package yet.** PR #12's layer
-operators do not cover all operations, shapes and boundaries in the exported
-models. Selfie first refuses `pad`; YuNet first refuses twelve result tensors.
-Pooling, squeeze/excitation and residual/multi-head lowering remain necessary.
-See the compiler's `docs/ane/camera-linked.md` for the operation census.
+YuNet has a source-built **one-program, 113-task** package in
+[`../packages/`](../packages/README.md), with package-MIL parity passing on all
+30 audited portraits. It uses convolution/relu pooling, native nearest resize,
+exclusive producer placement, a phase-layout stem and compact head readback.
+The CPU boundary performs image layout and score/head decode. No NN
+intermediate is evaluated on the host. Those boundary costs are included in
+device frame timing.
 
-The runtime and qualification infrastructure is implemented and tested with
-procedural fixtures. There is no linked-camera 30-portrait pass, device timing
-or speedup result. Current builds preserve refusal evidence and leave the
-effects on CPU. Do not install a refused build directory as a package.
+There is no ANE device timing or speedup result yet. The package contains a
+CPU simulation receipt and cannot activate production inference until the
+lead's device qualification succeeds. Selfie still lacks a linked package;
+blur uses CPU. The original exports still refuse direct linked compilation
+at padding or multiple results; see the compiler's
+`docs/ane/camera-linked.md` for the operation census and remaining selfie work.
 
 ## Build and host parity
 
@@ -38,8 +42,14 @@ python3 tools/camera_linked.py "$CAMERA_MODELS/selfie" --output "$PACKAGES/selfi
 python3 tools/camera_linked.py "$CAMERA_MODELS/yunet" --output "$PACKAGES/yunet"
 ```
 
-Both commands currently exit nonzero with `build.json` and `compiler.log`.
-When a model can compile, its successful `package/` directory contains
+Those direct-export commands preserve their refusals. For the complete YuNet
+lowering, use:
+
+```sh
+python3 tools/yunet_linked.py "$CAMERA_MODELS/yunet" --compiler build/mil-hwxc --output "$PACKAGES/yunet"
+```
+
+Its successful `package/` directory contains
 `camera-linked.json`, the compiler manifest, ANEC, MIL and weights. Install
 that directory as `models/MODEL/compiled/H13/linked`, retaining its hashes.
 
@@ -47,7 +57,7 @@ Run host parity from this camera-effects directory, using the compatible
 compiler checkout (with its `tools/` and `research/` directories):
 
 ```sh
-python linked/qualify.py --simulate --models "$CAMERA_MODELS" --images "$PORTRAITS" --compiler-root "$COMPILER" --output "$NEW_RESULTS"
+python linked/qualify.py --simulate --model yunet --models "$CAMERA_MODELS" --images "$PORTRAITS" --compiler-root "$COMPILER" --output "$NEW_RESULTS"
 ```
 
 This validates the real ANEC structure, then numerically evaluates its MIL
@@ -86,8 +96,11 @@ The JSON binds source identities; the controller supplies policy approval.
 The qualification script makes no controller request itself.
 
 ```sh
-timeout --kill-after=20 580 python linked/qualify.py --qualify --device m1pro --approval "$APPROVED_IDENTITIES" --models "$CAMERA_MODELS" --images "$PORTRAITS" --compiler-root "$COMPILER" --library "$LIBANE_BINDING" --frames 300 --output "$NEW_RESULTS"
+timeout --kill-after=20 580 python linked/qualify.py --qualify --model yunet --device m1pro --approval "$APPROVED_IDENTITIES" --models "$CAMERA_MODELS" --images "$PORTRAITS" --compiler-root "$COMPILER" --library "$LIBANE_BINDING" --frames 300 --output "$NEW_RESULTS"
 ```
+
+Omit `--model yunet` to attempt both models independently. A missing selfie
+package leaves its failed receipt and does not retire a passing YuNet package.
 
 Thirty fresh program handles each execute a distinct portrait once, without
 warmup. Then one resident handle executes 300 frames, alternating ANE/CPU
@@ -96,7 +109,7 @@ readback, excluding image preprocessing, model LOAD and parity comparisons.
 LOAD setup time is reported separately. The script reads `wedged` before,
 during and after execution. It changes no system settings.
 
-Expected successful results, once real linked packages are available:
+Expected successful device results (still unmeasured):
 
 | Field | Required result |
 | --- | --- |

@@ -30,7 +30,7 @@ and transpose-convolution pixel shuffle introduce no learned parameters.
 `fetch-models.py` pins the public PR #3 conversion at revision
 `64327b7633c98e10130f008b9802bc827114a4de` and checks each exported artifact
 against the existing `model.json`. It also downloads/checks the original weights
-from the public sources above. Weights and generated bundles are excluded from
+from the public sources above. Unpacked weights and generated bundles are excluded from
 the source tree in Git; the inherited PR #3 binary files are removed from this
 branch's tip. Generated programs contain only the compiler's formula-built
 programs and these openly licensed weights. The compiler is MIT:
@@ -46,3 +46,10 @@ The general selfie model is optimized for nearby prominent people; distant
 people, occlusion, thin structures, different scales, low light and motion can
 reduce quality. COCO is an open, independently annotated stress sample, not a
 representative video-call or temporal/fairness qualification dataset.
+
+The audited `packages/yunet-h13-linked-v1.tar.gz` archive is deliberately
+included for linked-camera qualification. It contains source-built H13
+programs, the MIT YuNet weights plus procedural coefficients, the complete
+model/compiler licences and numeric host-parity evidence. It contains no
+Apple-compiled programs, portrait images, machine overrides or device
+qualification receipt. See `packages/README.md` and `SHA256SUMS`.
