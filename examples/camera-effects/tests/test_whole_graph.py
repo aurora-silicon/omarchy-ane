@@ -217,3 +217,33 @@ def test_missing_binding_uses_original_cpu_model(package):
     assert np.isfinite(model(np.zeros(metadata['input'], np.float16))[0][0]).all()
     assert model.engine == 'cpu'
     model.close()
+
+
+def test_resident_buffer_path_preserves_outputs_across_frames(package):
+    root,_,metadata,_,manifest=package
+    program=manifest['programs'][0]
+    calls=dict(load=0,execute=0,close=0)
+    class Prepared:
+        def __init__(self,adapter,data,inputs,outputs):
+            calls['load']+=1
+            self.input_buffers=[C.create_string_buffer(v,len(v)) for v in inputs]
+            self.output_buffers=[C.create_string_buffer(n) for n in outputs]
+        def refill(self,inputs): pytest.fail('resident path allocated a refill payload')
+        def run_once(self): pytest.fail('resident path copied all output bytes')
+        def run_in_place(self):
+            calls['execute']+=1
+            value=unpack_surface(self.input_buffers[0],program['inputs'][0])
+            payload=pack_surface(value[:,:1],program['outputs'][0])
+            C.memmove(self.output_buffers[0],payload,len(payload))
+            return self.output_buffers
+        def close(self): calls['close']+=1
+    runner=SimpleNamespace(inspect_anec=SimpleNamespace(load_package=lambda d:(manifest,{})),
+                           LibANEAdapter=lambda lib:object(),PreparedProgram=Prepared)
+    graph=WholeGraph(root,metadata,'unused',qualification=True,runner=runner)
+    x=np.ones(metadata['input'],np.float16)
+    first=graph(x)[0]
+    for i in range(2,5): np.testing.assert_array_equal(graph(x*i)[0],x[:,:1]*i)
+    np.testing.assert_array_equal(first,x[:,:1])
+    assert graph.loads==1 and graph.executes==4
+    graph.close()
+    assert graph.input_views is None and calls==dict(load=1,execute=4,close=1)

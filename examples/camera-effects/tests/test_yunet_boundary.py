@@ -47,3 +47,22 @@ def test_changed_head_contract_is_rejected(field,value):
     plan,metadata=contract();plan=copy.deepcopy(plan)
     plan['readback'][0][field]=value
     with pytest.raises(ValueError): boundary.validate(plan,metadata)
+
+
+def test_resident_phase_destination_is_reused_and_padding_is_cleared():
+    x=(np.arange(3*320*320,dtype=np.float32)%256).reshape(1,3,320,320).astype(np.float16)
+    destination=np.full((1,16,160,160),np.nan,np.float16)
+    assert boundary.prepare_into(x,destination) is destination
+    np.testing.assert_array_equal(destination,boundary.prepare(x))
+    # A different frame must replace every input lane, including padding.
+    destination[:,12:]=17
+    boundary.prepare_into(x+1,destination)
+    np.testing.assert_array_equal(destination,boundary.prepare(x+1))
+    assert np.all(destination[:,12:]==0)
+
+
+def test_native_fp16_head_decode_matches_expanded_readback():
+    plan,_=contract()
+    packed=(np.arange(64*40*40,dtype=np.float32).reshape(1,64,40,40)/1000-2).astype(np.float16)
+    for actual,expected in zip(boundary.decode(packed,plan),boundary.decode(packed.astype(np.float32),plan)):
+        np.testing.assert_array_equal(actual,expected)

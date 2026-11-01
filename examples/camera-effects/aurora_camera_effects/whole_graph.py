@@ -144,6 +144,7 @@ class WholeGraph:
                  runner=None):
         self.closed = False
         self.prepared = None
+        self.input_views = None
         self.simulate = simulate
         self.lowered = False
         self.loads = self.executes = 0
@@ -170,7 +171,8 @@ class WholeGraph:
             if self.lowered:
                 from .linked_dram_sim import DRAMSimulation
                 self.simulator = DRAMSimulation(self.directory,self.manifest,reader=runner.inspect_anec)
-                self.simulation_method = 'decoded-dram-dataflow'
+                self.simulation_method = ('decoded-dram-l2-dataflow' if self.manifest.get('schedule')=='linked-l2'
+                                          else 'decoded-dram-dataflow')
             else:
                 from .linked_sim import MILSimulation
                 self.simulator = MILSimulation(self.directory/'model.mil', self.directory)
@@ -191,23 +193,36 @@ class WholeGraph:
             [b['allocationBytes'] for b in self.program['outputs']])
         self.setup_ms = (time.perf_counter_ns()-start)/1e6
         self.loads = 1
+        if hasattr(self.prepared, 'run_in_place'):
+            self.input_views = [surface(buffer,binding) for buffer,binding in
+                                zip(self.prepared.input_buffers,self.program['inputs'])]
 
     def __call__(self, x):
         if self.closed:
             raise RuntimeError('whole graph closed')
         if list(x.shape) != self.plan['input_shape'] or not np.isfinite(x).all():
             raise ValueError('invalid whole-graph input')
-        if self.lowered:
+        if self.lowered and (self.simulate or self.input_views is None):
             x=yunet_boundary.prepare(x)
         if self.simulate:
             values = self.simulator(x, self.plan['program_outputs'] if self.lowered else self.plan['mil_outputs'])
         else:
-            self.prepared.refill([pack_surface(x, self.program['inputs'][0])])
+            if self.input_views is not None:
+                if self.lowered:
+                    yunet_boundary.prepare_into(x,self.input_views[0])
+                else:
+                    self.input_views[0][:]=x.reshape(self.input_views[0].shape)
+            else:
+                self.prepared.refill([pack_surface(x, self.program['inputs'][0])])
             self.executes += 1
-            raw = self.prepared.run_once()
+            raw = (self.prepared.run_in_place() if self.input_views is not None else
+                   self.prepared.run_once())
             if len(raw) != len(self.program['outputs']):
                 raise ValueError('missing linked outputs')
-            values = [unpack_surface(data, b) for data, b in zip(raw, self.program['outputs'])]
+            # Lowered head decode converts only live sampled channels to
+            # float32; avoid expanding the entire padded readback first.
+            values = [(surface(data,b).reshape(b['shape']) if self.lowered else
+                       unpack_surface(data,b)) for data,b in zip(raw,self.program['outputs'])]
         if self.lowered:
             values=yunet_boundary.decode(values[0],self.plan)
         if len(values) != len(self.plan['output_shapes']) or any(list(v.shape) != shape or not np.isfinite(v).all()
@@ -222,3 +237,4 @@ class WholeGraph:
         if self.prepared is not None:
             self.prepared.close()
             self.prepared = None
+            self.input_views = None

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: MIT
-"""Simulate linked DRAM edges from decoded ANEC DMA addresses/strides.
+"""Simulate linked DRAM/L2 edges from decoded ANEC addresses/strides.
 
 Convolution and resize arithmetic use the package MIL/weights. Physical input,
-scratch and output movement uses the emitted task descriptors. This checks
+scratch, resident L2 and output movement uses the emitted task descriptors. This checks
 linking and zero-copy placement; it is not an ANE microarchitecture emulator.
 """
 import importlib
@@ -23,6 +23,31 @@ def view(buffer, shape, *, row, plane, offset=0):
                       strides=(c*plane,plane,row,2))
 
 
+L2_BYTES=0x200000
+
+
+def resident(memory, shape, regs, *, source, value=None):
+    """Logical NCHW <-> decoded circular L2 C/R strides (r2/r3)."""
+    base,channel,row=(regs[a] for a in ((0x4808,0x480c,0x4810) if source else
+                                      (0x4834,0x4838,0x483c)))
+    n,c,h,w=shape
+    if n!=1 or base%2 or channel<w*2 or row<c*channel or row%2 or channel%2:
+        raise ValueError('invalid resident L2 geometry')
+    addresses=(base+np.arange(c)[:,None,None]*channel+
+               np.arange(h)[None,:,None]*row+np.arange(w)[None,None,:]*2)%L2_BYTES
+    if source:
+        return memory[addresses//2].view(np.float16)[None].astype(np.float32)
+    memory[addresses//2]=np.asarray(value,dtype=np.float16)[0].view(np.uint16)
+
+
+def ring_disjoint(base_a,size_a,base_b,size_b):
+    if min(size_a,size_b)<0 or max(size_a,size_b)>L2_BYTES: return False
+    def pieces(base,size):
+        base%=L2_BYTES;end=base+size
+        return [(base,min(end,L2_BYTES))]+([(0,end-L2_BYTES)] if end>L2_BYTES else [])
+    return all(max(a,b)>=min(c,d) for a,c in pieces(base_a,size_a) for b,d in pieces(base_b,size_b))
+
+
 class DRAMSimulation(MILSimulation):
     def __init__(self, directory, manifest, *, reader=None):
         directory=Path(directory)
@@ -41,6 +66,7 @@ class DRAMSimulation(MILSimulation):
         # Poison catches unwritten logical values. Padding is never arithmetic.
         self.scratch=bytearray(b'\x00\x7e')*(self.program['scratchBytes']//2)
         self.output=bytearray(b'\x00\x7e')*(self.program['outputs'][0]['allocationBytes']//2)
+        self.l2=np.full(L2_BYTES//2,0x7e00,np.uint16)
         self.frame_count=0
 
     def stored(self, result):
@@ -81,11 +107,29 @@ class DRAMSimulation(MILSimulation):
             selected=self.tasks[layer['firstTask']:layer['firstTask']+layer['taskDescriptors']]
             reads=[(header,regs) for header,regs in selected if
                    regs.get(0x13800,0)&1 and header[8]&31 in (3,5)]
-            if not reads:
-                raise ValueError('DRAM simulation cannot evaluate an unqualified resident input')
-            header,regs=reads[0];channel=header[8]&31
-            operand=view(buffers[channel],shape,row=regs[0x1380c],plane=regs[0x13810],
-                         offset=regs[0x13808]).astype(np.float32)
+            if layer['inputEdge']!='dram':
+                header,regs=selected[0]
+                if reads or regs[0x4804] not in (0x160,0x144,0x104,0x120):
+                    raise ValueError('unqualified resident L2 source form')
+                operand=resident(self.l2,shape,regs,source=True)
+                np.testing.assert_array_equal(operand,env[source],
+                    err_msg='decoded L2 transport differs from the producer value')
+                for _,later in selected[1:]:
+                    if later[0x4804]!=0x100 or later[0x13800]!=0x8880:
+                        raise ValueError('unqualified split resident consumer')
+                    np.testing.assert_array_equal(resident(self.l2,shape,later,source=True),operand)
+                # Read the full live span; a row-band TileHeight cannot be
+                # substituted for the inter-layer allocation.
+                live=shape[2]*regs[0x4810]
+                result_bytes=(layer['l2ResultBytes'] if layer['outputEdge']!='dram' else
+                    regs[0x28]*regs[0x10]*max(16,(2*self.shapes[result][3]+15)//16*16))
+                if not ring_disjoint(regs[0x4808],live,regs[0x4834],result_bytes):
+                    raise ValueError('resident input overlaps result or output staging')
+            else:
+                if not reads: raise ValueError('DRAM layer has no active input DMA')
+                header,regs=reads[0];channel=header[8]&31
+                operand=view(buffers[channel],shape,row=regs[0x1380c],plane=regs[0x13810],
+                             offset=regs[0x13808]).astype(np.float32)
             env[source]=operand
             args={name:self.resolve(value,env) for name,value in node.arguments.items()}
             if node.name=='conv':
@@ -98,6 +142,18 @@ class DRAMSimulation(MILSimulation):
             value=self.layers.f16_ties_away(np.asarray(value,np.float64)).astype(np.float32)
             if tuple(value.shape)!=self.shapes[result] or not np.isfinite(value).all():
                 raise ValueError('invalid decoded DRAM layer result')
+            if layer['outputEdge']!='dram':
+                first=0
+                for header,regs in selected:
+                    count=regs[0x10]
+                    if regs[0x17800]&1 or count<1 or first+count>value.shape[1]:
+                        raise ValueError('invalid resident producer slice')
+                    resident(self.l2,(1,count,*value.shape[2:]),regs,source=False,
+                             value=value[:,first:first+count])
+                    first+=count
+                if first!=value.shape[1]: raise ValueError('resident channels left unwritten')
+                env[result]=value
+                continue
             plane=((value.shape[3]*2+63)//64*64)*value.shape[2]
             covered=np.zeros(value.shape[1],dtype=bool)
             for header,regs in selected:

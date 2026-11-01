@@ -64,11 +64,13 @@ class MILSimulation:
                 providers=['CPUExecutionProvider'])
         return self.convolutions[op.result].run(None, {'x':np.asarray(a['x'], np.float32)})[0]
 
-    def __call__(self, x, outputs):
+    def __call__(self, x, outputs, *, trace=None):
         if list(outputs) != self.returns:
             raise ValueError('package simulation output names differ from MIL')
         env = dict(self.constants)
         env[self.input] = np.asarray(x, np.float32)
+        if trace is not None:
+            trace(self.input, env[self.input])
         for op in self.operations:
             if op.name == 'const':
                 continue
@@ -110,4 +112,6 @@ class MILSimulation:
             # ANE surfaces round midpoint ties away from zero. Native internal
             # LUT/accumulator arithmetic remains a device qualification concern.
             env[op.result] = self.layers.f16_ties_away(np.asarray(y, np.float64)).astype(np.float32)
+            if trace is not None:
+                trace(op.result, env[op.result])
         return [env[name] for name in outputs]

@@ -65,3 +65,19 @@ def test_consistently_misplaced_producers_fail_concat_semantics(package):
     outputs=json.loads((path/'camera-linked.json').read_text())['program_outputs']
     with pytest.raises(AssertionError,match='producer placement'):
         sim(prepare(input_image()),outputs)
+
+
+def test_resident_transport_wrap_and_disjoint_live_spans():
+    from aurora_camera_effects.linked_dram_sim import resident,ring_disjoint,L2_BYTES
+    memory=np.full(L2_BYTES//2,0x7e00,np.uint16)
+    value=np.arange(64*2*8,dtype=np.float16).reshape(1,64,2,8)
+    producer={0x4834:L2_BYTES-128,0x4838:16,0x483c:64*16+16}
+    consumer={0x4808:L2_BYTES-128,0x480c:16,0x4810:64*16+16}
+    resident(memory,value.shape,producer,source=False,value=value)
+    np.testing.assert_array_equal(resident(memory,value.shape,consumer,source=True),value)
+    assert ring_disjoint(L2_BYTES-128,128,0,128)
+    assert not ring_disjoint(L2_BYTES-128,256,0,128)
+    assert not ring_disjoint(0,L2_BYTES+1,0,16)
+    # An internally consistent but misplaced consumer must change the values.
+    consumer[0x4808]+=16
+    assert not np.array_equal(resident(memory,value.shape,consumer,source=True),value)

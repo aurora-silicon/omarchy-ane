@@ -136,3 +136,53 @@ Preserve the entire new results directory and prior receipts for the lead.
 Rollback is selecting `--engine cpu`, or removing the candidate linked
 directory after preserving it. No system installation or device state change
 is required by this feature.
+
+## Bisect a device/host numerical disagreement
+
+The original YuNet DRAM candidate failed device parity despite passing host
+simulation. Keep it unqualified. The compiler now provides
+`tools/camera_exact_prefixes.py` (original task stream) and
+`tools/camera_prefixes.py` (dependency-closed source prefixes and isolated
+convolutions). Build their probes from the same extracted package.
+
+Prepare an oracle without device access, using the exact audited portraits:
+
+```sh
+python linked/bisect_camera.py --prepare --probes "$PROBES" --source "$PACKAGE" \
+  --images "$PORTRAITS" --compiler-root "$COMPILER" --output "$NEW_ORACLE"
+```
+
+The oracle contains derived intermediate tensors and stays with evaluation
+artifacts; do not commit it. Review an external approval file binding
+`device=m1pro`, the concrete controller `request` ID, `library_sha256`,
+`compiler_files` (the three runtime files from qualification above),
+`script_sha256` (this bisection script), `index_sha256` and
+`oracle_metadata_sha256`. Hash the actual script/index/oracle metadata files.
+Run only within that approved controller execute request:
+
+```sh
+timeout --kill-after=20 580 python linked/bisect_camera.py --run --device m1pro \
+  --approval "$APPROVAL" --probes "$PROBES" --source "$PACKAGE" \
+  --oracle "$ORACLE" --compiler-root "$COMPILER" --library "$LIBANE_BINDING" \
+  --cold-runs 3 --output "$NEW_RESULTS"
+```
+
+Start with `--layer 0 --layer 1 --layer 2 --layer 9 --layer 10`, then narrow the
+first divergent interval. `--mode exact-prefix`, `--mode prefix` and
+`--mode isolated` select the ladder type. Every cold run opens a new handle;
+readbacks, worst coordinates, relative L2 and error fractions are retained.
+The diagnostic threshold is 0.03 + 0.02*abs(reference) on intermediates, and
+is not a replacement for the unchanged final model gate.
+
+Expected completion is `status=diagnostic-complete` with wedged zero before
+and after. Inspect all numerical records: this status alone is no parity
+claim. A submission/readback error records `status=device-error` and the
+active original task interval, then aborts. Preserve the controller and
+kernel logs and do not reuse results after a hang. The diagnostic never
+writes `qualification.json`.
+
+The resident runtime can also fill prepared input buffers directly and read
+owned output buffers in place. YuNet writes phase axes into that input view,
+clears padded channels on each frame, and converts only the live sampled
+heads to float32. Returned camera outputs remain independent of later frames.
+This removes host copies; its end-to-end performance still needs measurement.

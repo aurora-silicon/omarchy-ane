@@ -23,13 +23,20 @@ def validate(plan, metadata):
         offset+=channels
 
 
-def prepare(x):
-    if x.shape!=(1,3,320,320):
-        raise ValueError('YuNet layout requires NCHW 320 BGR')
-    phase=x.reshape(1,3,160,2,160,2).transpose(0,1,3,5,2,4).reshape(1,12,160,160)
-    result=np.zeros((1,16,160,160),np.float16)
-    result[:,:12]=phase
+def prepare_into(x, result):
+    """Write phases directly into a resident fp16 input surface."""
+    if x.shape!=(1,3,320,320) or result.shape!=(1,16,160,160) or result.dtype!=np.float16:
+        raise ValueError('YuNet layout requires NCHW 320 BGR and fp16 phases')
+    # Keep the two phase axes separate: combining them on the source would
+    # allocate a dense temporary after transpose. The target owns the copy.
+    result[:,:12].reshape(1,3,2,2,160,160)[:] = x.reshape(1,3,160,2,160,2).transpose(0,1,3,5,2,4)
+    result[:,12:]=0
     return result
+
+
+def prepare(x):
+    result=np.empty((1,16,160,160),np.float16)
+    return prepare_into(x,result)
 
 
 def decode(packed, plan):

@@ -25,3 +25,9 @@ passes. Follow [the qualification command](../linked/README.md) with
 p50, one resident LOAD, one EXECUTE per frame, and `wedged` zero throughout.
 Device parity, p50/p99 and speedup remain unverified. Selfie has no linked
 package and blur remains on CPU.
+
+The v1 DRAM archive subsequently failed device parity. Its host receipt is
+not a device qualification; keep CPU fallback selected. Use the exact-prefix
+and isolated-layer diagnostic workflow in `../linked/README.md` before any
+new device qualification. A resident-graph candidate also requires the full
+unchanged 30-portrait and measured-speed gates.
