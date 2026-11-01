@@ -14,14 +14,14 @@ from aurora_camera_effects.backend import ROOT
 from aurora_camera_effects.yunet_boundary import prepare
 
 
-@pytest.fixture(scope='module')
-def package(tmp_path_factory):
+@pytest.fixture(scope='module',params=('v1','v2','v3'))
+def package(tmp_path_factory,request):
     compiler=Path(os.environ.get('AURORA_CAMERA_COMPILER_ROOT',ROOT.parents[2]/'compiler'))
     if not (compiler/'tools/h13_reference.py').is_file():
         pytest.skip('set AURORA_CAMERA_COMPILER_ROOT for linked package simulation')
     sys.path[:0]=[str(compiler/'tools'),str(compiler/'research')]
     path=tmp_path_factory.mktemp('decoded-dram-package')
-    archive=ROOT/'packages/yunet-h13-linked-v1.tar.gz'
+    archive=ROOT/f'packages/yunet-h13-linked-{request.param}.tar.gz'
     with tarfile.open(archive) as tar:
         for member in tar.getmembers():
             assert Path(member.name).name==member.name and member.isfile()
@@ -81,3 +81,17 @@ def test_resident_transport_wrap_and_disjoint_live_spans():
     # An internally consistent but misplaced consumer must change the values.
     consumer[0x4808]+=16
     assert not np.array_equal(resident(memory,value.shape,consumer,source=True),value)
+
+
+def test_resident_consumer_displacement_is_detected(package):
+    from aurora_camera_effects.linked_dram_sim import DRAMSimulation
+    path,manifest=package
+    layers=manifest['programs'][0]['layers']
+    consumer=next((v for v in layers if v['inputEdge']!='dram'),None)
+    if consumer is None: pytest.skip('DRAM baseline has no resident edge')
+    sim=DRAMSimulation(path,copy.deepcopy(manifest))
+    # The allocation still contains this shifted address. A bounds-only
+    # validator would accept it; real transport must expose wrong data.
+    sim.tasks[consumer['firstTask']][1][0x4808]+=16
+    with pytest.raises(AssertionError,match='L2 transport'):
+        sim(prepare(input_image()),sim.returns)

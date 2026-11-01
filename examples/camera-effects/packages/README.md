@@ -31,3 +31,37 @@ not a device qualification; keep CPU fallback selected. Use the exact-prefix
 and isolated-layer diagnostic workflow in `../linked/README.md` before any
 new device qualification. A resident-graph candidate also requires the full
 unchanged 30-portrait and measured-speed gates.
+
+Two resident YuNet candidates are retained for device comparison:
+
+| Archive | Tasks | L2 edges | Scratch bytes | Estimated descriptor DMA/frame |
+| --- | ---: | ---: | ---: | ---: |
+| `yunet-h13-linked-v2.tar.gz` | 113 | 41 | 25,067,520 | 68,007,936 bytes |
+| `yunet-h13-linked-v3.tar.gz` | 109 | 42 | 26,050,560 | 68,667,392 bytes |
+
+The failed v1 DRAM baseline has 113 tasks, 34,324,480 scratch bytes and an
+86,358,016-byte descriptor estimate. These estimates sum enabled input/output
+TileDMA extents and kernel-DMA lengths; they exclude cache and transaction
+behavior and are not measured bandwidth or latency. v3 removes four separate
+zero-producing tasks by padding the four stride-8 heads; v2 has slightly less
+estimated traffic. Choose by measured device results, not these estimates.
+
+Both resident candidates pass the unchanged output-tensor gate on all 30
+portraits with decoded DRAM/L2 transport and package-MIL primitive arithmetic.
+Each archive contains that CPU-simulation receipt and model/compiler/runtime
+licences. Neither has a passing device receipt; both retain normal CPU
+fallback. Both must still pass cold device parity, measured p50/p99, speedup
+and wedged checks. Selfie still has no linked package.
+
+Rebuild v2 with `tools/yunet_linked.py --schedule linked-l2 --head-padding legacy`
+and v3 with `--schedule linked-l2 --head-padding compact` in the compiler
+repository, supplying the audited model root and compiler/output arguments as
+in its camera-linked guide. Archive hashes are in `SHA256SUMS`. Archives use
+normalized ownership, permissions and timestamps and include no evaluation
+images, derived image tensors, device pins or device receipts.
+
+For the lead, preserve the installed candidate directory before extracting
+one archive under `MODEL_ROOT/yunet/compiled/H13/linked`, then use the existing
+one-command `linked/qualify.py --qualify --model yunet ...` from the linked
+runbook with a new approval manifest and results directory. Compare v2/v3 in
+separate qualified runs; preserve every receipt and failure.
