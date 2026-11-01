@@ -18,7 +18,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('command',choices=['preview','off'])
     p.add_argument('--input',type=Path)
-    p.add_argument('--engine',choices=['auto','ane','cpu'],default='auto')
+    p.add_argument('--engine',choices=['auto','ane','ane-whole','cpu'],default='auto')
     p.add_argument('--models',type=Path,default=ROOT/'models')
     p.add_argument('--compiler-root',type=Path,help='optional compiler graph-owner checkout')
     p.add_argument('--framing',action='store_true')

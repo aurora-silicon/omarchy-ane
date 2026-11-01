@@ -78,8 +78,8 @@ class CPUOnly:
 class Model:
     def __init__(self, name, root=ROOT/'models', library=LIBRARY, native_factory=None, *, engine=None):
         engine=engine or os.environ.get('AURORA_CAMERA_ENGINE','auto')
-        if engine not in ('auto','ane','cpu'):
-            raise ValueError('engine must be auto, ane or cpu')
+        if engine not in ('auto','ane','ane-whole','cpu'):
+            raise ValueError('engine must be auto, ane, ane-whole or cpu')
         self.closed=False
         self.root=Path(root)/name
         self.metadata=verified(self.root,name)
@@ -97,6 +97,11 @@ class Model:
         def load():
             if native_factory:
                 self.native=native_factory()
+            elif engine=='ane-whole' or (self.root/'compiled/H13/linked/camera-linked.json').is_file():
+                from .whole_graph import WholeGraph
+                self.native_engine='ane-whole'
+                self.native=WholeGraph(self.root,self.metadata,library,
+                    compiler_root=Path(os.environ.get('AURORA_CAMERA_COMPILER_ROOT','/usr/lib/mil-hwx-compiler')))
             elif (self.root/'compiled/H13/hybrid/plan.json').is_file():
                 from .hybrid import HybridGraph
                 self.native_engine='ane-hybrid'
