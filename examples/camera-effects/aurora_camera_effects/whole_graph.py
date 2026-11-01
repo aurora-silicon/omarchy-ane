@@ -167,8 +167,14 @@ class WholeGraph:
         if parsed != self.manifest:
             raise ValueError('linked manifest changed during preparation')
         if simulate:
-            from .linked_sim import MILSimulation
-            self.simulator = MILSimulation(self.directory/'model.mil', self.directory)
+            if self.lowered:
+                from .linked_dram_sim import DRAMSimulation
+                self.simulator = DRAMSimulation(self.directory,self.manifest,reader=runner.inspect_anec)
+                self.simulation_method = 'decoded-dram-dataflow'
+            else:
+                from .linked_sim import MILSimulation
+                self.simulator = MILSimulation(self.directory/'model.mil', self.directory)
+                self.simulation_method = 'package-mil'
             return
         if device_runner:
             lib = C.CDLL(str(library))

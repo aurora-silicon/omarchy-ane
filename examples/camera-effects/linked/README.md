@@ -60,10 +60,13 @@ compiler checkout (with its `tools/` and `research/` directories):
 python linked/qualify.py --simulate --model yunet --models "$CAMERA_MODELS" --images "$PORTRAITS" --compiler-root "$COMPILER" --output "$NEW_RESULTS"
 ```
 
-This validates the real ANEC structure, then numerically evaluates its MIL
-and weights with fp16 surface boundaries. ONNX Runtime supplies the separate
+This validates the ANEC structure. Lowered YuNet simulation then uses decoded
+DMA addresses/strides for physical input, scratch and output movement, and
+package-MIL arithmetic with fp16 surface boundaries. It checks task output
+slices and zero-copy concat semantics on the real linked stream. Other
+packages use numerical MIL simulation. ONNX Runtime supplies the separate
 unchanged CPU reference. Unsupported simulation operators are refused.
-Internal hardware accumulator/LUT arithmetic and descriptor execution are
+Internal hardware accumulator/LUT microarchitecture is
 not emulated; host parity cannot authorize hardware or production loading.
 
 ## Lead's one-command device qualification

@@ -97,6 +97,8 @@ def qualify(root, images, compiler, library, output, *, simulate, frames=300,
         for record, x in inputs:
             graph = WholeGraph(root, metadata, library, simulate=simulate,
                                qualification=True, compiler_root=compiler)
+            if simulate:
+                result['simulation_method'] = getattr(graph,'simulation_method','test-fixture')
             try:
                 # Fresh handle, new input, first EXECUTE, no warmup. Reference
                 # evaluation is outside the measured device frame.
@@ -169,6 +171,7 @@ def qualify(root, images, compiler, library, output, *, simulate, frames=300,
             except OSError as error:
                 result.update(status='fail', wedged_error=str(error))
         save()
+    print(root.name,'qualification',result['status'],result.get('error',''),flush=True)
     return result
 
 

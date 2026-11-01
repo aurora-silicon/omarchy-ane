@@ -1,13 +1,13 @@
 # YuNet linked H13 candidate
 
 `yunet-h13-linked-v1.tar.gz` contains the source-built ANEC, its MIL/weights,
-model/compiler licences, artifact identities and the 30-portrait CPU-simulation
+model/compiler licences, artifact identities and the 30-portrait decoded-DRAM CPU-simulation
 receipt. It contains **one program, one dispatch, 113 tasks**, with 34,324,480
 bytes of scratch. All 30 portraits pass the unchanged t-4019 output gate.
 There are no portrait images, machine pins or device qualification receipts.
 
 Archive SHA-256:
-`4919b1d38943450a92439b10d5aa5847d8192d89e3caeb6243f1c8b08d8626f3`.
+`2e310398b93aca137870798dbb36b10cd6f0f67afc685114cbc62940659c4dc9`.
 
 The program consumes a 16-channel phase layout of the original BGR 320 image
 and returns 64 channels at 40x40. The backend performs layout conversion and
