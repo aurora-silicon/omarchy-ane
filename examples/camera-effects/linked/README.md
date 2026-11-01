@@ -186,3 +186,10 @@ owned output buffers in place. YuNet writes phase axes into that input view,
 clears padded channels on each frame, and converts only the live sampled
 heads to float32. Returned camera outputs remain independent of later frames.
 This removes host copies; its end-to-end performance still needs measurement.
+
+The model qualification command also aborts immediately after a LOAD or
+execution failure, even if the recovery driver currently reports `wedged=0`.
+It retains the active portrait, cold/timing phase and program task count, and
+checks wedged state between timed frames. It does not issue another LOAD after
+a failed completion. Numeric parity failures still retain all 30 portrait
+comparisons when execution remains healthy.

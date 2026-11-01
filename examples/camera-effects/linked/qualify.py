@@ -75,12 +75,17 @@ def qualify(root, images, compiler, library, output, *, simulate, frames=300,
         receipt.rename(receipt.with_name(f'qualification.previous-{time.time_ns()}.json'))
     result = dict(schema=RECEIPT_SCHEMA, status='fail', target='H13', model=root.name,
                   mode='cpu-simulation' if simulate else 'libane-device', images=30,
-                  cold_passes=0, records=[])
+                  cold_passes=0, records=[], active=None, wedged_checks=[])
 
     def save():
         write_receipt(output, result)
         if not simulate and package.is_dir():
             write_receipt(receipt, result)
+
+    def check_wedged(phase, frame):
+        value=wedged.read_text().strip()
+        result['wedged_checks'].append(dict(phase=phase,frame=frame,value=value))
+        if value!='0': raise OSError('ANE wedged during '+phase)
 
     save()
     try:
@@ -95,16 +100,26 @@ def qualify(root, images, compiler, library, output, *, simulate, frames=300,
             if result['wedged_before'] != '0':
                 raise OSError('ANE wedged before qualification')
         for record, x in inputs:
+            record['status']='running'
+            result['records'].append(record)
+            result['active']=dict(phase='cold-load',portrait=record['file'])
+            save()
             graph = WholeGraph(root, metadata, library, simulate=simulate,
                                qualification=True, compiler_root=compiler)
             if simulate:
                 result['simulation_method'] = getattr(graph,'simulation_method','test-fixture')
+            execution_failed=False
+            stage='execute'
+            result['active'].update(phase='cold-execute',
+                task_count=getattr(graph,'program',{}).get('taskDescriptors'))
+            save()
             try:
                 # Fresh handle, new input, first EXECUTE, no warmup. Reference
                 # evaluation is outside the measured device frame.
                 start = time.perf_counter_ns()
                 actual = graph(x)
                 record['cold_ms'] = (time.perf_counter_ns()-start)/1e6
+                stage='parity'
                 cpu = reference.run(None, {'x':x.astype(np.float32)})
                 output_metrics(root.name, actual, cpu, record=record)
                 if root.name == 'yunet':
@@ -115,23 +130,37 @@ def qualify(root, images, compiler, library, output, *, simulate, frames=300,
                 result['cold_passes'] += 1
             except Exception as error:
                 record.update(status='fail', error=f'{type(error).__name__}: {error}')
+                execution_failed=not simulate and stage=='execute'
             finally:
-                graph.close()
-            result['records'].append(record)
+                try:
+                    graph.close()
+                except Exception as error:
+                    record.update(status='fail',close_error=f'{type(error).__name__}: {error}')
+                    raise
             save()
             print(root.name, record['file'], record['status'], record.get('mask_iou', ''), flush=True)
-            if not simulate and wedged.read_text().strip() != '0':
-                raise OSError('ANE wedged during cold qualification')
+            if execution_failed:
+                raise OSError('device execution failed; aborting before another LOAD')
+            if not simulate:
+                check_wedged('cold',len(result['records'])-1)
+        result['active']=None
         if any(r['status'] != 'pass' for r in result['records']):
             raise ValueError('30-portrait parity gate failed')
         if root.name == 'selfie':
             result['min_mask_iou'] = min(r['mask_iou'] for r in result['records'])
         if not simulate:
+            result['active']=dict(phase='timing-load')
+            save()
             graph = WholeGraph(root, metadata, library, qualification=True, compiler_root=compiler)
+            result['active'].update(phase='timing-execute',frame=0,
+                task_count=getattr(graph,'program',{}).get('taskDescriptors'))
+            save()
             ane, cpu_times = [], []
             try:
                 for index in range(frames):
                     x = inputs[index % 30][1]
+                    result['active'].update(frame=index,portrait=inputs[index % 30][0]['file'])
+                    check_wedged('timing-before',index)
                     # Alternate order to reduce ordering bias. Both inputs are
                     # already normalized; both timed calls include conversion
                     # to their native layout and readback to dense outputs.
@@ -145,6 +174,7 @@ def qualify(root, images, compiler, library, output, *, simulate, frames=300,
                         values[engine] = call()
                         (ane if engine == 'ane' else cpu_times).append((time.perf_counter_ns()-start)/1e6)
                     output_metrics(root.name, values['ane'], values['cpu'])
+                    check_wedged('timing-after',index)
                 if (graph.loads, graph.executes) != (1, frames):
                     raise ValueError('resident timing violated one LOAD/one EXECUTE per frame')
                 result['timing'] = dict(frames=frames, loads=graph.loads, executes=graph.executes,
@@ -160,7 +190,10 @@ def qualify(root, images, compiler, library, output, *, simulate, frames=300,
             if result['timing']['ane_p50_ms'] >= result['timing']['cpu_p50_ms']:
                 raise ValueError('ANE p50 is not faster than measured CPU p50')
         result['status'] = 'pass'
+        result['active']=None
     except Exception as error:
+        if result['records'] and result['records'][-1].get('status')=='running':
+            result['records'][-1].update(status='fail',error=f'{type(error).__name__}: {error}')
         result['error'] = f'{type(error).__name__}: {error}'
     finally:
         if not simulate:

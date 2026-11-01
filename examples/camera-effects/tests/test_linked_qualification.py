@@ -95,3 +95,50 @@ def test_simulation_does_not_replace_device_receipt(rig, tmp_path):
     assert (root/'compiled/H13/linked/qualification.json').read_text() == 'previous receipt'
     with pytest.raises(OSError):
         check_receipt(result, root/'compiled/H13/linked')
+
+
+def test_cold_device_error_aborts_even_when_driver_reports_unwedged(rig,tmp_path,monkeypatch):
+    root,compiler,library,wedged,owners,Graph=rig
+    Graph.program={'taskDescriptors':109}
+    def broken(self,x):
+        self.executes+=1
+        raise OSError('injected completion -5')
+    monkeypatch.setattr(Graph,'__call__',broken)
+    result=qualifier.qualify(root,tmp_path,compiler,library,tmp_path/'failed-submit.json',
+        simulate=False,frames=100,approval=tmp_path/'approval',device='m1pro',wedged=wedged)
+    assert result['status']=='fail' and result['cold_passes']==0
+    assert len(owners)==1 and owners[0].closed and len(result['records'])==1
+    assert 'completion -5' in result['records'][0]['error']
+    assert result['active']==dict(phase='cold-execute',portrait='000000000000.jpg',task_count=109)
+    assert result['wedged_after']=='0'
+
+
+def test_load_failure_keeps_active_portrait_and_does_not_retry(rig,tmp_path,monkeypatch):
+    root,compiler,library,wedged,owners,_=rig
+    calls=[]
+    def broken(*a,**kw):
+        calls.append('load')
+        raise OSError('injected LOAD failure')
+    monkeypatch.setattr(qualifier,'WholeGraph',broken)
+    result=qualifier.qualify(root,tmp_path,compiler,library,tmp_path/'failed-load.json',
+        simulate=False,frames=100,approval=tmp_path/'approval',device='m1pro',wedged=wedged)
+    assert calls==['load'] and result['status']=='fail'
+    assert len(result['records'])==1 and result['records'][0]['status']=='fail'
+    assert result['active']==dict(phase='cold-load',portrait='000000000000.jpg')
+
+
+def test_wedged_timing_frame_stops_before_the_next_submit(rig,tmp_path,monkeypatch):
+    root,compiler,library,wedged,owners,Graph=rig
+    Graph.program={'taskDescriptors':109}
+    original=Graph.__call__
+    def wedge_on_timing(self,x):
+        value=original(self,x)
+        if len(owners)==31: wedged.write_text('1')
+        return value
+    monkeypatch.setattr(Graph,'__call__',wedge_on_timing)
+    result=qualifier.qualify(root,tmp_path,compiler,library,tmp_path/'timing-wedge.json',
+        simulate=False,frames=100,approval=tmp_path/'approval',device='m1pro',wedged=wedged)
+    assert result['status']=='fail' and result['cold_passes']==30
+    assert len(owners)==31 and owners[-1].executes==1 and all(g.closed for g in owners)
+    assert result['active']['phase']=='timing-execute' and result['active']['frame']==0
+    assert result['wedged_checks'][-1]==dict(phase='timing-after',frame=0,value='1')
